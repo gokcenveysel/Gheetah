@@ -15,7 +15,7 @@
             --gh-secondary: #2a3042;
             --topbar-color: #2a3042;
             --content-bg: #ffffff;
-            --gh-gradient: linear-gradient(135deg, var(--gh-primary) 0%, var(--gh-secondary) 100%); /* Added gradient */
+            --gh-gradient: linear-gradient(135deg, var(--gh-primary) 0%, var(--gh-secondary) 100%);
         }
         
         body {
@@ -136,7 +136,7 @@
         
         /* MENU STYLES */
         .nav-item-header {
-            color: var(--gh-primary); /* Updated to use new orange */
+            color: var(--gh-primary);
             font-weight: 600;
             padding: 0.75rem 0;
             display: flex;
@@ -157,12 +157,12 @@
         }
         
         .nav-link:hover {
-            background-color: rgba(255, 179, 71, 0.1); /* Updated to use new orange */
+            background-color: rgba(255, 179, 71, 0.1);
         }
         
         .nav-link.active {
-            background-color: rgba(255, 179, 71, 0.2); /* Updated to use new orange */
-            color: var(--gh-primary); /* Updated to use new orange */
+            background-color: rgba(255, 179, 71, 0.2);
+            color: var(--gh-primary);
         }
         
         .nav-link i {
@@ -252,7 +252,6 @@
         </div>
     </header>
 
-    <!-- Rest of the HTML content remains exactly the same -->
     <div class="d-flex">
         <!-- SIDEBAR -->
         <div class="sidebar">
@@ -399,53 +398,314 @@
         <div class="content">
             <!-- INTRODUCTION -->
             <div id="what-is-gheetah" class="content-section">
-                <h2>What is Gheetah</h2>
+                <h2>What is Gheetah?</h2>
                 <div class="mt-4 p-4 rounded">
-                    <p>Gheetah is an enterprise test orchestration platform designed for modern development teams.</p>
-                    <ul>
-                        <li>Unified test execution across distributed environments</li>
-                        <li>Comprehensive reporting and analytics</li>
-                        <li>CI/CD pipeline integration</li>
+                    <p class="lead">Gheetah is a powerful <strong>Test Orchestration Platform</strong> designed to streamline the execution and management of BDD (Behavior-Driven Development) test automation projects. Built as a <strong>cross-platform</strong> solution with a <strong>.NET 8.0 MVC backend</strong>, it features a modern and intuitive frontend designed using <strong>Tabler.io</strong>.</p>
+                    
+                    <h5 class="mt-4 mb-3">Key Features & Capabilities:</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Seamless Test Execution:</strong>
+                            <ul class="mt-2">
+                                <li>Supports <strong>BDD test projects</strong> in <strong>C# (Reqnroll/SpecFlow)</strong> or <strong>Java (TestNG-Cucumber/JUnit-Cucumber)</strong>.</li>
+                                <li>Run tests <strong>remotely</strong> via <strong>Gheetah Agent</strong> or directly on the <strong>Gheetah Server</strong>.</li>
+                                <li>Target specific scenarios using <strong>TAG filtering</strong>.</li>
+                                <li>View <strong>real-time test results</strong> with structured reporting.</li>
+                            </ul>
+                        </li>
+                        
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Enterprise-Ready Platform:</strong>
+                            <ul class="mt-2">
+                                <li><strong>Customizable Dashboard</strong> for analytics and visibility.</li>
+                                <li><strong>User & Role Management</strong> for secure access control.</li>
+                                <li><strong>Integrations</strong> with <strong>Azure DevOps, Jenkins, GitLab, Email</strong>, and more.</li>
+                                <li>Scalable for <strong>enterprise environments</strong>.</li>
+                            </ul>
+                        </li>
+                        
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Lightweight & Easy to Use:</strong>
+                            <ul class="mt-2">
+                                <li>No database dependency—stores data as <strong>JSON files</strong> in the <code>/Data</code> directory.</li>
+                            </ul>
+                        </li>
                     </ul>
+
+                    <div class="alert alert-info mt-4">
+                        <h5 class="alert-heading">Feedback Welcome!</h5>
+                        <p>As you use Gheetah, we welcome your suggestions for improvements. Contact the creator:</p>
+                        <p class="mb-0"><strong>Veysel Gökçen</strong> – <a href="mailto:gokcenveysel@gmail.com" class="alert-link">gokcenveysel@gmail.com</a></p>
+                    </div>
                 </div>
             </div>
             
             <!-- INSTALLATION -->
             <div id="requirement" class="content-section">
-                <h2>System Requirements</h2>
-                <div class="mt-4 p-4 rounded">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h5>Server Requirements</h5>
-                            <ul>
-                                <li>Windows Server 2016+ or Linux</li>
-                                <li>4 CPU cores minimum</li>
-                                <li>8GB RAM minimum</li>
-                            </ul>
+                <h2 class="mb-4">System Requirements</h2>
+                
+                <div class="system-requirements-container">
+                    <!-- Server Requirements -->
+                    <div class="requirement-card">
+                        <div class="card-header">
+                            <i class="icon icon-server"></i>
+                            <h3>Gheetah Server</h3>
+                            <span class="badge">Core Platform</span>
                         </div>
-                        <div class="col-md-6">
-                            <h5>Agent Requirements</h5>
-                            <ul>
-                                <li>Windows 10/11 or Linux</li>
-                                <li>.NET 6.0 Runtime or Java 11+</li>
-                                <li>2 CPU cores minimum</li>
-                            </ul>
+                        <div class="card-body">
+                            <p class="intro">The central orchestration hub that manages test execution, reporting, and integrations. Designed for enterprise-scale deployment.</p>
+                            
+                            <div class="requirement-section">
+                                <h4>Infrastructure</h4>
+                                <ul class="feature-list">
+                                    <li><span class="feature-name">Operating System:</span> Windows Server 2016/2019/2022 or Linux (RHEL 8+, Ubuntu 20.04+)</li>
+                                    <li><span class="feature-name">Compute:</span> 4 CPU cores (8+ recommended for concurrent executions)</li>
+                                    <li><span class="feature-name">Memory:</span> 8GB RAM minimum (16GB recommended for production)</li>
+                                    <li><span class="feature-name">Storage:</span> 5GB available space (SSD strongly recommended)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="requirement-section">
+                                <h4>Software Dependencies</h4>
+                                <div class="dependency-group">
+                                    <span class="dependency-pill">.NET 8.0</span>
+                                    <span class="dependency-pill">ASP.NET Core</span>
+                                </div>
+                                <p class="note">Self-contained deployments available for environments without runtime pre-installation</p>
+                                
+                                <h5 class="mt-3">For Java Project Support:</h5>
+                                <ul class="feature-list">
+                                    <li><span class="feature-name">JDK:</span> OpenJDK 11+ or Oracle JDK 11+</li>
+                                    <li><span class="feature-name">Build Tools:</span> Maven 3.6+ or Gradle 7.4+</li>
+                                    <li><span class="feature-name">Environment:</span> Properly configured <code>JAVA_HOME</code> and build tool paths</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Agent Requirements -->
+                    <div class="requirement-card">
+                        <div class="card-header">
+                            <i class="icon icon-agent"></i>
+                            <h3>Execution Agent</h3>
+                            <span class="badge">Test Runner</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="intro">Lightweight components that execute test scenarios in distributed environments with minimal overhead.</p>
+                            
+                            <div class="requirement-section">
+                                <h4>Infrastructure</h4>
+                                <ul class="feature-list">
+                                    <li><span class="feature-name">Operating System:</span> Windows 10/11 or Linux (x64 distributions)</li>
+                                    <li><span class="feature-name">Compute:</span> 2 CPU cores minimum (4+ recommended for parallel execution)</li>
+                                    <li><span class="feature-name">Memory:</span> 4GB RAM minimum (scales with test suite complexity)</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="requirement-section">
+                                <h4>Runtime Environments</h4>
+                                <div class="dependency-group">
+                                    <span class="dependency-pill">.NET 8.0</span>
+                                    <span class="dependency-pill">Java 11+</span>
+                                </div>
+                                
+                                <h5 class="mt-3">Language-Specific Requirements:</h5>
+                                <div class="language-requirements">
+                                    <div class="language-tab">
+                                        <h6>C#/SpecFlow</h6>
+                                        <ul>
+                                            <li>NuGet package restore capability</li>
+                                            <li>Build tools: MSBuild or dotnet CLI</li>
+                                        </ul>
+                                    </div>
+                                    <div class="language-tab">
+                                        <h6>Java/Cucumber</h6>
+                                        <ul>
+                                            <li>Maven or Gradle installation</li>
+                                            <li>Network access to artifact repositories</li>
+                                            <li>Proper <code>JAVA_HOME</code> configuration</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <div id="first-installation" class="content-section">
-                <h2>First Installation Wizard</h2>
-                <div class="mt-4 p-4 rounded">
-                    <ol>
-                        <li>Download the Gheetah installer package</li>
-                        <li>Run the installation wizard</li>
-                        <li>Configure database connection</li>
-                        <li>Set up admin credentials</li>
-                    </ol>
+                
+                <div class="deployment-notes">
+                    <h4><i class="icon icon-notes"></i> Deployment Notes</h4>
+                    <div class="notes-content">
+                        <p>For optimal performance in containerized environments:</p>
+                        <ul>
+                            <li>Ensure sufficient CPU shares (minimum 2 vCPUs per agent container)</li>
+                            <li>Mount persistent storage for test artifacts and logs</li>
+                            <li>Configure network access to version control systems and package repositories</li>
+                        </ul>
+                        <p class="contact-note">For detailed sizing guidance based on your test suite characteristics, contact our solutions team.</p>
+                    </div>
                 </div>
             </div>
+
+            <style>
+                .system-requirements-container {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 24px;
+                    margin-bottom: 32px;
+                }
+
+                .requirement-card {
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+                    overflow: hidden;
+                }
+
+                .card-header {
+                    background: #f8f9fa;
+                    padding: 16px 24px;
+                    border-bottom: 1px solid #e9ecef;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+
+                .card-header h3 {
+                    margin: 0;
+                    font-size: 1.25rem;
+                    color: #2c3e50;
+                }
+
+                .card-body {
+                    padding: 24px;
+                }
+
+                .requirement-section {
+                    margin-bottom: 24px;
+                }
+
+                .feature-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 12px 0;
+                }
+
+                .feature-list li {
+                    padding: 6px 0;
+                    display: flex;
+                }
+
+                .feature-name {
+                    font-weight: 600;
+                    min-width: 140px;
+                    color: #495057;
+                }
+
+                .dependency-group {
+                    display: flex;
+                    gap: 8px;
+                    margin: 12px 0;
+                }
+
+                .dependency-pill {
+                    background: #e9ecef;
+                    padding: 4px 12px;
+                    border-radius: 16px;
+                    font-size: 0.85rem;
+                    font-weight: 500;
+                }
+
+                .language-requirements {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 16px;
+                    margin-top: 12px;
+                }
+
+                .deployment-notes {
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 20px;
+                    border-left: 4px solid #4e73df;
+                }
+
+                .contact-note {
+                    font-style: italic;
+                    color: #6c757d;
+                    margin-top: 12px;
+                }
+
+                @media (max-width: 992px) {
+                    .system-requirements-container {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+                                    
+			<div id="first-installation" class="content-section">
+				<h2 class="mb-4">First Installation Wizard</h2>
+				<div class="mt-4 p-4 rounded">
+					<p>When you deploy Gheetah to a compatible server meeting the system requirements or run it via Visual Studio, you will be greeted by the "First Installation" wizard. This intuitive setup process guides you through the initial configuration steps to ensure a smooth onboarding experience.</p>
+					
+					<h3>Configuration Steps</h3>
+					<ol>
+						<li><strong>SSO Provider Selection</strong>
+							<div style="margin-top: 10px;">
+								<img src="img/provider-1.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+							<ul>
+								<li>
+									<strong>Azure AD:</strong> If you select Azure AD, you will be prompted to configure the Azure AD integration settings including tenant ID, application ID, and secret key.
+									<div style="margin-top: 10px;">
+										<img src="img/provider-azure.jpeg" alt="Provider" style="max-width: 100%;">
+									</div>
+								</li>
+								<li>
+									<strong>Google Workspace:</strong> If you choose Google Workspace, you will need to set up the OAuth 2.0 credentials and configure domain-wide delegation.
+									<div style="margin-top: 10px;">
+										<img src="img/provider-google.jpeg" alt="Provider" style="max-width: 100%;">
+									</div>
+								</li>
+							</ul>
+						</li>
+						<li>
+							<strong>Manage Groups</strong>: Define and organize user groups to streamline access control. The system supports hierarchical group structures with inheritance capabilities.
+							<div style="margin-top: 10px;">
+								<img src="img/manage-groups.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</li>
+						<li>
+							<strong>Add Permissions to Groups</strong>: Assign specific permissions to the defined groups to tailor access levels. Granular permissions are available for all system modules.
+							<div style="margin-top: 10px;">
+								<img src="img/assign-permission.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</li>
+					</ol>
+					
+					<div class="alert alert-warning mt-3">
+						<h5 class="alert-heading">Important Note</h5>
+						<p>Default groups and roles are pre-configured with industry best practices for optimal security and usability. We strongly recommend retaining these settings unless specific customization is required. If modifications are made, you may need to update the corresponding <code>[Auth]</code> attributes in the codebase to maintain consistency between configuration and implementation.</p>
+					</div>
+					
+					<p>Upon completing these steps, click <strong>"Save Configuration"</strong> to finalize the initial setup. The application will automatically:</p>
+					<ul>
+						<li>Validate all configuration parameters</li>
+						<li>Initialize the necessary system resources</li>
+						<li>Create the default data structures</li>
+						<li>Redirect you to the related(Azure, Google or Custom)<strong> Login</strong> screen
+							<div style="margin-top: 10px;">
+								<img src="img/login.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</li>
+					</ul>
+					
+					<h3>Support and Feedback</h3>
+					<div class="alert alert-info">
+						<p>Should you encounter any issues during the setup process, our support team is ready to assist:</p>
+						<ul class="mb-0">
+							<li><strong>Email Support:</strong> Contact the creator, Veysel Gökçen, at <a href="mailto:gokcenveysel@gmail.com">gokcenveysel@gmail.com</a></li>
+							<li><strong>Community Support:</strong> Report issues or suggest improvements via our <a href="https://github.com/gokcenveysel/Gheetah" target="_blank">GitHub repository</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
             
             <!-- SSO INTEGRATION -->
             <div id="google-workspace" class="content-section">
