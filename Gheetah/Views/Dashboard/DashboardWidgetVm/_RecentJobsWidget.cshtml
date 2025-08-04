@@ -1,0 +1,78 @@
+﻿@model IEnumerable<Gheetah.Models.Hangfire.JobInfoDto>
+
+<div class="table-responsive">
+    <table class="table table-vcenter card-table">
+        <thead>
+            <tr>
+                <th>Job ID</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th class="w-1">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var job in Model)
+                {
+                    <tr>
+                        <td class="text-muted">@job.Id</td>
+                        <td>@job.MethodName</td>
+                        <td>
+                            <span class="badge @GetStatusBadgeClass(job.State)">
+                                @job.State
+                            </span>
+                        </td>
+                        <td>@job.FormattedCreatedAt</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-icon view-job-details"
+                               title="View details"
+                               data-job-id="@job.Id"
+                               data-bs-toggle="tooltip">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No recent jobs found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.view-job-details').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const jobId = this.dataset.jobId;
+                    showJobDetails(jobId);
+                });
+            });
+        });
+    </script>
+}
+
+@functions {
+    public static string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Succeeded" => "bg-green-lt",
+            "Failed" => "bg-red-lt",
+            "Processing" => "bg-blue-lt",
+            _ => "bg-secondary-lt"
+        };
+    }
+}

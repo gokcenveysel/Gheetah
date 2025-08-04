@@ -1,0 +1,26 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Gheetah.Models.ViewModels.Account.LoginVm
+@{
+    Layout = "_LayoutAuth";
+}
+
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <h1>SuperAdmin Login</h1>
+        </div>
+        <div class="card card-md">
+            <div class="card-body">
+                <form asp-action="SuperAdminLogin" method="post">
+                    <div class="mb-3">
+                        <input asp-for="Email" class="form-control" placeholder="Admin Email">
+                    </div>
+                    <div class="mb-3">
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Password">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

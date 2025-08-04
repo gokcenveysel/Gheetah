@@ -1,0 +1,97 @@
+﻿@model Gheetah.Models.ViewModels.Dashboard.DashboardWidgetVm
+
+<div class="table-responsive">
+    <table class="table table-hover table-vcenter card-table">
+        <thead>
+            <tr>
+                <th>Build</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="text-muted">Build #1234</td>
+                <td>
+                    <div class="d-flex align-items-center" data-bs-toggle="tooltip" title="Success">
+                        @Html.Raw(GetStatusIcon("success"))
+                        <span class="ms-2">Success</span>
+                    </div>
+                </td>
+                <td class="text-muted">12m 34s</td>
+                <td class="text-muted">2023-05-15</td>
+            </tr>
+            <tr>
+                <td class="text-muted">Build #1233</td>
+                <td>
+                    <div class="d-flex align-items-center" data-bs-toggle="tooltip" title="Failed">
+                        @Html.Raw(GetStatusIcon("failed"))
+                        <span class="ms-2">Failed</span>
+                    </div>
+                </td>
+                <td class="text-muted">8m 12s</td>
+                <td class="text-muted">2023-05-14</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+@functions {
+    public static string GetStatusIcon(string status)
+    {
+        switch (status.ToLower())
+        {
+            case "success":
+                return @"<svg xmlns=""http://www.w3.org/2000/svg"" width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#2fb344"" stroke-width=""3"" stroke-linecap=""round"" stroke-linejoin=""round"">
+                            <path d=""M22 11.08V12a10 10 0 1 1-5.93-9.14""></path>
+                            <polyline points=""22 4 12 14.01 9 11.01""></polyline>
+                        </svg>";
+            case "failed":
+                return @"<svg xmlns=""http://www.w3.org/2000/svg"" width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#e03131"" stroke-width=""3"" stroke-linecap=""round"" stroke-linejoin=""round"">
+                            <circle cx=""12"" cy=""12"" r=""10""></circle>
+                            <line x1=""15"" y1=""9"" x2=""9"" y2=""15""></line>
+                            <line x1=""9"" y1=""9"" x2=""15"" y2=""15""></line>
+                        </svg>";
+            case "warning":
+                return @"<svg xmlns=""http://www.w3.org/2000/svg"" width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#fcc419"" stroke-width=""3"" stroke-linecap=""round"" stroke-linejoin=""round"">
+                            <path d=""M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z""></path>
+                            <line x1=""12"" y1=""9"" x2=""12"" y2=""13""></line>
+                            <line x1=""12"" y1=""17"" x2=""12.01"" y2=""17""></line>
+                        </svg>";
+            default:
+                return @"<svg xmlns=""http://www.w3.org/2000/svg"" width=""16"" height=""16"" viewBox=""0 0 24 24"" fill=""none"" stroke=""#868e96"" stroke-width=""3"" stroke-linecap=""round"" stroke-linejoin=""round"">
+                            <circle cx=""12"" cy=""12"" r=""10""></circle>
+                            <line x1=""12"" y1=""8"" x2=""12"" y2=""12""></line>
+                            <line x1=""12"" y1=""16"" x2=""12.01"" y2=""16""></line>
+                        </svg>";
+        }
+    }
+}
+
+<style>
+    .table-vcenter td {
+        vertical-align: middle;
+    }
+
+    .btn-ghost-primary {
+        color: #206bc4;
+        background-color: transparent;
+        border-color: transparent;
+    }
+
+    .btn-ghost-primary:hover {
+        color: #206bc4;
+        background-color: rgba(32, 107, 196, 0.1);
+        border-color: transparent;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>

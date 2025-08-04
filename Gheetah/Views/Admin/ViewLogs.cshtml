@@ -1,0 +1,32 @@
+﻿@model List<Gheetah.Models.LogEntry>
+@{
+    ViewData["Title"] = "Activity Logs";
+}
+
+<h2 class="mb-4">Activity Logs</h2>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter table-striped">
+            <thead>
+            <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Description</th>
+                <th>Timestamp</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var log in Model.OrderByDescending(l => l.Timestamp))
+            {
+                <tr>
+                    <td>@log.UserEmail</td>
+                    <td>@log.Action</td>
+                    <td>@log.Description</td>
+                    <td>@log.Timestamp.ToString("g")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

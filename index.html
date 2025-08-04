@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Gheetah - Open Source Enterprise Test Orchestration Platform for .NET and Java BDD automation">
+    <title>Gheetah | Open Source Test Orchestration Platform</title>
+    
+    <!-- Tabler Core -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gh-primary: #FFB347; /* Pastel orange */
+            --gh-primary-dark: #FF9A3C; /* Slightly darker pastel orange */
+            --gh-secondary: #2a3042; /* Navy blue */
+            --gh-dark: #1A1E2B; /* Darker navy */
+            --gh-light: #FFFFFF;
+            --gh-text: #E5E7EB;
+            --gh-text-dark: #1F2937;
+            --gh-gradient: linear-gradient(135deg, var(--gh-primary) 0%, var(--gh-secondary) 100%);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gh-dark);
+            color: var(--gh-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Theme variables */
+        [data-theme="dark"] {
+            --gh-bg: var(--gh-dark);
+            --gh-card-bg: #2a3042; /* Navy blue */
+            --gh-card-border: rgba(255,255,255,0.08);
+            --gh-text-color: var(--gh-text);
+            --gh-text-muted: rgba(229, 231, 235, 0.6);
+            --gh-header-bg: #2a3042; /* Navy blue */
+            --gh-footer-bg: #2a3042; /* Navy blue */
+            --gh-border-color: rgba(255,255,255,0.1);
+            --gh-glass-bg: rgba(42, 48, 66, 0.7); /* Semi-transparent navy */
+            --gh-badge-bg: rgba(255, 179, 71, 0.1); /* Pastel orange with opacity */
+            --gh-badge-text: var(--gh-primary);
+            --gh-navbar-brand-color: var(--gh-text);
+            --gh-footer-text: var(--gh-text-muted);
+        }
+        
+        [data-theme="light"] {
+            --gh-bg: var(--gh-light);
+            --gh-card-bg: #FFFFFF;
+            --gh-card-border: rgba(0,0,0,0.05);
+            --gh-text-color: var(--gh-text-dark);
+            --gh-text-muted: rgba(31, 41, 55, 0.6);
+            --gh-header-bg: rgba(255, 255, 255, 0.95);
+            --gh-footer-bg: #F9FAFB;
+            --gh-border-color: rgba(0,0,0,0.1);
+            --gh-glass-bg: rgba(255, 255, 255, 0.7);
+            --gh-badge-bg: rgba(255, 179, 71, 0.1);
+            --gh-badge-text: var(--gh-primary-dark);
+            --gh-navbar-brand-color: #1F2937;
+            --gh-footer-text: var(--gh-text-muted);
+        }
+        
+        /* Base styles */
+        body {
+            color: var(--gh-text-color);
+            background-color: var(--gh-bg);
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--gh-text-color);
+        }
+        
+        a {
+            text-decoration: none;
+            transition: all 0.2s ease;
+            color: var(--gh-text-color);
+        }
+        
+        .text-muted {
+            color: var(--gh-text-muted) !important;
+        }
+        
+        /* Glassmorphism effect */
+        .glass {
+            background: var(--gh-glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--gh-border-color);
+        }
+        
+        /* Navbar */
+        .navbar {
+            background-color: var(--gh-header-bg) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--gh-border-color);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            color: var(--gh-navbar-brand-color) !important;
+        }
+        
+        /* Hero section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            color: var(--gh-text-color);
+            padding: 6rem 0 8rem;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,179,71,0.1) 0%, rgba(255,179,71,0) 70%); /* Pastel orange gradient */
+            z-index: 0;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: var(--gh-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            max-width: 600px;
+            opacity: 0.9;
+        }
+        
+        /* Feature blocks */
+        .feature-block {
+            position: relative;
+            padding: 5rem 0;
+        }
+        
+        .feature-block:nth-child(even) {
+            background: linear-gradient(135deg, rgba(255,179,71,0.05) 0%, rgba(42,48,66,0.05) 100%); /* Pastel orange + navy */
+        }
+        
+        .feature-icon {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 1rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            background: var(--gh-gradient);
+            color: white;
+            font-size: 1.75rem;
+            box-shadow: 0 4px 20px rgba(255, 179, 71, 0.3); /* Pastel orange shadow */
+        }
+        
+        /* Feature badges */
+        .feature-badge {
+            background: var(--gh-badge-bg);
+            color: var(--gh-badge-text);
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 500;
+            border: none;
+        }
+        
+        /* Buttons */
+        .btn-gh {
+            background: var(--gh-gradient);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.75rem;
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn-gh::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--gh-primary-dark) 0%, var(--gh-secondary) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        
+        .btn-gh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 179, 71, 0.3); /* Pastel orange shadow */
+            color: white;
+        }
+        
+        .btn-gh:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-outline-gh {
+            border: 2px solid var(--gh-primary);
+            color: var(--gh-primary);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+            background: transparent;
+            padding: 0.75rem 1.75rem;
+        }
+        
+        .btn-outline-gh:hover {
+            background: var(--gh-primary);
+            color: white;
+            border-color: var(--gh-primary);
+        }
+        
+        /* Theme toggle */
+        .theme-toggle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            color: var(--gh-text-color);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* Screenshots */
+        .screenshot {
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--gh-border-color);
+            transition: all 0.3s ease;
+            width: 100%;
+            height: auto;
+        }
+        
+        /* Floating elements */
+        .floating {
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        /* Integration logos */
+        .integration-logo {
+            height: 40px;
+            width: auto;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            filter: grayscale(100%);
+        }
+        
+        .integration-logo:hover {
+            opacity: 1;
+            filter: grayscale(0%);
+            transform: scale(1.1);
+        }
+        
+        /* Blob shapes */
+        .blob {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            background: linear-gradient(135deg, rgba(255,179,71,0.1) 0%, rgba(42,48,66,0.1) 100%); /* Pastel orange + navy */
+            z-index: -1;
+            filter: blur(40px);
+            opacity: 0.5;
+        }
+        
+        .blob-1 {
+            top: -100px;
+            right: -100px;
+            width: 600px;
+            height: 600px;
+        }
+        
+        .blob-2 {
+            bottom: -150px;
+            left: -150px;
+            width: 700px;
+            height: 700px;
+        }
+        
+        /* Stats */
+        .stat-item {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: var(--gh-glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gh-border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: rgba(255, 179, 71, 0.3); /* Pastel orange border */
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gh-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1;
+        }
+        
+        /* Testimonial */
+        .testimonial {
+            background: var(--gh-glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--gh-border-color);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .testimonial::before {
+            content: '"';
+            position: absolute;
+            top: 1rem;
+            left: 1.5rem;
+            font-size: 5rem;
+            font-family: serif;
+            color: var(--gh-primary);
+            opacity: 0.2;
+            line-height: 1;
+        }
+        
+        /* Feature showcase */
+        .feature-showcase {
+            background: var(--gh-glass-bg);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            border: 1px solid var(--gh-border-color);
+        }
+        
+        .feature-showcase-item {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-showcase-item:hover {
+            background: rgba(255, 179, 71, 0.05); /* Pastel orange with opacity */
+            transform: translateY(-3px);
+        }
+        
+        /* Feature grid */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-grid-item {
+            padding: 1.5rem;
+            border-radius: 1rem;
+            background: var(--gh-glass-bg);
+            border: 1px solid var(--gh-border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-grid-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: rgba(255, 179, 71, 0.3); /* Pastel orange border */
+        }
+        
+        /* Integration cards */
+        .integration-card {
+            padding: 2rem;
+            border-radius: 1rem;
+            background: var(--gh-glass-bg);
+            border: 1px solid var(--gh-border-color);
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .integration-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border-color: rgba(255, 179, 71, 0.3); /* Pastel orange border */
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hero {
+                text-align: center;
+                padding: 4rem 0 6rem;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .feature-block {
+                padding: 3rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <header class="navbar navbar-expand-md sticky-top">
+        <div class="container-xl">
+            <a class="navbar-brand" href="/">
+                <img src="Gheetah/wwwroot/img/gheetah_icon.png" alt="Gheetah" class="navbar-brand-image me-2">
+                <span class="fw-bold">Gheetah</span>
+            </a>
+            <div class="navbar-nav flex-row order-md-last">
+                <div class="nav-item d-none d-md-flex me-3">
+                    <div class="btn-list">
+                        <a href="https://github.com/" class="btn btn-outline-gh" target="_blank" rel="noreferrer">
+                            <i class="ti ti-brand-github me-1"></i> GitHub
+                        </a>
+						<a href="howto.html" class="btn btn-outline-gh btn-lg px-4">  <!-- Changed from #demo to howto.html -->
+							<i class="ti ti-help me-1"></i> How To  <!-- Changed icon and text -->
+						</a>
+                    </div>
+                </div>
+                
+                <div class="d-none d-md-flex align-items-center">
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                        <i class="ti ti-moon" id="theme-icon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Rest of the HTML content remains exactly the same -->
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        
+        <div class="container hero-content">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <span class="feature-badge mb-3">
+                        <i class="ti ti-star me-1"></i> Open Source v2.0
+                    </span>
+                    <h1 class="hero-title mb-4">Enterprise Test Orchestration Redefined</h1>
+                    <p class="hero-subtitle mb-5">Unify your .NET and Java BDD automation with powerful orchestration, execution, and reporting capabilities across distributed environments.</p>
+                    
+                    <div class="d-flex flex-wrap gap-3 mb-5">
+                        <a href="#features" class="btn btn-gh btn-lg px-4">
+                            <i class="ti ti-star me-1"></i> Explore Features
+                        </a>
+						<a href="howto.html" class="btn btn-outline-gh btn-lg px-4">  <!-- Changed from #demo to howto.html -->
+							<i class="ti ti-help me-1"></i> How To  <!-- Changed icon and text -->
+						</a>
+						</a>
+                        <a href="https://github.com/" class="btn btn-outline-gh btn-lg px-4" target="_blank">
+                            <i class="ti ti-brand-github me-1"></i> GitHub
+                        </a>
+                    </div>
+                    
+                    <div class="d-flex flex-wrap gap-4 text-muted">
+                        <div>
+                            <i class="ti ti-check text-success me-1"></i> .NET 8.0 MVC
+                        </div>
+                        <div>
+                            <i class="ti ti-check text-success me-1"></i> Cross-Platform
+                        </div>
+                        <div>
+                            <i class="ti ti-check text-success me-1"></i> Open Source
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 d-none d-lg-block">
+                    <div class="position-relative floating">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1080&q=80" alt="Test Automation Dashboard" class="img-fluid screenshot">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="stat-item text-center">
+                        <div class="stat-number">21+</div>
+                        <p class="mb-0 text-muted">Core Features</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item text-center">
+                        <div class="stat-number">10x</div>
+                        <p class="mb-0 text-muted">Faster Execution</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item text-center">
+                        <div class="stat-number">24/7</div>
+                        <p class="mb-0 text-muted">Uptime</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-item text-center">
+                        <div class="stat-number">100%</div>
+                        <p class="mb-0 text-muted">Open Source</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comprehensive Feature Set Section -->
+    <section id="features" class="feature-block">
+        <div class="container">
+            <div class="row justify-content-center mb-6">
+                <div class="col-lg-8 text-center">
+                    <h2 class="fw-bold mb-3">Complete Test Orchestration Platform</h2>
+                    <p class="lead text-muted">End-to-end capabilities for your BDD automation lifecycle</p>
+                </div>
+            </div>
+            
+            <div class="feature-grid">
+                <!-- 1. Kurulum ve Auth -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-download"></i>
+                    </div>
+                    <h3 class="mb-3">Easy Setup & Authentication</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>One-click runtime installation</li>
+                        <li>Google/Azure SSO integration</li>
+                        <li>Custom register/login system</li>
+                    </ul>
+                </div>
+                
+                <!-- 2. Kullanıcı Yönetimi -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-users"></i>
+                    </div>
+                    <h3 class="mb-3">User & Role Management</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>Customizable RBAC system</li>
+                        <li>Role-based page visibility</li>
+                        <li>User management dashboard</li>
+                    </ul>
+                </div>
+                
+                <!-- 3. Dashboard -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-dashboard"></i>
+                    </div>
+                    <h3 class="mb-3">Custom Dashboard</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>Personalizable layout</li>
+                        <li>Azure/Custom widgets</li>
+                        <li>Drag & drop interface</li>
+                    </ul>
+                </div>
+                
+                <!-- 4. Proje Yönetimi -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-versions"></i>
+                    </div>
+                    <h3 class="mb-3">BDD Project Management</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>Upload .zip or clone from Git</li>
+                        <li>.NET/Java project support</li>
+                        <li>Automated build system</li>
+                    </ul>
+                </div>
+                
+                <!-- 5. Agent Yönetimi -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-server"></i>
+                    </div>
+                    <h3 class="mb-3">Agent Management</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>Windows agent setup</li>
+                        <li>Remote execution</li>
+                        <li>Agent monitoring</li>
+                    </ul>
+                </div>
+                
+                <!-- 6. Test Execution -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-player-play"></i>
+                    </div>
+                    <h3 class="mb-3">Test Execution</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>Scenario/tag based runs</li>
+                        <li>Local or remote execution</li>
+                        <li>Real-time SignalR output</li>
+                    </ul>
+                </div>
+                
+                <!-- 7. Raporlama -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-report-analytics"></i>
+                    </div>
+                    <h3 class="mb-3">Reporting & Analytics</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>Detailed test reports</li>
+                        <li>Historical trends</li>
+                        <li>Export to PDF/Excel</li>
+                    </ul>
+                </div>
+                
+                <!-- 8. Sistem Yönetimi -->
+                <div class="feature-grid-item">
+                    <div class="feature-icon">
+                        <i class="ti ti-settings"></i>
+                    </div>
+                    <h3 class="mb-3">System Administration</h3>
+                    <ul class="text-muted mb-0 ps-3">
+                        <li>CI/CD configuration</li>
+                        <li>Mail/SMTP setup</li>
+                        <li>Advanced logging</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detailed Features - Authentication -->
+    <section class="feature-block">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <div class="feature-icon">
+                        <i class="ti ti-shield-lock"></i>
+                    </div>
+                    <h2 class="fw-bold mb-4">Flexible Authentication System</h2>
+                    <p class="lead mb-4">Secure access with multiple authentication options tailored for enterprise needs.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-brand-google text-primary me-2"></i>
+                                <span>Google SSO</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-brand-azure text-primary me-2"></i>
+                                <span>Azure AD</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-user-plus text-primary me-2"></i>
+                                <span>Custom Registration</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-key text-primary me-2"></i>
+                                <span>JWT Authentication</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <img src="https://images.unsplash.com/photo-1579389083078-4e7018379f7e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Authentication" class="img-fluid rounded-3 shadow floating" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Detailed Features - Project Management -->
+    <section class="feature-block">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 order-lg-2 mb-5 mb-lg-0">
+                    <div class="feature-icon">
+                        <i class="ti ti-versions"></i>
+                    </div>
+                    <h2 class="fw-bold mb-4">Comprehensive BDD Project Management</h2>
+                    <p class="lead mb-4">Manage your test automation projects with powerful version control and build tools.</p>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-cloud-upload text-primary me-2"></i>
+                                <span>.zip Package Upload</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-brand-git text-primary me-2"></i>
+                                <span>Git Repository Clone</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-brand-csharp text-primary me-2"></i>
+                                <span>.NET Project Support</span>
+                            </div>
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="ti ti-brand-java text-primary me-2"></i>
+                                <span>Java Project Support</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 order-lg-1">
+                    <img src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" alt="Project Management" class="img-fluid rounded-3 shadow floating" loading="lazy">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integration Section -->
+    <section class="py-7">
+        <div class="container">
+            <div class="row justify-content-center mb-6">
+                <div class="col-lg-10 text-center">
+                    <h2 class="fw-bold mb-3">Seamless Ecosystem Integration</h2>
+                    <p class="lead text-muted mb-5">Gheetah connects with your existing DevOps and development tools</p>
+                    
+                    <div class="row g-4">
+                        <!-- Authentication Providers -->
+                        <div class="col-md-4">
+                            <div class="integration-card text-center">
+                                <div class="feature-icon-sm mb-3 mx-auto">
+                                    <i class="ti ti-shield-lock"></i>
+                                </div>
+                                <h4 class="mb-3">Authentication</h4>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" class="integration-logo">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg" class="integration-logo">
+                                    <img src="https://www.svgrepo.com/show/448296/auth0.svg" class="integration-logo">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Version Control -->
+                        <div class="col-md-4">
+                            <div class="integration-card text-center">
+                                <div class="feature-icon-sm mb-3 mx-auto">
+                                    <i class="ti ti-brand-git"></i>
+                                </div>
+                                <h4 class="mb-3">Version Control</h4>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg" class="integration-logo">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/gitlab/gitlab-original.svg" class="integration-logo">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg" class="integration-logo">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CI/CD -->
+                        <div class="col-md-4">
+                            <div class="integration-card text-center">
+                                <div class="feature-icon-sm mb-3 mx-auto">
+                                    <i class="ti ti-brand-docker"></i>
+                                </div>
+                                <h4 class="mb-3">CI/CD Pipelines</h4>
+                                <div class="d-flex justify-content-center gap-3">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jenkins/jenkins-original.svg" class="integration-logo">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg" class="integration-logo">
+                                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/gitlab/gitlab-original.svg" class="integration-logo">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonial -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="testimonial">
+                        <div class="d-flex align-items-center mb-4">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Sarah Johnson" class="rounded-circle me-3" width="60">
+                            <div>
+                                <h5 class="mb-0">Sarah Johnson</h5>
+                                <p class="text-muted mb-0">QA Director at TechCorp</p>
+                            </div>
+                        </div>
+                        <p class="lead mb-0">"Gheetah transformed our test automation workflow. What used to take days now happens in hours with complete visibility across all our teams. The unified dashboard alone saved us hundreds of hours in manual reporting."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="py-9 bg-gh-dark">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="fw-bold mb-3">Ready to Transform Your Test Automation?</h2>
+                    <p class="lead mb-5">Explore Gheetah's capabilities with our interactive demo</p>
+                    <div class="d-flex flex-wrap gap-3 justify-content-center">
+                        <a href="https://github.com/" class="btn btn-gh btn-lg px-5" target="_blank">
+                            <i class="ti ti-brand-github me-2"></i> GitHub Repository
+                        </a>
+                        <a href="#contact" class="btn btn-outline-gh btn-lg px-5">
+                            <i class="ti ti-mail me-2"></i> Contact Us
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h2 class="fw-bold mb-3">Get In Touch</h2>
+                    <p class="lead text-muted mb-5">Have questions? Join our community for support</p>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="feature-grid-item h-100">
+                                <div class="feature-icon-sm mb-3">
+                                    <i class="ti ti-brand-github"></i>
+                                </div>
+                                <h4 class="mb-3">GitHub Discussions</h4>
+                                <p class="text-muted mb-0">Get help from our active community of developers and users</p>
+                                <a href="https://github.com/" class="btn btn-outline-gh mt-3" target="_blank">Join Discussion</a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="feature-grid-item h-100">
+                                <div class="feature-icon-sm mb-3">
+                                    <i class="ti ti-brand-discord"></i>
+                                </div>
+                                <h4 class="mb-3">Discord Community</h4>
+                                <p class="text-muted mb-0">Real-time chat with contributors and other users</p>
+                                <a href="#" class="btn btn-outline-gh mt-3">Join Discord</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer py-6" style="background-color: var(--gh-footer-bg); color: var(--gh-footer-text);">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 mb-5 mb-lg-0">
+                    <div class="d-flex align-items-center mb-3">
+                        <a class="navbar-brand" href="/">
+                            <img src="Gheetah/wwwroot/img/gheetah_icon.png" alt="Gheetah" class="navbar-brand-image me-2">
+                            <span class="fw-bold">Gheetah</span>
+                        </a>
+                    </div>
+                    <p class="mb-4">Open source enterprise test orchestration platform for modern development teams.</p>
+                    <div class="d-flex gap-3">
+                        <a href="https://github.com/" class="btn btn-sm btn-outline-gh" target="_blank">
+                            <i class="ti ti-brand-github me-1"></i> Star on GitHub
+                        </a>
+                        <a href="#" class="btn btn-sm btn-outline-gh">
+                            <i class="ti ti-brand-discord me-1"></i> Join Community
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="row">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <h5 class="mb-3">Resources</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a href="#" class="text-muted">Documentation</a></li>
+                                <li class="mb-2"><a href="#" class="text-muted">API Reference</a></li>
+                                <li class="mb-2"><a href="#" class="text-muted">Tutorials</a></li>
+                                <li class="mb-2"><a href="#" class="text-muted">Blog</a></li>
+                            </ul>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Community</h5>
+                            <ul class="list-unstyled">
+                                <li class="mb-2"><a href="#" class="text-muted">GitHub Discussions</a></li>
+                                <li class="mb-2"><a href="#" class="text-muted">Contributor Guide</a></li>
+                                <li class="mb-2"><a href="#" class="text-muted">Roadmap</a></li>
+                                <li class="mb-2"><a href="#" class="text-muted">Issue Tracker</a></li>
+                            </ul>
+                        </div>
+                    </div>
+            </div>
+            <hr class="my-5" style="border-color: var(--gh-border-color);">
+            <div class="row align-items-center">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <p class="mb-0">© 2025 Gheetah. Open source under MIT License.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">Made with <i class="ti ti-heart text-danger"></i> by the open source community</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Tabler JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <script>
+        // Theme toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const html = document.documentElement;
+            
+            // Check for saved theme preference
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-theme', currentTheme);
+            themeIcon.className = currentTheme === 'dark' ? 'ti ti-moon' : 'ti ti-sun';
+            
+            // Toggle theme
+            themeToggle.addEventListener('click', function() {
+                const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                themeIcon.className = newTheme === 'dark' ? 'ti ti-moon' : 'ti ti-sun';
+                localStorage.setItem('theme', newTheme);
+            });
+            
+            // Smooth scrolling for anchor links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

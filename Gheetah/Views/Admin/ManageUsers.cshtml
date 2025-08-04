@@ -1,0 +1,328 @@
+﻿@model List<Gheetah.Models.User>
+@using Gheetah.Models.ViewModels.Setup
+@{
+    ViewData["Title"] = "User Management";
+    var groups = ViewBag.Groups as List<GroupVm>;
+}
+
+<div class="page-header d-print-none">
+    <div class="container-fluid">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">User Management</h2>
+                <div class="text-muted mt-1">Manage system users and their permissions</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">System Users</h3>
+                <div class="card-actions">
+                    <div class="input-icon">
+                        <input type="text" class="form-control" placeholder="Search users..." id="userSearch">
+                        <span class="input-icon-addon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                <path d="M21 21l-6 -6" />
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-vcenter card-table table-striped">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Groups</th>
+                            <th>Permissions</th>
+                            <th>Status</th>
+                            <th class="w-1">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || !Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="empty">
+                                        <div class="empty-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                <path d="M9 10l.01 0" />
+                                                <path d="M15 10l.01 0" />
+                                                <path d="M9.5 15a3.5 3.5 0 0 0 5 0" />
+                                            </svg>
+                                        </div>
+                                        <p class="empty-title">No users found</p>
+                                        <p class="empty-subtitle text-muted">
+                                            Add your first user by clicking the button above
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="avatar avatar-sm me-2" style="background-image: url(https://ui-avatars.com/api/?name=@user.FullName&background=random)"></span>
+                                            <div>
+                                                <div class="font-weight-medium">@user.FullName</div>
+                                                <div class="text-muted">@user.Id</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>@user.Email</td>
+                                    <td>
+                                        @if (user.Groups != null && user.Groups.Any())
+                                        {
+                                            <div class="avatar-list avatar-list-stacked">
+                                                @foreach (var group in user.Groups.Take(3))
+                                                {
+                                                    <span class="avatar avatar-xs" title="@group" style="background-image: url(https://ui-avatars.com/api/?name=@group&background=random)"></span>
+                                                }
+                                                @if (user.Groups.Count > 3)
+                                                {
+                                                    <span class="avatar avatar-xs">+@(user.Groups.Count - 3)</span>
+                                                }
+                                            </div>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (user.Roles != null && user.Roles.Any())
+                                        {
+                                            foreach (var role in user.Roles.Take(2))
+                                            {
+                                                <span class="badge bg-blue-lt me-1">@role</span>
+                                            }
+                                            @if (user.Roles.Count > 2)
+                                            {
+                                                <span class="badge bg-blue-lt">+@(user.Roles.Count - 2)</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @(user.Status == "Active" ? "bg-success-lt" : user.Status == "Disabled" ? "bg-danger-lt" : "bg-warning-lt")">
+                                            @user.Status
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a href="#" class="btn btn-icon" data-bs-toggle="modal" data-bs-target="#editUserModal-@user.Id" title="Edit">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                                    <path d="M16 5l3 3" />
+                                                </svg>
+                                            </a>
+                                            <a href="#" class="btn btn-icon" title="Delete" onclick="confirmDelete('@user.Id')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                    <path d="M4 7l16 0" />
+                                                    <path d="M10 11l0 6" />
+                                                    <path d="M14 11l0 6" />
+                                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- Edit User Modal -->
+                                <div class="modal modal-blur fade" id="editUserModal-@user.Id" tabindex="-1" role="dialog">
+                                    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <form asp-action="UpdateUser" method="post">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit User: @user.Email</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="Id" value="@user.Id" />
+                                                    <input type="hidden" name="Email" value="@user.Email" />
+
+                                                    <div class="row">
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Full Name</label>
+                                                                <input type="text" name="FullName" class="form-control" value="@user.FullName" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg-6">
+                                                            <div class="mb-3">
+                                                                <label class="form-label">Status</label>
+                                                                <select class="form-select" name="Status">
+                                                                    @foreach (var status in new[] { "Active", "Disabled", "Pending" })
+                                                                    {
+                                                                        <option value="@status" selected="@(user.Status == status)">
+                                                                            @status
+                                                                        </option>
+                                                                    }
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Groups</label>
+                                                        <div class="row">
+                                                            @foreach (var group in groups)
+                                                            {
+                                                                <div class="col-md-4">
+                                                                    <label class="form-check form-check-inline">
+                                                                        <input class="form-check-input" type="checkbox"
+                                                                               name="Groups"
+                                                                               value="@group.Name"
+                                                                        @(user.Groups?.Contains(@group.Name) == true ? "checked" : "") />
+                                                                        <span class="form-check-label">@group.Name</span>
+                                                                    </label>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Permissions</label>
+                                                        <select class="form-select" name="Roles" multiple>
+                                                            @foreach (var role in new[] { "Admin", "Manager", "Editor", "Viewer" })
+                                                            {
+                                                                <option value="@role" selected="@(user.Roles?.Contains(role) == true)">@role</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary ms-auto">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer d-flex align-items-center">
+                <p class="m-0 text-muted">Showing <span>@Model?.Count</span> users</p>
+                <ul class="pagination m-0 ms-auto">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M15 6l-6 6l6 6" />
+                            </svg>
+                            prev
+                        </a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">
+                            next
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M9 6l6 6l-6 6" />
+                            </svg>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Delete Confirmation Modal -->
+<div class="modal modal-blur fade" id="delete-confirm-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <h3>Are you sure?</h3>
+                <div class="text-muted">Do you really want to delete this user? This action cannot be undone.</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn w-100" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button id="confirm-delete-btn" class="btn btn-danger w-100">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            $('select[multiple]').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'Select permissions',
+                closeOnSelect: false
+            });
+
+            $('#userSearch').on('keyup', function() {
+                const value = $(this).val().toLowerCase();
+                $('table tbody tr').filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+
+        function confirmDelete(userId) {
+            const modal = new bootstrap.Modal(document.getElementById('delete-confirm-modal'));
+            modal.show();
+
+            document.getElementById('confirm-delete-btn').onclick = function() {
+                deleteUser(userId);
+                modal.hide();
+            };
+        }
+
+        function deleteUser(userId) {
+            fetch('/Admin/DeleteUser', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `id=${encodeURIComponent(userId)}`
+            })
+            .then(response => {
+                if (response.redirected) {
+                    window.location.href = response.url;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+}

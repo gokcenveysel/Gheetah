@@ -1,0 +1,150 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Gheetah.Models.ViewModels.Account.LoginVm
+@{
+    ViewData["Title"] = "Login";
+    Layout = "_LayoutAuth";
+    var provider = ViewBag.Provider?.ToString();
+}
+
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <a href="/" class="navbar-brand navbar-brand-autodark">
+                <!-- Logo SVG -->
+                <a href="/" class="navbar-brand navbar-brand-autodark">
+                    <img src="/img/gheetah_logo.png" alt="Gheetah">
+                </a>
+            </a>
+        </div>
+
+        @if (provider == "Custom")
+        {
+            <div class="card card-md">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Login to your account</h2>
+
+                    <form method="post" asp-action="Login" autocomplete="off" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label">Email address</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" />
+                                        <path d="M3 7l9 6l9 -6" />
+                                    </svg>
+                                </span>
+                                <input asp-for="Email" type="email" class="form-control" placeholder="your@email.com" autocomplete="off">
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">
+                                Password
+                                <span class="form-label-description">
+                                    <a href="/account/forgot-password">I forgot password</a>
+                                </span>
+                            </label>
+                            <div class="input-group input-group-flat">
+                                <span class="input-group-text">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+                                        <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                                        <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
+                                    </svg>
+                                </span>
+                                <input asp-for="Password" type="password" class="form-control" placeholder="Your password" autocomplete="off">
+                                <span class="input-group-text">
+                                    <a href="#" class="link-secondary" title="Show password" data-bs-toggle="tooltip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                            <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                        </svg>
+                                    </a>
+                                </span>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-check">
+                                <input type="checkbox" class="form-check-input">
+                                <span class="form-check-label">Remember me on this device</span>
+                            </label>
+                        </div>
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-login" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M15 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
+                                    <path d="M21 12h-13l3 -3" />
+                                    <path d="M11 15l-3 -3" />
+                                </svg>
+                                Sign in
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center text-muted mt-3">
+                Don't have an account yet? <a href="/account/register" tabindex="-1">Sign up</a>
+            </div>
+        }
+        else if (provider == "Azure")
+        {
+            <div class="card card-md text-center">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Login with Azure AD</h2>
+                    <p class="text-muted mb-4">Single sign-on with your Microsoft account</p>
+                    <a href="/sso/azure" class="btn btn-primary w-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-microsoft" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M3 7h1v10h-1z" />
+                            <path d="M6 7h1v10h-1z" />
+                            <path d="M12 7h1v10h-1z" />
+                            <path d="M18 7h1v10h-1z" />
+                            <path d="M21 7h1v10h-1z" />
+                        </svg>
+                        Sign in with Microsoft
+                    </a>
+                </div>
+                <div class="card-footer">
+                    <div class="text-center text-muted">
+                    </div>
+                </div>
+            </div>
+        }
+        else if (provider == "Google")
+        {
+            <div class="card card-md text-center">
+                <div class="card-body">
+                    <h2 class="h2 text-center mb-4">Login with Google</h2>
+                    <p class="text-muted mb-4">Single sign-on with your Google account</p>
+                    <a href="/sso/google" class="btn btn-animate-icon w-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            <path fill="none" d="M1 1h22v22H1z"/>
+                        </svg>
+                        Sign in with Google
+                    </a>
+                </div>
+                <div class="card-footer">
+                    <div class="text-center text-muted">
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-danger">
+                <h4 class="alert-title">Authentication Error</h4>
+                <div>Unknown login provider.</div>
+            </div>
+        }
+    </div>
+</div>

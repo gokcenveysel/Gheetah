@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Gheetah Documentation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+    <style>
+        :root {
+            --sidebar-width: 320px;
+            --navbar-height: 66px;
+            --gh-primary: #FFB347; /* Updated to match landingpage2.html */
+            --gh-primary-dark: #FF9A3C; /* Updated to match landingpage2.html */
+            --gh-secondary: #2a3042;
+            --topbar-color: #2a3042;
+            --content-bg: #ffffff;
+            --gh-gradient: linear-gradient(135deg, var(--gh-primary) 0%, var(--gh-secondary) 100%); /* Added gradient */
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--content-bg);
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        /* NAVBAR */
+        .navbar {
+            height: var(--navbar-height);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background-color: var(--topbar-color) !important;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .navbar-brand {
+            color: white !important;
+            font-weight: 600;
+        }
+        
+        /* Buttons to match landingpage2.html */
+        .btn-gh {
+            background: var(--gh-gradient);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .btn-gh::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--gh-primary-dark) 0%, var(--gh-secondary) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+        
+        .btn-gh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 179, 71, 0.3);
+            color: white;
+        }
+        
+        .btn-gh:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-outline-gh {
+            border: 2px solid var(--gh-primary);
+            color: var(--gh-primary);
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 0.75rem;
+            background: transparent;
+            padding: 0.5rem 1.25rem;
+        }
+        
+        .btn-outline-gh:hover {
+            background: var(--gh-primary);
+            color: white;
+            border-color: var(--gh-primary);
+        }
+        
+        /* SIDEBAR */
+        .sidebar {
+            width: var(--sidebar-width);
+            position: fixed;
+            top: var(--navbar-height);
+            left: 0;
+            bottom: 0;
+            background-color: var(--topbar-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 1rem 1rem 1rem;
+        }
+        
+        /* SCROLLBAR */
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        
+        /* MENU STYLES */
+        .nav-item-header {
+            color: var(--gh-primary); /* Updated to use new orange */
+            font-weight: 600;
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            color: white;
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+            transition: all 0.2s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 179, 71, 0.1); /* Updated to use new orange */
+        }
+        
+        .nav-link.active {
+            background-color: rgba(255, 179, 71, 0.2); /* Updated to use new orange */
+            color: var(--gh-primary); /* Updated to use new orange */
+        }
+        
+        .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .submenu {
+            padding-left: 1rem;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.3s ease;
+        }
+        
+        .submenu.active {
+            max-height: 1000px;
+        }
+        
+        .menu-toggle {
+            transition: transform 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .menu-toggle.rotated {
+            transform: rotate(90deg);
+        }
+        
+        /* CONTENT AREA */
+        .content {
+            margin-left: var(--sidebar-width);
+            padding: 2rem;
+            min-height: calc(100vh - var(--navbar-height));
+            margin-top: var(--navbar-height);
+            background-color: var(--content-bg);
+            color: #333;
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 100%;
+                position: static;
+                max-height: 50vh;
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <header class="navbar navbar-expand-md">
+        <div class="container-xl">
+            <a class="navbar-brand" href="#">
+                <img src="Gheetah/wwwroot/img/gheetah_icon.png" alt="Gheetah" class="navbar-brand-image me-2">
+                <span class="fw-bold">Gheetah</span>
+            </a>
+            <div class="navbar-nav flex-row order-md-last">
+                <div class="nav-item d-none d-md-flex me-3">
+                    <div class="btn-list">
+                        <a href="https://github.com/" class="btn btn-outline-gh" target="_blank">
+                            <i class="ti ti-brand-github me-1"></i> GitHub
+                        </a>
+                        <a href="landingpage2.html" class="btn btn-gh">
+                            <i class="ti ti-home me-1"></i> Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Rest of the HTML content remains exactly the same -->
+    <div class="d-flex">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h4 class="mb-0 text-white">Gheetah Documentation</h4>
+            </div>
+            <div class="sidebar-content">
+                <ul class="nav flex-column">
+                    <!-- INTRODUCTION -->
+                    <li>
+                        <div class="nav-item-header" data-target="intro-menu">
+                            <span>Introduction</span>
+                            <i class="ti ti-chevron-right menu-toggle"></i>
+                        </div>
+                        <div id="intro-menu" class="submenu">
+                            <a class="nav-link" href="#" data-section="what-is-gheetah">
+                                <i class="ti ti-info-circle"></i> What is Gheetah
+                            </a>
+                        </div>
+                    </li>
+                    
+                    <!-- INSTALLATION -->
+                    <li>
+                        <div class="nav-item-header" data-target="installation-menu">
+                            <span>Installation</span>
+                            <i class="ti ti-chevron-right menu-toggle"></i>
+                        </div>
+                        <div id="installation-menu" class="submenu">
+                            <a class="nav-link" href="#" data-section="requirement">
+                                <i class="ti ti-checklist"></i> Requirement
+                            </a>
+                            <a class="nav-link" href="#" data-section="first-installation">
+                                <i class="ti ti-wizard"></i> First installation wizard
+                            </a>
+                            
+                            <!-- SSO INTEGRATION -->
+                            <div class="nav-item-header" data-target="sso-submenu">
+                                <span><i class="ti ti-shield-lock me-1"></i>SSO integration</span>
+                                <i class="ti ti-chevron-right menu-toggle"></i>
+                            </div>
+                            <div id="sso-submenu" class="submenu">
+                                <a class="nav-link" href="#" data-section="google-workspace">
+                                    <i class="ti ti-brand-google"></i> Google Workspace
+                                </a>
+                                <a class="nav-link" href="#" data-section="azure-ad">
+                                    <i class="ti ti-brand-azure"></i> Azure AD
+                                </a>
+                                <a class="nav-link" href="#" data-section="no-sso">
+                                    <i class="ti ti-user"></i> No SSO
+                                </a>
+                            </div>
+                            
+                            <!-- GROUPS AND ROLES -->
+                            <div class="nav-item-header" data-target="groups-submenu">
+                                <span><i class="ti ti-users me-1"></i>Groups and Roles</span>
+                                <i class="ti ti-chevron-right menu-toggle"></i>
+                            </div>
+                            <div id="groups-submenu" class="submenu">
+                                <a class="nav-link" href="#" data-section="defined-groups">
+                                    <i class="ti ti-users-group"></i> Defined groups
+                                </a>
+                                <a class="nav-link" href="#" data-section="manage-roles">
+                                    <i class="ti ti-user-plus"></i> Manage roles
+                                </a>
+                            </div>
+                            
+                            <!-- DASHBOARD -->
+                            <div class="nav-item-header" data-target="dashboard-submenu">
+                                <span><i class="ti ti-dashboard me-1"></i>Dashboard</span>
+                                <i class="ti ti-chevron-right menu-toggle"></i>
+                            </div>
+                            <div id="dashboard-submenu" class="submenu">
+                                <a class="nav-link" href="#" data-section="manage-dashboard">
+                                    <i class="ti ti-layout-dashboard"></i> Manage dashboard
+                                </a>
+                                <a class="nav-link" href="#" data-section="widgets">
+                                    <i class="ti ti-apps"></i> Widgets
+                                </a>
+                            </div>
+                            
+                            <!-- PROJECTS -->
+                            <div class="nav-item-header" data-target="projects-submenu">
+                                <span><i class="ti ti-versions me-1"></i>Projects</span>
+                                <i class="ti ti-chevron-right menu-toggle"></i>
+                            </div>
+                            <div id="projects-submenu" class="submenu">
+                                <a class="nav-link" href="#" data-section="add-projects">
+                                    <i class="ti ti-plus"></i> Add projects
+                                </a>
+                                <a class="nav-link" href="#" data-section="manage-projects">
+                                    <i class="ti ti-settings"></i> Manage projects
+                                </a>
+                            </div>
+                            
+                            <!-- AGENTS -->
+                            <div class="nav-item-header" data-target="agents-submenu">
+                                <span><i class="ti ti-server me-1"></i>Agents</span>
+                                <i class="ti ti-chevron-right menu-toggle"></i>
+                            </div>
+                            <div id="agents-submenu" class="submenu">
+                                <a class="nav-link" href="#" data-section="agent-requirements">
+                                    <i class="ti ti-checklist"></i> Requirements
+                                </a>
+                                <a class="nav-link" href="#" data-section="agent-working">
+                                    <i class="ti ti-player-play"></i> How agent is working
+                                </a>
+                                <a class="nav-link" href="#" data-section="pending-request">
+                                    <i class="ti ti-clock"></i> What does it mean Pending Request
+                                </a>
+                            </div>
+                            
+                            <!-- ADMIN -->
+                            <div class="nav-item-header" data-target="admin-submenu">
+                                <span><i class="ti ti-settings me-1"></i>Admin</span>
+                                <i class="ti ti-chevron-right menu-toggle"></i>
+                            </div>
+                            <div id="admin-submenu" class="submenu">
+                                <div class="nav-item-header" data-target="site-settings-submenu">
+                                    <span><i class="ti ti-adjustments me-1"></i>Site Settings</span>
+                                    <i class="ti ti-chevron-right menu-toggle"></i>
+                                </div>
+                                <div id="site-settings-submenu" class="submenu">
+                                    <a class="nav-link" href="#" data-section="cicd-integration">
+                                        <i class="ti ti-brand-docker"></i> CI/CD integration
+                                    </a>
+                                    <a class="nav-link" href="#" data-section="project-folder">
+                                        <i class="ti ti-folder"></i> Project folder
+                                    </a>
+                                    <a class="nav-link" href="#" data-section="remote-repo">
+                                        <i class="ti ti-brand-git"></i> Remote Repo integration
+                                    </a>
+                                    <a class="nav-link" href="#" data-section="mail-integration">
+                                        <i class="ti ti-mail"></i> Mail integration
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CONTENT -->
+        <div class="content">
+            <!-- INTRODUCTION -->
+            <div id="what-is-gheetah" class="content-section">
+                <h2>What is Gheetah</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Gheetah is an enterprise test orchestration platform designed for modern development teams.</p>
+                    <ul>
+                        <li>Unified test execution across distributed environments</li>
+                        <li>Comprehensive reporting and analytics</li>
+                        <li>CI/CD pipeline integration</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- INSTALLATION -->
+            <div id="requirement" class="content-section">
+                <h2>System Requirements</h2>
+                <div class="mt-4 p-4 rounded">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Server Requirements</h5>
+                            <ul>
+                                <li>Windows Server 2016+ or Linux</li>
+                                <li>4 CPU cores minimum</li>
+                                <li>8GB RAM minimum</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Agent Requirements</h5>
+                            <ul>
+                                <li>Windows 10/11 or Linux</li>
+                                <li>.NET 6.0 Runtime or Java 11+</li>
+                                <li>2 CPU cores minimum</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="first-installation" class="content-section">
+                <h2>First Installation Wizard</h2>
+                <div class="mt-4 p-4 rounded">
+                    <ol>
+                        <li>Download the Gheetah installer package</li>
+                        <li>Run the installation wizard</li>
+                        <li>Configure database connection</li>
+                        <li>Set up admin credentials</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- SSO INTEGRATION -->
+            <div id="google-workspace" class="content-section">
+                <h2>Google Workspace</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>To configure Google Workspace SSO:</p>
+                    <ol>
+                        <li>Go to Google Cloud Console</li>
+                        <li>Create OAuth 2.0 Client ID</li>
+                        <li>Configure authorized redirect URI</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div id="azure-ad" class="content-section">
+                <h2>Azure AD</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Azure AD integration steps:</p>
+                    <ol>
+                        <li>Navigate to Azure Active Directory</li>
+                        <li>Create new app registration</li>
+                        <li>Configure API permissions</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div id="no-sso" class="content-section">
+                <h2>No SSO (Local Auth)</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Local authentication features:</p>
+                    <ul>
+                        <li>User registration</li>
+                        <li>Password reset functionality</li>
+                        <li>Account locking</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- GROUPS AND ROLES -->
+            <div id="defined-groups" class="content-section">
+                <h2>Defined Groups</h2>
+                <div class="mt-4 p-4 rounded">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Group</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Administrators</td>
+                                <td>Full system access</td>
+                            </tr>
+                            <tr>
+                                <td>QA Managers</td>
+                                <td>Test management team</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="manage-roles" class="content-section">
+                <h2>Manage Roles</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Role management interface allows you to:</p>
+                    <ul>
+                        <li>Create new roles</li>
+                        <li>Assign permissions</li>
+                        <li>Manage role hierarchies</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- DASHBOARD -->
+            <div id="manage-dashboard" class="content-section">
+                <h2>Manage Dashboard</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Dashboard customization options:</p>
+                    <ul>
+                        <li>Drag-and-drop widgets</li>
+                        <li>Custom layouts</li>
+                        <li>Personalized views</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="widgets" class="content-section">
+                <h2>Widgets</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Available widget types:</p>
+                    <ul>
+                        <li>Test execution statistics</li>
+                        <li>Build status</li>
+                        <li>Environment health</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- PROJECTS -->
+            <div id="add-projects" class="content-section">
+                <h2>Add Projects</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>To add a new project:</p>
+                    <ol>
+                        <li>Click "Add Project" button</li>
+                        <li>Select project type (.NET/Java)</li>
+                        <li>Configure project settings</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div id="manage-projects" class="content-section">
+                <h2>Manage Projects</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Project management features:</p>
+                    <ul>
+                        <li>Edit project settings</li>
+                        <li>Configure test suites</li>
+                        <li>Manage dependencies</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- AGENTS -->
+            <div id="agent-requirements" class="content-section">
+                <h2>Agent Requirements</h2>
+                <div class="mt-4 p-4 rounded">
+                    <ul>
+                        <li>Windows 10/11 or Linux</li>
+                        <li>4GB RAM minimum</li>
+                        <li>10GB free disk space</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="agent-working" class="content-section">
+                <h2>How Agent Works</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Agent communication flow:</p>
+                    <ol>
+                        <li>Agent registers with central server</li>
+                        <li>Receives test execution requests</li>
+                        <li>Returns results to server</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div id="pending-request" class="content-section">
+                <h2>Pending Request</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Pending requests indicate:</p>
+                    <ul>
+                        <li>Agent is processing the request</li>
+                        <li>Waiting for resource allocation</li>
+                        <li>Queue position information</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- ADMIN -->
+            <div id="cicd-integration" class="content-section">
+                <h2>CI/CD Integration</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Supported CI/CD systems:</p>
+                    <ul>
+                        <li>Jenkins</li>
+                        <li>Azure DevOps</li>
+                        <li>GitHub Actions</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="project-folder" class="content-section">
+                <h2>Project Folder</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Project folder structure:</p>
+                    <pre>
+/projects
+  /{project-id}
+    /src
+    /tests
+    /reports</pre>
+                </div>
+            </div>
+            
+            <div id="remote-repo" class="content-section">
+                <h2>Remote Repo Integration</h2>
+                <div class="mt-4 p-4 bg-light rounded">
+                    <p>Supported version control systems:</p>
+                    <ul>
+                        <li>Git</li>
+                        <li>SVN</li>
+                        <li>Mercurial</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="mail-integration" class="content-section">
+                <h2>Mail Integration</h2>
+                <div class="mt-4 p-4 bg-light rounded">
+                    <p>Email notification settings:</p>
+                    <ul>
+                        <li>SMTP configuration</li>
+                        <li>Notification templates</li>
+                        <li>Recipient groups</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- DEFAULT PLACEHOLDER -->
+            <div id="no-content" class="content-section active">
+                <div class="text-center py-5 my-5">
+                    <i class="ti ti-info-circle mb-3" style="font-size: 3rem; color: var(--gh-primary);"></i>
+                    <h3>Select a topic from the sidebar</h3>
+                    <p class="text-muted">Choose a documentation section to view its content</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Menu toggle functionality
+            document.querySelectorAll('.nav-item-header').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetMenu = document.getElementById(targetId);
+                    const icon = this.querySelector('.menu-toggle');
+                    
+                    if (targetMenu) {
+                        targetMenu.classList.toggle('active');
+                        icon.classList.toggle('rotated');
+                    }
+                });
+            });
+            
+            // Content navigation
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    const sectionId = this.getAttribute('data-section');
+                    document.getElementById(sectionId).classList.add('active');
+                    
+                    // Scroll to top of content
+                    window.scrollTo(0, 0);
+                });
+            });
+            
+            // Auto-expand parent menus of active item
+            function expandActiveMenu() {
+                const activeLink = document.querySelector('.nav-link.active');
+                if (activeLink) {
+                    let parent = activeLink.closest('.submenu');
+                    while (parent) {
+                        parent.classList.add('active');
+                        const toggle = document.querySelector(`[data-target="${parent.id}"]`);
+                        if (toggle) {
+                            toggle.querySelector('.menu-toggle').classList.add('rotated');
+                        }
+                        parent = parent.parentElement.closest('.submenu');
+                    }
+                }
+            }
+            
+            // Initialize
+            expandActiveMenu();
+        });
+    </script>
+</body>
+</html>

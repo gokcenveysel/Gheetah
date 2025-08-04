@@ -1,0 +1,200 @@
+﻿@model List<Gheetah.Models.ViewModels.Setup.PermissionVm>
+@{
+    ViewData["Title"] = "Permission Management";
+    var allActions = new[] { "Clone", "Build", "Delete", "ManageUsers", "ManageGroups", "ManagePermissions", "ViewDashboard", "RunScenarios", "ViewResults" };
+}
+
+<div class="page-header d-print-none">
+    <div class="container-fluid">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">Permission Management</h2>
+                <div class="text-muted mt-1">Configure system permissions and access levels</div>
+            </div>
+            <div class="col-auto ms-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPermissionModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 5l0 14" />
+                        <path d="M5 12l14 0" />
+                    </svg>
+                    Add Permission
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-fluid">
+        <form asp-action="SavePermissions" method="post">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">System Permissions</h3>
+                    <div class="card-actions">
+                        <div class="dropdown">
+                            <a href="#" class="btn-action dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M4 6l16 0" />
+                                    <path d="M4 12l16 0" />
+                                    <path d="M4 18l16 0" />
+                                </svg>
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-end">
+                                <a class="dropdown-item" href="#">Import</a>
+                                <a class="dropdown-item" href="#">Export</a>
+                                <a class="dropdown-item" href="#">Reset Defaults</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Permission Name</th>
+                                @foreach (var action in allActions)
+                                {
+                                    <th class="text-center">@action</th>
+                                }
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="@(allActions.Length + 3)" class="text-center py-4">
+                                        <div class="empty">
+                                            <div class="empty-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                                    <path d="M9 10l.01 0" />
+                                                    <path d="M15 10l.01 0" />
+                                                    <path d="M9.5 15a3.5 3.5 0 0 0 5 0" />
+                                                </svg>
+                                            </div>
+                                            <p class="empty-title">No permissions configured</p>
+                                            <p class="empty-subtitle text-muted">
+                                                Add your first permission by clicking the button above
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @for (int i = 0; i < Model.Count; i++)
+                                {
+                                    <tr>
+                                        <td>
+                                            <input type="hidden" name="[@i].Id" value="@Model[i].Id" />
+                                            <span class="text-muted">@Model[i].Id</span>
+                                        </td>
+                                        <td>
+                                            <input name="[@i].Name" class="form-control form-control-flush" value="@Model[i].Name" placeholder="Permission name" />
+                                        </td>
+
+                                        @foreach (var action in allActions)
+                                        {
+                                            <td class="text-center">
+                                                <label class="form-check form-check-single form-switch">
+                                                    <input class="form-check-input"
+                                                           type="checkbox"
+                                                           name="[@i].Actions"
+                                                           value="@action"
+                                                    @(Model[i].Actions?.Contains(action) == true ? "checked" : "")>
+                                                </label>
+                                            </td>
+                                        }
+
+                                        <td class="text-center">
+                                            <div class="btn-list flex-nowrap">
+                                                <a href="#" class="btn btn-icon" title="Delete">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                        <path d="M4 7l16 0" />
+                                                        <path d="M10 11l0 6" />
+                                                        <path d="M14 11l0 6" />
+                                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                    </svg>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <div>
+                        <span class="text-muted">Showing @Model?.Count permissions</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" type="submit">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-device-floppy" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2" />
+                                <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                                <path d="M14 4l0 4l-6 0l0 -4" />
+                            </svg>
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Permission Modal -->
+<div class="modal modal-blur fade" id="addPermissionModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Permission</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="AddPermission" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Permission Name</label>
+                        <input type="text" class="form-control" name="Name" placeholder="Enter permission name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Allowed Actions</label>
+                        <div class="row g-2">
+                            @foreach (var action in allActions)
+                            {
+                                <div class="col-md-6">
+                                    <label class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="Actions" value="@action">
+                                        <span class="form-check-label">@action</span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary ms-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M12 5l0 14" />
+                            <path d="M5 12l14 0" />
+                        </svg>
+                        Add Permission
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

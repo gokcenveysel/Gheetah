@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Gheetah.Agent": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}

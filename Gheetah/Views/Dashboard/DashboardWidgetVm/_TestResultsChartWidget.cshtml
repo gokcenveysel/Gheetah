@@ -1,0 +1,47 @@
+﻿@model Gheetah.Models.ViewModels.Dashboard.DashboardWidgetVm
+
+<div class="chart-container" style="height: 250px;">
+    <canvas id="testResultsChart-@Model.Id"></canvas>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('testResultsChart-@Model.Id').getContext('2d');
+        new Chart(ctx, {
+            type: '@(Model.ChartType ?? "bar")',
+            data: {
+                labels: ['Build #1234', 'Build #1233', 'Build #1232', 'Build #1231', 'Build #1230'],
+                datasets: [
+                    {
+                        label: 'Passed',
+                        data: [85, 72, 90, 68, 82],
+                        backgroundColor: '#2fb344',
+                    },
+                    {
+                        label: 'Failed',
+                        data: [10, 23, 5, 27, 13],
+                        backgroundColor: '#e03131',
+                    },
+                    {
+                        label: 'Skipped',
+                        data: [5, 5, 5, 5, 5],
+                        backgroundColor: '#fd7e14',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    });
+</script>

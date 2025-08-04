@@ -1,0 +1,57 @@
+﻿@model Gheetah.Models.ViewModels.Dashboard.DashboardWidgetVm
+
+<div class="table-responsive">
+    <table class="table table-hover table-vcenter card-table">
+        <thead>
+        <tr>
+            <th>Build</th>
+            <th>Status</th>
+            <th>Total</th>
+            <th>Passed</th>
+            <th>Failed</th>
+            <th>Skipped</th>
+            <th>Pass Rate</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td colspan="7" class="text-center text-muted">
+                <div class="d-flex justify-content-center align-items-center">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Loading test results data...
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .table-vcenter td {
+        vertical-align: middle;
+    }
+    
+    .pass-rate-cell {
+        font-weight: 600;
+    }
+    
+    .pass-rate-high { color: #2fb344; }
+    .pass-rate-medium { color: #fd7e14; }
+    .pass-rate-low { color: #e03131; }
+    
+    .test-count { font-weight: 500; }
+    
+    .btn-check-fails {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: #e03131;
+    }
+    
+    .results-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+</style>

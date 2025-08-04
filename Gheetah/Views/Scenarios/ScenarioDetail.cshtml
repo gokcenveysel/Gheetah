@@ -1,0 +1,943 @@
+﻿@{
+    ViewData["Title"] = "Scenarios";
+}
+
+<div class="page">
+    <div class="page-header d-print-none">
+        <div class="container-fluid">
+            <div class="row g-2 align-items-center">
+                <div class="col">
+                    <h2 class="page-title">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-test-pipe" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M20 8.04l-12.122 12.124a2.857 2.857 0 1 1 -4.041 -4.04l12.122 -12.124" />
+                            <path d="M7 13h8" />
+                            <path d="M19 15l1.5 1.6a2 2 0 1 1 -3 0l1.5 -1.6z" />
+                        </svg>
+                        Scenarios
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-body">
+        <div class="container-fluid">
+            <div class="row row-deck row-cards mb-3">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Project Name</div>
+                            </div>
+                            <div class="h1 mb-3">@ViewBag.ProjectName</div>
+                            <div class="d-flex mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-folders text-blue" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 4h3l2 2h5a2 2 0 0 1 2 2v7a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2" />
+                                    <path d="M17 17v2a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-9a2 2 0 0 1 2 -2h2" />
+                                </svg>
+                                <div class="ms-auto">
+                                    <span class="text-green d-inline-flex align-items-center lh-1">
+                                        Project Details
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Feature Files</div>
+                            </div>
+                            <div class="h1 mb-3">@ViewBag.FeatureFileCount</div>
+                            <div class="d-flex mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-files text-yellow" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M15 3v4a1 1 0 0 0 1 1h4" />
+                                    <path d="M18 17h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h4l5 5v7a2 2 0 0 1 -2 2z" />
+                                    <path d="M16 17v2a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2" />
+                                </svg>
+                                <div class="ms-auto">
+                                    <span class="text-green d-inline-flex align-items-center lh-1">
+                                        Feature Files
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="subheader">Total Scenarios</div>
+                            </div>
+                            <div class="h1 mb-3">@ViewBag.ScenarioCount</div>
+                            <div class="d-flex mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list-details text-green" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M13 5h8" />
+                                    <path d="M13 9h5" />
+                                    <path d="M13 15h8" />
+                                    <path d="M13 19h5" />
+                                    <path d="M3 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                    <path d="M3 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
+                                </svg>
+                                <div class="ms-auto">
+                                    <span class="text-green d-inline-flex align-items-center lh-1">
+                                        Test Scenarios
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row row-deck row-cards">
+                <div class="col-lg-5">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hierarchy-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M10 3h4v4h-4z" />
+                                    <path d="M3 17h4v4h-4z" />
+                                    <path d="M17 17h4v4h-4z" />
+                                    <path d="M7 17l5 -4l5 4" />
+                                    <path d="M12 7l0 6" />
+                                </svg>
+                                Scenario List
+                            </h3>
+                            <div class="card-actions">
+                                <div class="input-icon">
+                                    <input type="text" id="treeSearchInput" class="form-control" placeholder="Search scenarios..." autocomplete="off">
+                                    <span class="input-icon-addon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                            <path d="M21 21l-6 -6" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body">
+                            <div id="treeview" role="tree"></div>
+                        </div>
+
+                        <div class="card-footer">
+                            <button type="button" class="btn btn-primary w-100" onclick="openRunAllScenariosOffcanvas()">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M7 4v16l13 -8z" />
+                                </svg>
+                                Run All Scenarios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-7">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                    <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                                    <path d="M9 9l1 0" />
+                                    <path d="M9 13l6 0" />
+                                    <path d="M9 17l6 0" />
+                                </svg>
+                                Scenario Content
+                            </h3>
+                            <div class="card-actions">
+                                <span id="process-status" class="badge bg-secondary"></span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="highlight">
+                                <pre><code id="feature-content" class="language-gherkin"></code></pre>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <div class="d-flex">
+                                <button id="select-tag-btn" type="button" class="btn btn-outline-primary me-2" onclick="extractAndAddTags()" disabled>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-tags" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M7.859 6h-2.826a2 2 0 0 0 -1.991 1.819l-.637 7.146a2 2 0 0 0 .342 1.31l.17 .27a2 2 0 0 0 1.648 .895h2.853" />
+                                        <path d="M17.573 18.432l1.403 -1.403a2 2 0 0 0 0 -2.829l-7.586 -7.586a2 2 0 0 0 -2.828 0l-1.419 1.42" />
+                                        <path d="M6.5 15.5l5.5 -5.5" />
+                                        <path d="M5 7l5 5" />
+                                    </svg>
+                                    Run Options
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overlay" style="display: none;">
+                            <div class="d-flex align-items-center">
+                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                <span>Running scenarios...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-report-analytics" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 5h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2h-2" />
+                                    <path d="M9 3m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v0a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" />
+                                    <path d="M9 17v-5" />
+                                    <path d="M12 17v-1" />
+                                    <path d="M15 17v-3" />
+                                </svg>
+                                Scenario Execution Report
+                            </h3>
+                            <small id="scenario-name" class="text-muted mx-4" style="margin-top: 4px !important"></small>
+                        </div>
+                        <div class="card-body">
+                            <div id="accordion" class="accordion"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="offcanvas offcanvas-end" tabindex="-1" id="runOptionsOffcanvas">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-settings" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+                <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+            </svg>
+            Run Options
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div id="tag-selection" class="mb-3">
+            <label class="form-label">Select Tag</label>
+            <select id="scenarioTags" class="form-select">
+                <option value="">Select a tag...</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Select Agent</label>
+            <select id="agentSelection" class="form-select">
+                <option value="">No Agent (Run Locally)</option>
+            </select>
+        </div>
+        <button id="run-scenario-btn" class="btn btn-primary w-100" onclick="runScenarioOrAll()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                <path d="M7 4v16l13 -8z" />
+            </svg>
+            Run Scenario
+        </button>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="scenarioResultModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-full-width modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Scenario Execution Result</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="max-height: 75vh; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;">
+                <div class="card" style="height: 100%;">
+                    <div class="card-body" style="padding: 0;">
+                        <div class="highlight" style="margin: 0; height: 100%;">
+                            <pre style="margin: 0; height: 100%;"><code id="test-result-content" class="language-stylus" style="display: block; height: 100%; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;"></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #scenarioResultModal ::-webkit-scrollbar {
+        display: none;
+    }
+
+    .highlight {
+        position: relative;
+        background: var(--tblr-bg-surface);
+        border-radius: var(--tblr-border-radius);
+    }
+
+    pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        padding: 1rem;
+        margin: 0;
+        background: transparent;
+    }
+
+    code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: .875em;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10;
+    }
+
+    #treeview {
+        min-height: 400px;
+    }
+
+    .accordion {
+        --tblr-accordion-border-width: 0;
+    }
+</style>
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <style>
+        #scenarioResultModal ::-webkit-scrollbar {
+            display: none;
+        }
+        #scenarioResultModal {
+            z-index: 1055 !important;
+        }
+
+        #scenarioResultModal.show {
+            display: block !important;
+            opacity: 1;
+        }
+
+        #scenarioResultModal .modal-dialog {
+            z-index: 1056 !important;
+        }
+
+        .modal-backdrop {
+            z-index: 1040 !important;
+        }
+    </style>
+    <script>
+        let currentScenarioName = null;
+        let currentScenarioPath = null;
+        let isRunAllScenarios = false;
+        let currentProcessId = null;
+
+        function injectHtmlWithScripts(htmlContent, containerSelector) {
+            console.log('injectHtmlWithScripts called with container:', containerSelector);
+            const container = document.querySelector(containerSelector);
+            if (!container) {
+                console.error('Container not found:', containerSelector);
+                showCustomToast('danger', 'Target container for HTML report not found');
+                return;
+            }
+
+            container.innerHTML = htmlContent;
+            const scripts = container.getElementsByTagName('script');
+            for (let i = 0; i < scripts.length; i++) {
+                const script = document.createElement('script');
+                script.textContent = scripts[i].textContent;
+                document.body.appendChild(script);
+                document.body.removeChild(script);
+            }
+        }
+
+        function checkModalExists() {
+            console.log('Checking modal existence');
+            const modal = document.getElementById('scenarioResultModal');
+            if (!modal) {
+                console.error('Modal element not found in DOM');
+                showCustomToast('danger', 'Scenario result modal not found in DOM');
+                return false;
+            }
+            const modalDialog = modal.querySelector('.modal-dialog');
+            const modalContent = modal.querySelector('.modal-content');
+            const backdrop = document.querySelector('.modal-backdrop');
+            return true;
+        }
+
+        function openModal() {
+            console.log('Attempting to open modal');
+            if (!checkModalExists()) return false;
+            try {
+                const modalElement = document.getElementById('scenarioResultModal');
+                if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+                    console.error('Bootstrap Modal is not available');
+                    showCustomToast('danger', 'Bootstrap Modal is not loaded');
+                    return false;
+                }
+
+                const modalInstance = new bootstrap.Modal(modalElement, {
+                    backdrop: 'static',
+                    keyboard: false
+                });
+                modalInstance.show();
+
+                setTimeout(() => {
+                    const modal = $('#scenarioResultModal');
+                    const backdrop = $('.modal-backdrop');
+                    if (!modal.hasClass('show')) {
+                        modal.css({ display: 'block', opacity: 1, 'z-index': 1055 });
+                        modal.addClass('show');
+                        if (backdrop.length) {
+                            backdrop.css('z-index', 1040);
+                        }
+                    } else {
+                    }
+                }, 500);
+                return true;
+            } catch (err) {
+                console.error('Error opening modal:', err);
+                showCustomToast('danger', 'Failed to open results modal: ' + err.message);
+                return false;
+            }
+        }
+
+        window.loadAvailableAgents = function () {
+            console.log('loadAvailableAgents called');
+            $.get('/Agents/GetAvailableAgents')
+                .done(function (agents) {
+                    const agentSelect = $('#agentSelection');
+                    agentSelect.empty().append($('<option>', {
+                        value: '',
+                        text: 'No Agent (Run Locally)'
+                    }));
+                    agents.forEach(agent => {
+                        agentSelect.append($('<option>', {
+                            value: agent.agentId,
+                            text: agent.environmentName + ' (' + agent.os + ')'
+                        }));
+                    });
+                })
+                .fail(function (xhr) {
+                    console.error('GetAvailableAgents Error:', xhr.status, xhr.statusText, xhr.responseText);
+                    showCustomToast('danger', 'Failed to load available agents');
+                });
+        };
+
+        window.extractAndAddTags = function () {
+            if (!currentScenarioName || !currentScenarioPath) {
+                console.error('Error: currentScenarioName or currentScenarioPath is not defined', { currentScenarioName, currentScenarioPath });
+                showCustomToast('danger', 'Please select a scenario first');
+                return;
+            }
+
+            isRunAllScenarios = false;
+            $('#tag-selection').show();
+            $('#run-scenario-btn').text('Run Scenario');
+
+            console.log('Extracting tags for:', currentScenarioName, currentScenarioPath);
+
+            $.get(`/Scenarios/GetScenarioContent?filePath=${encodeURIComponent(currentScenarioPath)}&scenarioName=${encodeURIComponent(currentScenarioName)}`)
+                .done(function (content) {
+                    if (!content) {
+                        console.error('Error: Empty scenario content received');
+                        showCustomToast('danger', 'Scenario content is empty');
+                        return;
+                    }
+                    const tags = [...new Set(content.match(/@@\w+/g) || [])];
+                    const selectElement = $('#scenarioTags');
+                    selectElement.empty().append($('<option>', {
+                        value: '',
+                        text: 'Select Tag...'
+                    }));
+                    if (tags.length === 0) {
+                        showCustomToast('warning', 'No tags found for this scenario');
+                    }
+                    tags.forEach(tag => {
+                        const tagName = tag.substring(1);
+                        selectElement.append($('<option>', {
+                            value: tagName,
+                            text: tagName
+                        }));
+                    });
+                    window.loadAvailableAgents();
+                    new bootstrap.Offcanvas(document.getElementById('runOptionsOffcanvas')).show();
+                })
+                .fail(function (xhr) {
+                    console.error('GetScenarioContent Error:', xhr.status, xhr.statusText, xhr.responseText);
+                    showCustomToast('danger', 'Failed to load scenario content: ' + (xhr.responseText || 'Unknown error'));
+                });
+        };
+
+        $(document).ready(function () {
+            const projectID = window.location.pathname.split('/').pop();
+
+            checkModalExists();
+
+            window.openRunAllScenariosOffcanvas = function () {
+                isRunAllScenarios = true;
+                $('#tag-selection').hide();
+                $('#run-scenario-btn').text('Run All Scenarios');
+                window.loadAvailableAgents();
+                new bootstrap.Offcanvas(document.getElementById('runOptionsOffcanvas')).show();
+            };
+
+            window.runScenarioOrAll = function () {
+            currentProcessId = null;
+            localStorage.removeItem('currentProcessId');
+            const agentId = $('#agentSelection').val();
+            const selectedTag = $('#scenarioTags').val();
+            const runButton = $('#run-scenario-btn');
+            runButton.prop('disabled', true);
+
+            $('#accordion').empty();
+            $('#test-result-content').empty();
+            updateStatus('Running');
+            $('.overlay').show();
+
+            setTimeout(() => {
+                if (!openModal()) {
+                    console.error('Failed to open modal in runScenarioOrAll');
+                    $('.overlay').hide();
+                    runButton.prop('disabled', false);
+                    showCustomToast('danger', 'Failed to open results modal');
+                    return;
+                }
+            }, 100);
+
+            if (isRunAllScenarios) {
+                $.ajax({
+                    url: '/Scenarios/RunAllScenarios',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    data: JSON.stringify({ projectId: projectID, agentId: agentId }),
+                    success: function (response) {
+                        console.log('RunAllScenarios response:', response);
+                        if (response.success) {
+                            currentProcessId = response.processId;
+                            connection.invoke('SubscribeToProcess', currentProcessId)
+                                .then(() => {
+                                    console.log('Subscribed to process:', currentProcessId);
+                                    checkProcessStatus(currentProcessId);
+                                })
+                                .catch(err => {
+                                    console.error('SubscribeToProcess Error:', err);
+                                    showCustomToast('danger', 'Failed to subscribe to process: ' + err);
+                                    updateStatus('Failed');
+                                    $('.overlay').hide();
+                                    $('#scenarioResultModal').modal('hide');
+                                    runButton.prop('disabled', false);
+                                });
+                        } else {
+                            console.error('RunAllScenarios failed:', response.message);
+                            showCustomToast('danger', response.message);
+                            updateStatus('Failed');
+                            $('.overlay').hide();
+                            $('#scenarioResultModal').modal('hide');
+                            runButton.prop('disabled', false);
+                        }
+                    },
+                    error: function (xhr) {
+                        const errorMessage = xhr.responseJSON?.message || 'Unknown error';
+                        console.error('RunAllScenarios Error:', xhr.status, xhr.statusText, xhr.responseText);
+                        showCustomToast('danger', errorMessage);
+                        updateStatus('Failed');
+                        $('.overlay').hide();
+                        $('#scenarioResultModal').modal('hide');
+                        runButton.prop('disabled', false);
+                    }
+                });
+            } else {
+                if (!selectedTag) {
+                    console.warn('No scenario tag selected');
+                    showCustomToast('warning', 'Please select a scenario tag');
+                    $('.overlay').hide();
+                    $('#scenarioResultModal').modal('hide');
+                    runButton.prop('disabled', false);
+                    return;
+                }
+
+                if (!currentScenarioName || !currentScenarioPath) {
+                    console.error('No scenario selected', { currentScenarioName, currentScenarioPath });
+                    showCustomToast('danger', 'Please select a scenario first');
+                    $('.overlay').hide();
+                    $('#scenarioResultModal').modal('hide');
+                    runButton.prop('disabled', false);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/Scenarios/RunScenario',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    data: JSON.stringify({ scenarioTag: selectedTag, projectId: projectID, agentId: agentId, scenarioName: currentScenarioName, filePath: currentScenarioPath }),
+                    success: function (response) {
+                        if (response.success) {
+                            currentProcessId = response.processId;
+                            console.log('Using processId:', currentProcessId);
+                            connection.invoke('SubscribeToProcess', currentProcessId)
+                                .then(() => {
+                                    console.log('Subscribed to process:', currentProcessId);
+                                    checkProcessStatus(currentProcessId);
+                                })
+                                .catch(err => {
+                                    console.error('SubscribeToProcess Error:', err);
+                                    showCustomToast('danger', 'Failed to subscribe to process: ' + err);
+                                    updateStatus('Failed');
+                                    $('.overlay').hide();
+                                    $('#scenarioResultModal').modal('hide');
+                                    runButton.prop('disabled', false);
+                                });
+                        } else {
+                            console.error('RunScenario failed:', response.message);
+                            showCustomToast('danger', response.message);
+                            updateStatus('Failed');
+                            $('.overlay').hide();
+                            $('#scenarioResultModal').modal('hide');
+                            runButton.prop('disabled', false);
+                        }
+                    },
+                    error: function (xhr) {
+                        const errorMessage = xhr.responseJSON?.message || 'Unknown error';
+                        console.error('RunScenario Error:', xhr.status, xhr.statusText, xhr.responseText);
+                        showCustomToast('danger', errorMessage);
+                        updateStatus('Failed');
+                        $('.overlay').hide();
+                        $('#scenarioResultModal').modal('hide');
+                        runButton.prop('disabled', false);
+                    }
+                });
+            }
+        };
+
+             const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/gheetahHub')
+            .configureLogging(signalR.LogLevel.Information)
+            .withAutomaticReconnect({
+                nextRetryDelayInMilliseconds: retryContext => {
+                    return Math.min(retryContext.elapsedMilliseconds * 2, 10000);
+                }
+            })
+            .build();
+
+            connection.on('ReceiveOutput', function (output) {
+                const resultElement = document.getElementById('test-result-content');
+                if (resultElement) {
+                    const wasScrolled = resultElement.scrollTop + resultElement.clientHeight >= resultElement.scrollHeight - 10;
+                    resultElement.textContent += output + '\n';
+                    resultElement.removeAttribute('data-highlighted');
+                    hljs.highlightElement(resultElement);
+                    if (wasScrolled) {
+                        resultElement.scrollTop = resultElement.scrollHeight;
+                    }
+                    if (!$('#scenarioResultModal').hasClass('show')) {
+                        console.warn('Modal is not open, attempting to open it');
+                        if (!openModal()) {
+                            console.error('Failed to open modal in ReceiveOutput');
+                        }
+                    }
+                } else {
+                    console.error('test-result-content element not found');
+                    showCustomToast('danger', 'Test result element not found');
+                }
+            });
+
+            connection.on('ReceiveHtmlReport', function (htmlReport) {
+                const containerSelector = '#accordion';
+                try {
+                    injectHtmlWithScripts(htmlReport, containerSelector);
+                    setTimeout(() => {
+                        $('.collapse').collapse({ toggle: false });
+                        hljs.highlightAll();
+                        $('#scenarioResultModal').modal('handleUpdate');
+                        $('.collapse').first().collapse('show');
+                    }, 100);
+                } catch (err) {
+                    console.error('Error processing HTML report:', err);
+                    showCustomToast('danger', 'Failed to process HTML report: ' + err.message);
+                }
+            });
+
+            connection.on('ReceiveCompletionMessage', function (message) {
+                showCustomToast('info', message);
+                updateStatus('Completed');
+                $('.overlay').hide();
+            });
+
+            connection.on('ReceiveInitialData', (outputs, status) => {
+                const resultElement = document.getElementById('test-result-content');
+                if (resultElement) {
+                    resultElement.textContent = outputs.join('\n');
+                    resultElement.removeAttribute('data-highlighted');
+                    hljs.highlightElement(resultElement);
+                    if (!$('#scenarioResultModal').hasClass('show')) {
+                        console.warn('Modal is not open, attempting to open it');
+                        if (!openModal()) {
+                            console.error('Failed to open modal in ReceiveInitialData');
+                        }
+                    }
+                } else {
+                    console.error('test-result-content element not found');
+                    showCustomToast('danger', 'Test result element not found');
+                }
+                updateStatus(status);
+            });
+
+            connection.start()
+                .then(() => {
+                    console.log('SignalR connection started');
+                })
+                .catch(err => {
+                    console.error('SignalR Connection Error:', err);
+                    showCustomToast('danger', 'Connection error: ' + err.toString());
+                });
+
+            function checkProcessStatus(processId) {
+                const statusCheckInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch(`/Scenarios/GetProcessStatus?processId=${processId}`);
+                        if (!response.ok) {
+                            handleMissingProcess(processId);
+                            return;
+                        }
+
+                        const data = await response.json();
+                        updateStatus(data.status);
+
+                        if (data.output && data.output.length > 0) {
+                            const resultElement = document.getElementById('test-result-content');
+                            if (resultElement) {
+                                resultElement.textContent = data.output.join('\n');
+                                resultElement.removeAttribute('data-highlighted');
+                                hljs.highlightElement(resultElement);
+                                if (!$('#scenarioResultModal').hasClass('show')) {
+                                    console.warn('Modal is not open, attempting to open it');
+                                    if (!openModal()) {
+                                        console.error('Failed to open modal in checkProcessStatus');
+                                    }
+                                }
+                            }
+                        }
+
+                        if (data.htmlReport) {
+                            try {
+                                injectHtmlWithScripts(data.htmlReport, '#accordion');
+                                setTimeout(() => {
+                                    $('.collapse').collapse({ toggle: false });
+                                    hljs.highlightAll();
+                                    $('#scenarioResultModal').modal('handleUpdate');
+                                    $('.collapse').first().collapse('show');
+                                }, 100);
+                            } catch (err) {
+                                console.error('Error processing HTML report in status check:', err);
+                                showCustomToast('danger', 'Failed to process HTML report: ' + err.message);
+                            }
+                        }
+
+                        if (data.status === 'Executed' || data.status === 'Failed') {
+                            clearInterval(statusCheckInterval);
+                            if (data.status === 'Failed') {
+                                showCustomToast('danger', 'Process failed');
+                            }
+                            $('.overlay').hide();
+                        }
+                    } catch (error) {
+                        console.error('Status check error:', error);
+                        showCustomToast('danger', 'Status check error: ' + error.toString());
+                        handleMissingProcess(processId);
+                    }
+                }, 1000);
+            }
+
+            function handleMissingProcess(processId) {
+                clearInterval(statusCheckInterval);
+                showCustomToast('warning', 'Process session expired');
+                connection.invoke('UnsubscribeFromProcess', processId)
+                    .catch(err => console.error('UnsubscribeFromProcess Error:', err));
+                $('.overlay').hide();
+                $('#scenarioResultModal').modal('hide');
+            }
+
+            function updateStatus(status) {
+                const statusElement = document.getElementById('process-status');
+                const badgeClasses = {
+                    Running: 'bg-info',
+                    Executed: 'bg-success',
+                    Completed: 'bg-success',
+                    Failed: 'bg-danger'
+                };
+                if (statusElement) {
+                    statusElement.textContent = `Status: ${status}`;
+                    statusElement.className = `badge ${badgeClasses[status] || 'bg-secondary'}`;
+                    if (status === 'Completed' || status === 'Executed') {
+                        $('#scenarioResultModal').modal('handleUpdate');
+                    }
+                }
+            }
+
+            function escapeHtml(unsafe) {
+                if (typeof unsafe !== 'string') {
+                    console.warn('escapeHtml: Input is not a string', unsafe);
+                    return unsafe;
+                }
+                return unsafe
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;');
+            }
+
+            if (!hljs.getLanguage('stylus')) {
+                hljs.registerLanguage('stylus', function(hljs) {
+                    return {
+                        case_insensitive: false,
+                        keywords: 'if else for in return mixin function',
+                        contains: [
+                            hljs.HASH_COMMENT_MODE,
+                            hljs.C_LINE_COMMENT_MODE,
+                            hljs.C_BLOCK_COMMENT_MODE,
+                            { className: 'selector-tag', begin: /[a-zA-Z\-][a-zA-Z0-9\-]*/, relevance: 0 },
+                            { className: 'selector-id', begin: /#[a-zA-Z\-][a-zA-Z0-9\-]*/, relevance: 10 },
+                            { className: 'selector-class', begin: /\.[a-zA-Z\-][a-zA-Z0-9\-]*/, relevance: 10 },
+                            { className: 'attribute', begin: /\[/, end: /\]/, relevance: 0 },
+                            { className: 'variable', begin: /\$[a-zA-Z\-][a-zA-Z0-9\-]*/, relevance: 10 },
+                            { className: 'number', begin: hljs.NUMBER_RE, relevance: 0 },
+                            { className: 'string', begin: /"/, end: /"/, contains: [hljs.BACKSLASH_ESCAPE] },
+                            { className: 'string', begin: /'/, end: /'/, contains: [hljs.BACKSLASH_ESCAPE] }
+                        ]
+                    };
+                });
+            }
+
+            if (!hljs.getLanguage('gherkin')) {
+                hljs.registerLanguage('gherkin', function(hljs) {
+                    return {
+                        case_insensitive: true,
+                        keywords: 'Given When Then And But Background Scenario Outline Examples Feature Rule Example Scenario',
+                        contains: [
+                            hljs.HASH_COMMENT_MODE,
+                            { className: 'keyword', begin: '@@\\w+', relevance: 10 },
+                            { className: 'string', begin: /"""/, end: /"""/, relevance: 10 },
+                            hljs.QUOTE_STRING_MODE,
+                            hljs.NUMBER_MODE,
+                            { className: 'variable', begin: /<[A-Za-z0-9_\-\(\)]+>/ },
+                            { className: 'symbol', begin: /[|]/ }
+                        ]
+                    };
+                });
+            }
+
+            document.querySelectorAll('.highlight pre code').forEach((block) => {
+                hljs.highlightElement(block);
+            });
+
+            $('#treeview').jstree({
+                plugins: ['wholerow', 'contextmenu', 'search'],
+                search: {
+                    case_insensitive: true,
+                    show_only_matches: true,
+                    show_only_matches_children: true,
+                    search_callback: function(search, node) {
+                        console.log('jstree search_callback called with search:', search);
+                        return node.text.toLowerCase().indexOf(search.toLowerCase()) !== -1;
+                    }
+                },
+                core: {
+                    data: function(node, cb) {
+                        $.get('/Scenarios/GetFeatureFiles', { id: projectID })
+                            .done(function(data) {
+                                console.log('GetFeatureFiles Response:', data);
+                                cb(data);
+                            })
+                            .fail(function() {
+                                console.error('GetFeatureFiles Failed');
+                                cb([]);
+                            });
+                    }
+                },
+                contextmenu: {
+                    items: function(node) {
+                        if (node.original && node.original.scenarioName) {
+                            return {
+                                run: {
+                                    label: 'Run',
+                                    action: function() {
+                                        currentScenarioName = node.original.scenarioName;
+                                        currentScenarioPath = node.original.path;
+                                        window.extractAndAddTags();
+                                    }
+                                }
+                            };
+                        }
+                        return null;
+                    }
+                }
+            }).on('select_node.jstree', function(e, data) {
+                if (data.node.original && data.node.original.scenarioName) {
+                    currentScenarioName = data.node.original.scenarioName;
+                    currentScenarioPath = data.node.original.path;
+                    const path = data.node.original.path;
+                    const scenarioName = data.node.original.scenarioName;
+                    const fullName = data.node.original.data ? data.node.original.data.fullName : null;
+
+                    $('#scenario-name').text('Scenario: ' + (fullName || scenarioName));
+                    $('#select-tag-btn').prop('disabled', false);
+                    $.get(`/Scenarios/GetScenarioContent?filePath=${encodeURIComponent(path)}&scenarioName=${encodeURIComponent(scenarioName)}`)
+                        .done(function(content) {
+                            const codeElement = document.getElementById('feature-content');
+                            codeElement.innerHTML = hljs.highlight(content, { language: 'gherkin' }).value;
+                            codeElement.classList.add('hljs');
+                        })
+                        .fail(function(xhr) {
+                            console.error('GetScenarioContent Failed:', xhr.status, xhr.statusText, xhr.responseText);
+                            showCustomToast('danger', 'Content load failed: ' + (xhr.responseText || 'Unknown error'));
+                        });
+                } else {
+                    $('#select-tag-btn').prop('disabled', true);
+                    currentScenarioName = null;
+                    currentScenarioPath = null;
+                }
+            }).on('search.jstree', function(e, data) {
+                $('.jstree-search').removeClass('jstree-search').css({
+                    'font-weight': 'normal',
+                    'color': 'inherit'
+                });
+            });
+
+            $('#runOptionsOffcanvas').on('hidden.bs.offcanvas', function() {
+                isRunAllScenarios = false;
+                $('#tag-selection').show();
+                $('#run-scenario-btn').text('Run Scenario');
+            });
+
+            window.addEventListener('beforeunload', () => {
+                console.log('Window beforeunload, stopping SignalR connection');
+                connection.stop();
+            });
+        });
+    </script>
+}

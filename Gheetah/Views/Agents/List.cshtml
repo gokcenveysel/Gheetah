@@ -1,0 +1,148 @@
+﻿@model List<Gheetah.Models.AgentModel.AgentInfo>
+<div class="page">
+    <div class="page-header d-print-none">
+        <div class="container-fluid">
+            <h2 class="page-title">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M4 4h6v6h-6z" />
+                    <path d="M14 4h6v6h-6z" />
+                    <path d="M4 14h6v6h-6z" />
+                </svg>
+                Agents List
+            </h2>
+        </div>
+    </div>
+    <div class="page-body">
+        <div class="container-fluid">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Registered Agents</h3>
+                    <div class="card-actions">
+                        <a href="@Url.Action("Download", "Agents")" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                <path d="M7 11l5 5 5 -5" />
+                                <path d="M12 4v12" />
+                            </svg>
+                            Download Agent
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>OS</th>
+                                <th>Environment</th>
+                                <th>Status</th>
+                                <th>Availability</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var agent in Model)
+                            {
+                                <tr>
+                                    <td>@agent.AgentId</td>
+                                    <td>@agent.OS</td>
+                                    <td>@agent.EnvironmentName</td>
+                                    <td>@agent.Status</td>
+                                    <td>@agent.Availability</td>
+                                    <td>
+                                        <div class="btn-list flex-nowrap">
+                                            <a href="#" class="btn btn-icon" title="Delete" onclick="confirmDeleteAgent('@agent.AgentId')">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                    <path d="M4 7l16 0" />
+                                                    <path d="M10 11l0 6" />
+                                                    <path d="M14 11l0 6" />
+                                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                </svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal modal-blur fade" id="delete-confirm-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 9v4" />
+                    <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z" />
+                    <path d="M12 16h.01" />
+                </svg>
+                <h3>Are you sure?</h3>
+                <div class="text-muted">Do you really want to delete this agent? This action cannot be undone.</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn w-100" data-bs-dismiss="modal">
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="col">
+                            <button id="confirm-delete-btn" class="btn btn-danger w-100">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Html.AntiForgeryToken()
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function confirmDeleteAgent(agentId) {
+                const modal = new bootstrap.Modal(document.getElementById('delete-confirm-modal'));
+                modal.show();
+
+                document.getElementById('confirm-delete-btn').onclick = function() {
+                    deleteAgent(agentId);
+                    modal.hide();
+                };
+            }
+
+            function deleteAgent(agentId) {
+                fetch('/Agents/Delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: `agentId=${encodeURIComponent(agentId)}`
+                })
+                .then(response => {
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+
+            window.confirmDeleteAgent = confirmDeleteAgent;
+        });
+    </script>
+}

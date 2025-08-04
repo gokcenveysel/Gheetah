@@ -1,0 +1,141 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Gheetah.Models.ViewModels.Account.RegisterVm
+@{
+    ViewData["Title"] = "Register";
+    Layout = "_LayoutAuth";
+}
+
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="text-center mb-4">
+            <a href="/" class="navbar-brand navbar-brand-autodark">
+                <a href="/" class="navbar-brand navbar-brand-autodark">
+                    <img src="/img/gheetah_logo.png" alt="Gheetah">
+                </a>
+            </a>
+        </div>
+
+        <div class="card card-md">
+            <div class="card-body">
+                <h2 class="h2 text-center mb-4">Create new account</h2>
+
+                <form method="post" asp-action="Register" autocomplete="off" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Full name</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                                    <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+                                </svg>
+                            </span>
+                            <input asp-for="FullName" type="text" class="form-control" placeholder="John Doe" autocomplete="off">
+                        </div>
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email address</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M3 7a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-10z" />
+                                    <path d="M3 7l9 6l9 -6" />
+                                </svg>
+                            </span>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="your@email.com" autocomplete="off">
+                        </div>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <div class="input-group input-group-flat">
+                            <span class="input-group-text">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+                                    <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                                    <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
+                                </svg>
+                            </span>
+                            <input asp-for="Password" type="password" class="form-control" placeholder="Your password" autocomplete="off">
+                            <span class="input-group-text">
+                                <a href="#" class="link-secondary" title="Show password" data-bs-toggle="tooltip">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                        <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                    </svg>
+                                </a>
+                            </span>
+                        </div>
+                        <small class="form-hint">
+                            Your password must be 8-20 characters long, contain letters and numbers.
+                        </small>
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-check">
+                            <input type="checkbox" class="form-check-input" required>
+                            <span class="form-check-label">Agree the <a href="#" tabindex="-1" data-bs-toggle="modal" data-bs-target="#termsModal">terms and policy</a></span>
+                        </label>
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user-plus" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                                <path d="M16 19h6" />
+                                <path d="M19 16v6" />
+                                <path d="M6 21v-2a4 4 0 0 1 4 -4h4" />
+                            </svg>
+                            Create new account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="text-center text-muted mt-3">
+            Already have an account? <a href="/account/login" tabindex="-1">Sign in</a>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Policy Modal -->
+<div class="modal modal-blur fade" id="termsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h4>Legal Disclaimer</h4>
+                <p>By using this application, you acknowledge and agree to the following terms:</p>
+
+                <h5>1. User Responsibility</h5>
+                <p>All actions performed using this application are solely your responsibility. You agree that you are fully responsible for any content you create, share, or distribute through this platform, and for any consequences that may result from such actions.</p>
+
+                <h5>2. No Warranty</h5>
+                <p>This application is provided "as is" without any warranties, express or implied. The developers of this application make no representations or warranties of any kind concerning the application, whether expressed or implied.</p>
+
+                <h5>3. Limitation of Liability</h5>
+                <p>In no event shall the developers of this application be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of the use of this application, even if advised of the possibility of such damage.</p>
+
+                <h5>4. Data Protection</h5>
+                <p>While we implement security measures to protect your data, you acknowledge that no electronic transmission or storage of information is completely secure. You are responsible for maintaining the confidentiality of your account credentials.</p>
+
+                <h5>5. Changes to Terms</h5>
+                <p>We reserve the right to modify these terms at any time. Your continued use of the application following any such modification constitutes your agreement to be bound by the modified terms.</p>
+
+                <h5>6. Governing Law</h5>
+                <p>These terms shall be governed by and construed in accordance with applicable laws, without regard to its conflict of law provisions.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">I Understand</button>
+            </div>
+        </div>
+    </div>
+</div>

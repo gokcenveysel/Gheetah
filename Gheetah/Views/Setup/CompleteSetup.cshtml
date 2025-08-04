@@ -1,0 +1,33 @@
+﻿@model Gheetah.Models.ViewModels.Setup.CompletionVm
+@{
+    ViewData["Title"] = "Setup Completed";
+}
+
+<div class="page-body">
+    <div class="container-xl d-flex flex-column justify-content-center">
+        <div class="empty">
+            <div class="empty-icon bg-success text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-circle-check" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                    <path d="M9 12l2 2l4 -4" />
+                </svg>
+            </div>
+            <p class="empty-title">Setup successfully completed!</p>
+            <p class="empty-subtitle text-muted">
+                @Model.Message
+            </p>
+            <div class="empty-action">
+                <a href="@Url.Action("Login", "Account")" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-login" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M15 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
+                        <path d="M21 12h-13l3 -3" />
+                        <path d="M11 15l-3 -3" />
+                    </svg>
+                    Go to Login
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

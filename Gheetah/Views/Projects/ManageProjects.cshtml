@@ -1,0 +1,542 @@
+﻿@using Gheetah.Models.RepoSettingsModel
+@model List<RepoSettingsVm>
+@{
+    ViewData["Title"] = "Manage Projects";
+}
+
+<style>
+    @@media (max-width: 768px) {
+        .card-header .flex-fill {
+            min-width: 100%;
+            margin-top: 0.5rem;
+        }
+    }
+
+    .empty-repo-message {
+        padding: 2rem 0;
+        border-top: 1px solid #e5e7eb;
+        margin-top: -1px;
+        text-align: center;
+    }
+
+    .card-title + .badge {
+        position: relative;
+        top: -1px;
+        margin-left: 0.5rem;
+    }
+
+    .show-all-container {
+        position: relative;
+    }
+
+    .show-all-container.collapsed .show-all-icon {
+        transform: rotate(0deg);
+    }
+
+    .show-all-icon {
+        transform: rotate(180deg);
+        transition: transform 0.2s ease;
+    }
+</style>
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs">
+            <li class="nav-item">
+                <a href="#tab-clone" class="nav-link active" data-bs-toggle="tab">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M7 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M7 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M17 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                        <path d="M7 8l0 8" />
+                        <path d="M9 18a6 6 0 0 0 6 -6a3 3 0 0 0 -3 -3h-2" />
+                    </svg>
+                    Clone Projects
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#tab-upload" class="nav-link" data-bs-toggle="tab">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1" />
+                        <path d="M9 15l3 -3l3 3" />
+                        <path d="M12 12l0 9" />
+                    </svg>
+                    Upload Projects
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body tab-content">
+        <div class="tab-pane active show" id="tab-clone">
+            @await Html.PartialAsync("_CloneProjectTab", Model)
+        </div>
+        <div class="tab-pane" id="tab-upload">
+            @await Html.PartialAsync("_UploadProjectTab", Model)
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <script>
+        function initializeUploadForm() {
+            console.log("Initializing upload form...");
+
+            if (typeof window.__fileDialogOpen === 'undefined') {
+                window.__fileDialogOpen = false;
+            }
+
+            const uploadForm = document.getElementById('uploadForm');
+            if (!uploadForm) {
+                console.warn("Upload form not found!");
+                return false;
+            }
+
+            uploadForm.action = '/Projects/UploadProject';
+            console.log('Form action locked to:', uploadForm.action);
+
+            const dropzone = document.getElementById('uploadDropzone');
+            const fileInput = document.getElementById('archiveFile');
+            if (!dropzone || !fileInput) {
+                console.warn("Dropzone or file input not found!");
+                return false;
+            }
+
+            const newFileInput = fileInput.cloneNode(false);
+            fileInput.parentNode.replaceChild(newFileInput, fileInput);
+            const cleanFileInput = document.getElementById('archiveFile');
+
+            const handleZoneClick = (e) => {
+                if (window.__fileDialogOpen) {
+                    e.stopImmediatePropagation();
+                    return;
+                }
+
+                const validTarget = e.target === dropzone ||
+                                  e.target.classList.contains('dz-message') ||
+                                  e.target.closest('.dz-message');
+                if (!validTarget) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+
+                window.__fileDialogOpen = true;
+                cleanFileInput.value = '';
+
+                const handleFileSelect = () => {
+                    console.log('File selected (ONLY ONCE):', cleanFileInput.files[0]?.name);
+                    window.__fileDialogOpen = false;
+                    updateFilePreview();
+                };
+
+                cleanFileInput.addEventListener('change', handleFileSelect, {once: true});
+                cleanFileInput.click();
+            };
+
+            dropzone.addEventListener('click', handleZoneClick, {capture: true, passive: false});
+
+            const preventDefaults = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            };
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            const highlight = () => dropzone.classList.add('bg-blue-lt');
+            const unhighlight = () => dropzone.classList.remove('bg-blue-lt');
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, unhighlight, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt.files.length) {
+                    cleanFileInput.files = dt.files;
+                    updateFilePreview();
+                }
+            });
+
+            uploadForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                if (this.dataset.submitting === 'true') return;
+                this.dataset.submitting = 'true';
+
+                const uploadButton = document.getElementById('uploadButton');
+                try {
+                    if (!cleanFileInput.files?.length) {
+                        showCustomToast('danger', 'Lütfen bir dosya seçin');
+                        return;
+                    }
+
+                    if (uploadButton) {
+                        uploadButton.disabled = true;
+                        uploadButton.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Yükleniyor...`;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('archiveFile', cleanFileInput.files[0]);
+                    formData.append('language', uploadForm.querySelector('input[name="language"]:checked').value);
+                    formData.append('__RequestVerificationToken', document.querySelector('[name="__RequestVerificationToken"]').value);
+
+                    const response = await fetch(uploadForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        credentials: 'include'
+                    });
+
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.message || 'Upload failed');
+                        showCustomToast('success', result.message);
+                        if (result.redirectUrl) {
+                            setTimeout(() => window.location.href = result.redirectUrl, 1500);
+                        }
+                    } else {
+                        const errorText = await response.text();
+                        throw new Error('Server returned an unexpected response');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showCustomToast('danger', error.message || 'Dosya yükleme başarısız oldu');
+                } finally {
+                    this.dataset.submitting = 'false';
+                    if (uploadButton) {
+                        uploadButton.disabled = false;
+                        uploadButton.innerHTML = `Proje Yükle`;
+                    }
+                }
+            });
+
+            function updateFilePreview() {
+                const filePreview = document.getElementById('filePreview');
+                if (!filePreview) return;
+
+                filePreview.innerHTML = '';
+                const uploadButton = document.getElementById('uploadButton');
+
+                if (!cleanFileInput.files || cleanFileInput.files.length === 0) {
+                    if (uploadButton) uploadButton.disabled = true;
+                    return;
+                }
+
+                if (uploadButton) uploadButton.disabled = false;
+
+                Array.from(cleanFileInput.files).forEach(file => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-preview-item';
+
+                    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    icon.setAttribute('width', '18');
+                    icon.setAttribute('height', '18');
+                    icon.setAttribute('viewBox', '0 0 24 24');
+                    icon.setAttribute('stroke', 'currentColor');
+                    icon.setAttribute('fill', 'none');
+                    icon.setAttribute('stroke-width', '2');
+
+                    const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path1.setAttribute('d', 'M6 20.735a2 2 0 0 1 -1 -1.735v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2h-1');
+
+                    const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path2.setAttribute('d', 'M11 17a2 2 0 0 1 2 2v2a1 1 0 0 1 -1 1h-2a1 1 0 0 1 -1 -1v-2a2 2 0 0 1 2 -2z');
+
+                    icon.appendChild(path1);
+                    icon.appendChild(path2);
+                    fileItem.appendChild(icon);
+                    fileItem.appendChild(document.createTextNode(`${file.name} (${formatFileSize(file.size)})`));
+                    filePreview.appendChild(fileItem);
+                });
+            }
+
+            console.log("Upload form initialized (1-CLICK GUARANTEED)");
+            return true;
+        }
+
+        function formatFileSize(bytes) {
+            return bytes > 1024 * 1024
+                ? `${(bytes / 1024 / 1024).toFixed(2)} MB`
+                : `${(bytes / 1024).toFixed(2)} KB`;
+        }
+
+        async function handlePublicRepoClone(repoId, repoUrl) {
+            console.group("handlePublicRepoClone");
+
+            if (typeof Loader === 'undefined') {
+                console.error("Loader is not defined!");
+                return;
+            }
+
+            if (!Loader.show("The project is cloning...")) {
+                console.error("Failed to show loader");
+                return;
+            }
+
+            const timeout = setTimeout(() => {
+                console.warn("Clone operation timed out");
+                Loader.hide();
+                showCustomToast('danger', 'Clone operation timed out. Please try again.');
+            }, 300000);
+
+            try {
+                console.log("Starting clone operation...");
+                const response = await fetch('/Project/ClonePublicGitHubRepo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        repoId: repoId,
+                        repoUrl: repoUrl
+                    })
+                });
+
+                clearTimeout(timeout);
+                console.log("Clone operation completed", response);
+
+                if (response.redirected) {
+                    console.log("Redirecting to:", response.url);
+                    window.location.href = response.url;
+                } else {
+                    const result = await response.json();
+                    if (result.success) {
+                        console.log("Clone successful");
+                        showCustomToast('success', result.message);
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        console.error("Clone failed:", result.message);
+                        showCustomToast('danger', result.message);
+                    }
+                }
+            } catch (error) {
+                console.error("Clone error:", error);
+                clearTimeout(timeout);
+                showCustomToast('danger', 'Network error: ' + error.message);
+            } finally {
+                console.log("Finalizing clone operation");
+                Loader.hide();
+            }
+
+            console.groupEnd();
+        }
+
+        function applyRepoFilters() {
+            const searchTerm = document.querySelector('#searchInput').value.toLowerCase();
+            const projectId = document.querySelector('#projectFilter').value;
+            const repoType = document.querySelector('#repoTypeFilter').value;
+            let anyReposVisible = false;
+
+            document.querySelectorAll('.project-card').forEach(card => {
+                const cardProjectId = card.getAttribute('data-project-id');
+                const cardRepoType = card.getAttribute('data-repo-type');
+                const footer = card.querySelector('.show-all-container');
+                const collapseSection = card.querySelector('.collapse');
+                let visibleCount = 0;
+
+                const matchesProject = !projectId || cardProjectId === projectId;
+                const matchesRepoType = !repoType || cardRepoType === repoType;
+
+                if (matchesProject && matchesRepoType) {
+                    card.querySelectorAll('.repo-item').forEach(item => {
+                        const repoName = item.getAttribute('data-repo-name');
+                        const matchesSearch = !searchTerm || repoName.includes(searchTerm);
+
+                        if (matchesSearch) {
+                            item.style.display = '';
+                            visibleCount++;
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+
+                    if (footer) {
+                        const showAllText = footer.querySelector('.show-all-text');
+                        const totalRepos = parseInt(footer.textContent.match(/\d+/)[0]);
+
+                        if (visibleCount <= 5) {
+                            footer.classList.add('d-none');
+                            if (collapseSection) collapseSection.classList.remove('show');
+                        } else {
+                            footer.classList.remove('d-none');
+                            const remaining = visibleCount - 5;
+                            showAllText.textContent = `Show ${remaining} more repository${remaining !== 1 ? 's' : ''}`;
+                        }
+                    }
+
+                    if (visibleCount > 0) {
+                        card.style.display = '';
+                        anyReposVisible = true;
+                    } else {
+                        card.style.display = 'none';
+                        if (collapseSection) collapseSection.classList.remove('show');
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+
+                const emptyMessage = card.querySelector('.empty-repo-message');
+                if (emptyMessage) {
+                    emptyMessage.classList.toggle('d-none', visibleCount > 0);
+                }
+            });
+
+            const globalEmptyState = document.querySelector('.global-empty-state');
+            if (globalEmptyState) {
+                globalEmptyState.classList.toggle('d-none', anyReposVisible);
+            }
+        }
+
+        function initRepoFilters() {
+            const searchInput = document.querySelector('#searchInput');
+            const projectFilter = document.querySelector('#projectFilter');
+            const repoTypeFilter = document.querySelector('#repoTypeFilter');
+
+            if (!searchInput || !projectFilter || !repoTypeFilter) {
+                setTimeout(initRepoFilters, 200);
+                return;
+            }
+
+            searchInput.addEventListener('input', applyRepoFilters);
+            projectFilter.addEventListener('change', applyRepoFilters);
+            repoTypeFilter.addEventListener('change', applyRepoFilters);
+            applyRepoFilters();
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const form = e.target;
+            const btn = form.querySelector('.clone-btn');
+
+            try {
+                Loader.show("Cloning project...");
+                btn.disabled = true;
+
+                const response = await fetch(form.action || '/Projects/CloneProject', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: new URLSearchParams(new FormData(form))
+                });
+
+                if (!response.ok) {
+                    const error = await response.text();
+                    throw new Error(`HTTP error! status: ${response.status} - ${error.substring(0, 100)}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType?.includes('application/json')) {
+                    const text = await response.text();
+                    if (text.includes('<!DOCTYPE html>')) {
+                        throw new Error('saçma bir mesaj gösterelim');
+                    }
+                    throw new Error(`Expected JSON but got ${contentType}`);
+                }
+
+                const result = await response.json();
+
+                if (result.redirectUrl) {
+                    window.location.href = result.redirectUrl;
+                    return;
+                }
+
+                showCustomToast(result.success ? 'success' : 'danger', result.message);
+
+            } 
+            catch (error) {
+                console.error("Clone error:", error);
+
+                if (error.message.includes('Session expired')) {
+                    showCustomToast('warning', 'Your session has expired. Redirecting to login...');
+                } else {
+                    showCustomToast('danger', error.message.includes('HTTP error')
+                        ? 'Server error occurred. Please try again.'
+                        : error.message);
+                }
+            } finally {
+                Loader.hide();
+                btn.disabled = false;
+            }
+        }
+
+        function initializeCloneForms() {
+            console.log("Initializing clone forms");
+            document.querySelectorAll('.clone-form').forEach(form => {
+                form.removeEventListener('submit', handleFormSubmit);
+                form.addEventListener('submit', handleFormSubmit);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            console.log("DOM fully loaded");
+
+            document.querySelector('a[href="#tab-clone"]')?.addEventListener('shown.bs.tab', function() {
+                initRepoFilters();
+                setTimeout(initializeCloneForms, 100);
+            });
+
+            document.querySelector('a[href="#tab-upload"]')?.addEventListener('shown.bs.tab', function() {
+                initializeUploadForm();
+                setTimeout(initializeUploadForm, 100);
+            });
+
+            document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const icon = this.querySelector('.show-all-icon');
+                    if (icon) {
+                        icon.style.transform = this.getAttribute('aria-expanded') === 'false'
+                            ? 'rotate(0deg)'
+                            : 'rotate(180deg)';
+                    }
+                });
+            });
+
+            document.querySelectorAll('form[id^="publicRepoForm-"]').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const repoId = this.id.split('-')[1];
+                    const repoUrl = this.querySelector('.public-repo-url').value.trim();
+
+                    if (!repoUrl.match(/^https:\/\/github\.com\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+(\.git)?$/)) {
+                        showCustomToast('danger', 'Please enter a valid GitHub repository URL');
+                        return;
+                    }
+
+                    handlePublicRepoClone(repoId, repoUrl.endsWith('.git') ? repoUrl : `${repoUrl}.git`);
+                });
+            });
+
+            if (document.querySelector('#tab-clone.active')) {
+                initRepoFilters();
+                initializeCloneForms();
+            }
+
+        @if (TempData["Error"] != null)
+        {
+            <text>
+                    showCustomToast('danger', '@Html.Raw(TempData["Error"].ToString().Replace("'", "\\'"))');
+            </text>
+        }
+        });
+    </script>
+}

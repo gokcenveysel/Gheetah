@@ -1,0 +1,340 @@
+﻿@using Gheetah.Models.ProjectModel
+@using Gheetah.Models.RepoSettingsModel
+@using Gheetah.Models.SiteSettingsModel
+@model List<RepoSettingsVm>
+@{
+    ViewData["Title"] = "Clone Projects";
+    var allRepos = ViewBag.AllRepos as Dictionary<string, List<GitRepoVm>> ?? new();
+}
+
+<style>
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 0;
+    }
+
+    .empty-state-icon {
+        width: 6rem;
+        height: 6rem;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .empty-state-icon svg {
+            width: 3rem;
+            height: 3rem;
+            stroke-width: 1;
+        }
+
+    .empty-state-title {
+        font-size: 1.5rem;
+        margin-bottom: .5rem;
+    }
+
+    .empty-state-subtitle {
+        font-size: 1rem;
+    }
+</style>
+
+<div class="page-header d-print-none">
+    <div class="container-fluid">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title">Clone Projects</h2>
+                <div class="text-muted mt-1">Manage and clone your repositories</div>
+            </div>
+            <div class="col-auto ms-auto">
+                <div class="btn-list">
+                    <a href="/SiteSettings" class="btn btn-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+                            <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                        </svg>
+                        Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-fluid">
+        <!-- Search and Filter Card -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <div class="input-icon">
+                            <input type="text" id="searchInput" class="form-control" placeholder="Search repositories...">
+                            <span class="input-icon-addon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                    <path d="M21 21l-6 -6" />
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="projectFilter" class="form-select">
+                            <option value="">All Projects</option>
+                            @foreach (var repo in Model)
+                            {
+                                <option value="@repo.Id">@repo.DisplayName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select id="repoTypeFilter" class="form-select">
+                            <option value="">All Types</option>
+                            <option value="Azure">Azure</option>
+                            <option value="GitHub">GitHub</option>
+                            <option value="GitLab">GitLab</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Cards -->
+        <div id="projectsContainer">
+            @foreach (var repo in Model)
+            {
+                if (allRepos.ContainsKey(repo.Id) && allRepos[repo.Id].Any())
+                {
+                    var repoTypeClass = repo.RepoType switch
+                    {
+                        "Azure" => "bg-blue-lt",
+                        "GitHub" => "bg-purple-lt",
+                        "GitLab" => "bg-orange-lt",
+                        _ => "bg-secondary-lt"
+                    };
+
+                    var repoTypeIcon = repo.RepoType switch
+                    {
+                        "Azure" => @"<path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+            <path d='M6 7.5l-4 9.5h4l6 -15z'/>
+            <path d='M22 20l-7 -15l-3 7l4 5l-8 3z'/>",
+                        "GitHub" => @"<path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+            <path d='M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5'/>",
+                        "GitLab" => @"<path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+            <path d='M21 14l-9 7l-9 -7l3 -11l3 7h6l3 -7z'/>",
+                        _ => @"<path stroke='none' d='M0 0h24v24H0z' fill='none'/>
+            <path d='M7 8l-4 4l4 4'/>
+            <path d='M17 8l4 4l-4 4'/>
+            <path d='M14 4l-4 16'/>"
+                    };
+
+                    <div class="card mb-4 project-card" data-project-id="@repo.Id" data-repo-type="@repo.RepoType">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center flex-wrap">
+                                <span class="avatar avatar-sm me-3 @repoTypeClass">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        @Html.Raw(repoTypeIcon)
+                                    </svg>
+                                </span>
+                                <div class="flex-fill">
+                                    <div class="d-flex align-items-center flex-wrap">
+                                        <h3 class="card-title me-2 mb-1">@repo.DisplayName</h3>
+                                        <span class="badge @repoTypeClass mb-1">@repo.RepoType</span>
+                                    </div>
+                                    <div class="text-muted">@repo.ProjectName • <span class="repo-count">@allRepos[repo.Id].Count</span> repositories</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            @if (repo.RepoType == "GitHub")
+                            {
+                                <div class="p-3 border-bottom">
+                                    <h4 class="mb-3">Clone Public Repository</h4>
+                                    <form id="publicRepoForm-@repo.Id" class="row g-2 align-items-center">
+                                        <div class="col-md-8">
+                                            <input type="text"
+                                                   class="form-control public-repo-url"
+                                                   placeholder="https://github.com/username/repo"
+                                                   required
+                                                   pattern="https://github\.com/[a-zA-Z0-9_\-\.]+/[a-zA-Z0-9_\-\.]+(\.git)?"
+                                                   title="Example: https://github.com/username/repo or https://github.com/username/repo.git">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="submit" class="btn btn-primary w-100">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                    <path d="M19 18a3.5 3.5 0 0 0 0 -7h-1a5 4.5 0 0 0 -11 -2a4.6 4.4 0 0 0 -2.1 8.4" />
+                                                    <path d="M12 13l0 9" />
+                                                    <path d="M9 19l3 3l3 -3" />
+                                                </svg>
+                                                Clone Public Repo
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            }
+
+                            <div class="table-responsive">
+                                <table class="table table-hover table-vcenter card-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Repository</th>
+                                            <th>URL</th>
+                                            <th>Language</th>
+                                            <th class="w-1"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var gitRepo in allRepos[repo.Id].Take(5))
+                                        {
+                                            <tr class="repo-item" data-repo-name="@gitRepo.Name.ToLower()">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <span class="avatar avatar-sm me-3 bg-green-lt">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                                <path d="M16 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                                                <path d="M12 8m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                                                <path d="M12 16m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                                                <path d="M12 15v-6" />
+                                                                <path d="M15 11l-2 -2" />
+                                                                <path d="M11 7l-1.9 -1.9" />
+                                                                <path d="M13.446 2.6l7.955 7.954a2.045 2.045 0 0 1 0 2.892l-7.955 7.955a2.045 2.045 0 0 1 -2.892 0l-7.955 -7.955a2.045 2.045 0 0 1 0 -2.892l7.955 -7.955a2.045 2.045 0 0 1 2.892 0z" />
+                                                            </svg>
+                                                        </span>
+                                                        <div>
+                                                            <div class="font-weight-medium">@gitRepo.Name</div>
+                                                            <div class="text-muted">@repo.RepoType Repository</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="text-muted text-truncate" style="max-width: 200px;">
+                                                        @gitRepo.RemoteUrl
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="text-muted text-truncate" style="max-width: 200px;">
+                                                        @gitRepo.Language
+                                                    </div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <form method="post" id="cloneForm-@repo.Id" class="clone-form" action="/Projects/CloneProject">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="repoId" value="@repo.Id"/>
+                                                        <input type="hidden" name="repoUrl" value="@gitRepo.RemoteUrl"/>
+                                                        <input type="hidden" name="repoDisplayName" value="@gitRepo.Name"/>
+                                                        <input type="hidden" name="repoLanguage" value="@gitRepo.Language"/>
+                                                        <button type="submit" class="btn btn-sm btn-primary clone-btn">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                                <path d="M19 18a3.5 3.5 0 0 0 0 -7h-1a5 4.5 0 0 0 -11 -2a4.6 4.4 0 0 0 -2.1 8.4"/>
+                                                                <path d="M12 13l0 9"/>
+                                                                <path d="M9 19l3 3l3 -3"/>
+                                                            </svg>
+                                                            Clone
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                            @if (allRepos[repo.Id].Count > 5)
+                            {
+                                <div class="card-footer text-center show-all-container" id="footer-@repo.Id">
+                                    <a href="#" class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#collapse-@repo.Id">
+                                        <span class="show-all-text">Show all @allRepos[repo.Id].Count repositories</span>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon show-all-icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M6 9l6 6l6 -6" />
+                                        </svg>
+                                    </a>
+                                </div>
+                                <div id="collapse-@repo.Id" class="collapse">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-vcenter card-table">
+                                            <tbody>
+                                                @foreach (var gitRepo in allRepos[repo.Id].Skip(5))
+                                                {
+                                                    <tr class="repo-item" data-repo-name="@gitRepo.Name.ToLower()">
+                                                        <td>
+                                                            <div class="d-flex align-items-center">
+                                                                <span class="avatar avatar-sm me-3 bg-green-lt">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                                        <path d="M16 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                                                        <path d="M12 8m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                                                        <path d="M12 16m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />
+                                                                        <path d="M12 15v-6" />
+                                                                        <path d="M15 11l-2 -2" />
+                                                                        <path d="M11 7l-1.9 -1.9" />
+                                                                        <path d="M13.446 2.6l7.955 7.954a2.045 2.045 0 0 1 0 2.892l-7.955 7.955a2.045 2.045 0 0 1 -2.892 0l-7.955 -7.955a2.045 2.045 0 0 1 0 -2.892l7.955 -7.955a2.045 2.045 0 0 1 2.892 0z" />
+                                                                    </svg>
+                                                                </span>
+                                                                <div>
+                                                                    <div class="font-weight-medium">@gitRepo.Name</div>
+                                                                    <div class="text-muted">@repo.RepoType Repository</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="text-muted text-truncate" style="max-width: 200px;">
+                                                                @gitRepo.RemoteUrl
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="text-muted text-truncate" style="max-width: 200px;">
+                                                                @gitRepo.Language
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <form method="post" id="cloneForm-@repo.Id" class="clone-form" action="/Projects/CloneProject">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="repoId" value="@repo.Id"/>
+                                                                <input type="hidden" name="repoUrl" value="@gitRepo.RemoteUrl"/>
+                                                                <input type="hidden" name="repoDisplayName" value="@gitRepo.Name"/>
+                                                                <input type="hidden" name="repoLanguage" value="@gitRepo.Language"/>
+                                                                <button type="submit" class="btn btn-sm btn-primary clone-btn">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                                                        <path d="M19 18a3.5 3.5 0 0 0 0 -7h-1a5 4.5 0 0 0 -11 -2a4.6 4.4 0 0 0 -2.1 8.4"/>
+                                                                        <path d="M12 13l0 9"/>
+                                                                        <path d="M9 19l3 3l3 -3"/>
+                                                                    </svg>
+                                                                    Clone
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="empty-repo-message alert alert-info d-none text-center py-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-info-circle mb-2" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                    <path d="M12 9h.01" />
+                                    <path d="M11 12h1v4h1" />
+                                </svg>
+                                <h4 class="alert-title">No repositories found</h4>
+                                <div class="text-muted">Try adjusting your search or filter criteria</div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>

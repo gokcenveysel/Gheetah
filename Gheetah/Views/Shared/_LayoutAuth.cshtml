@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Gheetah</title>
+
+    <!-- Tabler Core CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/core@1.1.1/dist/css/tabler.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons@latest/iconfont/tabler-icons.min.css">
+
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f5f7fb;
+        }
+
+        .auth-container {
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .auth-logo {
+            height: 48px;
+            margin-bottom: 2rem;
+        }
+
+        .auth-card {
+            border: 0;
+            box-shadow: 0 0 2rem rgba(0, 0, 0, 0.05);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .auth-header {
+            background: linear-gradient(135deg, #6e8efb 0%, #4a6cf7 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="d-flex flex-column">
+    <div class="page page-center">
+        <div class="container container-tight py-4">
+            <div class="card card-md auth-card">
+                <div class="card-body">
+                    @RenderBody()
+                </div>
+            </div>
+
+            <div class="auth-footer">
+                © @DateTime.Now.Year Gheetah. All rights reserved.
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabler Core JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@1.1.1/dist/js/tabler.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

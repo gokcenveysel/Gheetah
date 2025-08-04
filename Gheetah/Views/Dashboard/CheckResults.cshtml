@@ -1,0 +1,155 @@
+﻿@model List<Gheetah.Models.PipelineResultsModel.Azure.PipelineRunModel.PipelineExecution.PipelineExecutionTestResult>
+
+<div class="container-fluid px-4 py-3">
+    <div class="card">
+        <div class="card-header bg-transparent border-0">
+            <h2 class="card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-triangle text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 9v2m0 4v.01" />
+                    <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" />
+                </svg>
+                <span class="ms-2">Failed Test Results</span>
+            </h2>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-nowrap">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%"></th>
+                            <th>Test Case</th>
+                            <th>Status</th>
+                            <th>Duration</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var result in Model)
+                        {
+                            <tr data-bs-toggle="collapse" data-bs-target="#details-@result.Id" class="cursor-pointer">
+                                <td>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-right text-muted" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M9 6l6 6l-6 6" />
+                                    </svg>
+                                </td>
+                                <td class="text-truncate" style="max-width: 400px;" title="@result.TestCase.Name">
+                                    @result.TestCase.Name
+                                </td>
+                                <td>
+                                    <span class="badge bg-red text-white">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M18 6l-12 12" />
+                                            <path d="M6 6l12 12" />
+                                        </svg>
+                                        @result.Outcome
+                                    </span>
+                                </td>
+                                <td class="text-muted">@((result.DurationInMs / 1000).ToString("F2"))s</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-ghost-dark">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                            <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="collapse" id="details-@result.Id">
+                                <td colspan="5" class="p-0 border-top-0">
+                                    <div class="p-3">
+                                        <div class="row g-3">
+                                            <div class="col-lg-6">
+                                                <div class="p-0">
+                                                    <h5 class="d-flex align-items-center mb-2 text-dark fw-bold">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-alert-circle text-danger me-1" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                            <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+                                                            <path d="M12 8v4" />
+                                                            <path d="M12 16h.01" />
+                                                        </svg>
+                                                        ERROR MESSAGE
+                                                    </h5>
+                                                    <pre class="m-0 p-3 bg-white rounded"><code class="text-dark">@result.ErrorMessage</code></pre>
+                                                </div>
+                                            </div>
+                                            <div class="col-lg-6">
+                                                <div class="p-0">
+                                                    <h5 class="d-flex align-items-center mb-2 fw-bold">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-stack me-1" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                            <path d="M12 6l-8 4l8 4l8 -4l-8 -4" />
+                                                            <path d="M4 14l8 4l8 -4" />
+                                                        </svg>
+                                                        STACK TRACE
+                                                    </h5>
+                                                    <pre class="m-0 p-3 rounded" style="background-color: #3a7bd5;"><code class="text-white">@result.StackTrace</code></pre>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(row => {
+                row.addEventListener('click', function() {
+                    const icon = this.querySelector('.icon-tabler-chevron-right');
+                    if (icon) {
+                        icon.classList.toggle('rotate-90');
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .text-truncate {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .rotate-90 {
+        transform: rotate(90deg);
+        transition: transform 0.2s ease;
+    }
+
+    pre code {
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .btn-ghost-dark {
+        background-color: transparent;
+        color: var(--tblr-dark);
+    }
+
+    .btn-ghost-dark:hover {
+        background-color: rgba(var(--tblr-dark-rgb), 0.1);
+    }
+
+    .bg-red {
+        background-color: #dc3545 !important;
+    }
+</style>

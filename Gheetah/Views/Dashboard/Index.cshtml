@@ -1,0 +1,1963 @@
+﻿@model Gheetah.Models.ViewModels.Dashboard.DashboardVm
+@using Gheetah.Models.CICDModel
+
+<div class="container-fluid">
+    <div class="row g-3">
+        <div class="col-12">
+            @await Component.InvokeAsync("GroupDashboard")
+        </div>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Team Dashboard</h3>
+                    @if (User.IsInRole("Admin") || User.IsInRole("Lead"))
+                    {
+                        <div class="card-actions">
+                            <a href="#" id="dashboardSettingsBtn" class="text-muted" title="Customize dashboard">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-settings" width="24" height="24" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z" />
+                                    <path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+                                </svg>
+                            </a>
+                        </div>
+                    }
+                </div>
+                <div class="card-body">
+                    <div id="dashboardContainer" class="row row-cards">
+                        @if (Model?.DashboardWidgets == null || !Model.DashboardWidgets.Any())
+                        {
+                            <div class="empty">
+                                <div class="empty-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="48" height="48" viewBox="0 0 24 24" stroke-width="1.5" stroke="#206bc4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M4 4h6v8h-6z"></path>
+                                        <path d="M4 16h6v4h-6z"></path>
+                                        <path d="M14 12h6v8h-6z"></path>
+                                        <path d="M14 4h6v4h-6z"></path>
+                                    </svg>
+                                </div>
+                                <p class="empty-title">No widgets configured</p>
+                                <p class="empty-subtitle text-muted">
+                                    Add widgets to customize your dashboard view
+                                </p>
+                                <div class="empty-action">
+                                    <button id="addFirstWidgetBtn" class="btn btn-primary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M12 5l0 14"></path>
+                                            <path d="M5 12l14 0"></path>
+                                        </svg>
+                                        Add widget
+                                    </button>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var widget in Model.DashboardWidgets)
+                            {
+                                <div class="col-md-@widget.ColumnSize" data-widget-id="@widget.Id">
+                                    <div class="card widget-card">
+                                        <div class="card-header">
+                                            <h3 class="card-title">@widget.Title</h3>
+                                            @if (User.IsInRole("Admin") || User.IsInRole("Lead"))
+                                            {
+                                                <div class="card-actions">
+                                                    <button class="btn btn-sm btn-icon btn-edit-widget" title="Edit widget" data-id="@widget.Id">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                            <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                                            <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                                            <path d="M16 5l3 3" />
+                                                        </svg>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-icon btn-delete-widget" title="Delete widget" data-id="@widget.Id">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                            <path d="M4 7l16 0" />
+                                                            <path d="M10 11l0 6" />
+                                                            <path d="M14 11l0 6" />
+                                                            <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                                            <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                        <div class="card-body">
+                                            @if (widget.Type == "PipelineResultsTable")
+                                            {
+                                                @await Html.PartialAsync("~/Views/Dashboard/DashboardWidgetVm/_PipelineResultsWidget.cshtml", widget)
+                                            }
+                                            else if (widget.Type == "TestResultsChart")
+                                            {
+                                                @await Html.PartialAsync("~/Views/Dashboard/DashboardWidgetVm/_TestResultsChartWidget.cshtml", widget)
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="dashboardSettingsOverlay" class="overlay d-none">
+    <div class="overlay-content">
+        <div class="overlay-header">
+            <h3>Dashboard Settings</h3>
+            <button class="btn btn-close" id="closeSettingsOverlay"></button>
+        </div>
+        <div class="overlay-body">
+            <div class="mb-3">
+                <div class="input-icon">
+                    <input type="text" id="widgetSearch" class="form-control" placeholder="Search widgets...">
+                    <span class="input-icon-addon">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                            <path d="M21 21l-6 -6" />
+                        </svg>
+                    </span>
+                </div>
+            </div>
+
+            <div class="row row-cards" id="availableWidgets">
+                <div class="col-12">
+                    <h4 class="mb-3">Azure DevOps Widgets</h4>
+                </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="PipelineResultsTable" data-cicd-type="Azure">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-table" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"></path>
+                                        <path d="M3 10h18"></path>
+                                        <path d="M10 3v18"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Pipeline Results Table</h4>
+                                    <p class="text-muted mb-0">Shows last 5 pipeline runs with status and duration</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="TestResultsChart" data-cicd-type="Azure">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chart-bar" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 12m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                                        <path d="M9 8m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                                        <path d="M15 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"></path>
+                                        <path d="M4 20l14 0"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Test Results Chart</h4>
+                                    <p class="text-muted mb-0">Visualizes passed, failed and skipped tests from last 5 builds</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="TestResultsTable" data-cicd-type="Azure">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-list-details" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M13 5h8"></path>
+                                        <path d="M13 9h5"></path>
+                                        <path d="M13 15h8"></path>
+                                        <path d="M13 19h5"></path>
+                                        <rect x="3" y="4" width="6" height="6" rx="1"></rect>
+                                        <rect x="3" y="14" width="6" height="6" rx="1"></rect>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Test Results Table</h4>
+                                    <p class="text-muted mb-0">Detailed view of test results with pass rates</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add other CI/CD tool widgets sections here when implemented -->
+                <!--
+                <div class="col-12 mt-4">
+                    <h4 class="mb-3">Jenkins Widgets</h4>
+                </div>
+                -->
+                <div class="col-12">
+                    <h4 class="mb-3">General Widgets</h4>
+                </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="RecentExecutions">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                                        <path d="M12 7v5l3 3"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Recent Scenario Executions</h4>
+                                    <p class="text-muted mb-0">Shows your last test executions with status</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="RecentJobs">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock-play" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M12 7v5l2 2"></path>
+                                        <path d="M17 22l5 -3l-5 -3z"></path>
+                                        <path d="M13.017 20.943a9 9 0 1 1 7.831 -7.292"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">Recent Hangfire Job Tracking</h4>
+                                    <p class="text-muted mb-0">Shows recent Hangfire job executions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="widgetConfigModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Configure Widget</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="widgetConfigContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary ms-auto" id="saveWidgetConfig">
+                    Save changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="deleteConfirmationModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M12 9v2m0 4v.01" />
+                    <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" />
+                </svg>
+                <h3>Are you sure?</h3>
+                <div class="text-muted">Do you really want to delete this widget? This action cannot be undone.</div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <button class="btn w-100" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="col">
+                            <button id="confirmDeleteBtn" class="btn btn-danger w-100">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@Html.AntiForgeryToken()
+
+@section Styles {
+    <style>
+        /* Buton hover efekti */
+        #dashboardSettingsBtn {
+            transition: all 0.2s;
+            opacity: 0.7;
+        }
+
+        #dashboardSettingsBtn:hover {
+            opacity: 1;
+            color: #206bc4 !important;
+        }
+
+        .card-actions {
+            align-items: center;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 450px;
+            background: white;
+            z-index: 1050;
+            box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+            overflow-y: auto;
+            visibility: hidden;
+        }
+
+        .overlay.show {
+            transform: translateX(0);
+            visibility: visible;
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        .overlay-content {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .overlay-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .overlay-body {
+            padding: 1rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .widget-card {
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .widget-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .widget-selector {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .widget-selector:hover {
+            background-color: #f8f9fa;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 3rem 0;
+            width: 100%;
+        }
+
+        .empty-icon {
+            margin-bottom: 1rem;
+        }
+
+        .empty-icon svg {
+            width: 4rem;
+            height: 4rem;
+            stroke-width: 1.5;
+        }
+
+        .empty-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-subtitle {
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+        }
+
+        .chart-loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 10;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+
+        .timeline-badge {
+            position: absolute;
+            left: -1rem;
+            width: 1rem;
+            height: 1rem;
+            border-radius: 50%;
+            top: 0.25rem;
+        }
+
+        .timeline-content {
+            padding-left: 1.5rem;
+        }
+
+    </style>
+}
+
+@section Scripts {
+    <script type="text/javascript">
+        window.retryJobDetails = function(jobId, modalId) {
+            loadJobDetails(jobId, modalId);
+        };
+        document.addEventListener('DOMContentLoaded', function() {
+          const CICDToolType = {
+                0: "None",
+                1: "GitLab",
+                2: "Jenkins",
+                3: "Azure"
+            };
+            // 1. STATE MANAGEMENT
+            const state = {
+                widgets: [],
+                widgetCounter: 0,
+                currentEditId: null,
+                cicdSettings: @Html.Raw(Json.Serialize(ViewBag.CICDSettings)),
+                cicdToolTypes: @Html.Raw(Json.Serialize(ViewBag.CICDToolTypes))
+            };
+
+            // 2. DOM ELEMENTS
+            const elements = {
+                dashboardContainer: document.getElementById('dashboardContainer'),
+                settingsOverlay: document.getElementById('dashboardSettingsOverlay'),
+                settingsBtn: document.getElementById('dashboardSettingsBtn'),
+                closeSettingsBtn: document.getElementById('closeSettingsOverlay'),
+                addFirstWidgetBtn: document.getElementById('addFirstWidgetBtn'),
+                widgetSearch: document.getElementById('widgetSearch'),
+                availableWidgets: document.getElementById('availableWidgets'),
+                widgetConfigModal: new bootstrap.Modal('#widgetConfigModal'),
+                widgetConfigContent: document.getElementById('widgetConfigContent'),
+                saveWidgetConfig: document.getElementById('saveWidgetConfig')
+            };
+
+            // 3. INITIALIZATION
+            init();
+
+            function init() {
+                loadWidgets();
+                setupEventListeners();
+
+                document.addEventListener('click', function(e) {
+                    if (e.target && e.target.id === 'reload-job-btn') {
+                        const modal = e.target.closest('.modal');
+                        const jobId = modal.dataset.jobId;
+                        const modalId = modal.id;
+                        loadJobDetails(jobId, modalId);
+                    }
+                });
+            }
+
+            // 4. EVENT HANDLERS
+            function setupEventListeners() {
+                // Overlay controls
+                if (elements.settingsBtn) {
+                    elements.settingsBtn.addEventListener('click', () => toggleOverlay(true));
+                }
+                if (elements.addFirstWidgetBtn) {
+                    elements.addFirstWidgetBtn.addEventListener('click', () => toggleOverlay(true));
+                }
+                if (elements.closeSettingsBtn) {
+                    elements.closeSettingsBtn.addEventListener('click', () => toggleOverlay(false));
+                }
+
+                // Widget Selection
+                if (elements.availableWidgets) {
+                    elements.availableWidgets.addEventListener('click', function(e) {
+                        const widgetSelector = e.target.closest('.widget-selector');
+                        if (widgetSelector) {
+                            const widgetType = widgetSelector.dataset.widgetType;
+                            openConfigModal(widgetType);
+                        }
+                    });
+                }
+
+                // Save Widget Config
+                elements.saveWidgetConfig.addEventListener('click', saveWidget);
+
+                // Widget Search
+                if (elements.widgetSearch) {
+                    elements.widgetSearch.addEventListener('input', handleWidgetSearch);
+                }
+
+                // Delegated events for dynamic elements
+                document.addEventListener('click', function(e) {
+                    // Edit button
+                    if (e.target.closest('.btn-edit-widget')) {
+                        const widgetId = e.target.closest('.btn-edit-widget').dataset.id;
+                        editWidget(widgetId);
+                    }
+
+                    // Delete button
+                    if (e.target.closest('.btn-delete-widget')) {
+                        const widgetId = e.target.closest('.btn-delete-widget').dataset.id;
+                        deleteWidget(widgetId);
+                    }
+                });
+            }
+
+            // 5. WIDGET OPERATIONS
+
+            function renderWidget(widgetData) {
+                // Empty state kontrolü
+                const emptyState = elements.dashboardContainer.querySelector('.empty');
+                if (emptyState) emptyState.remove();
+
+                // Widget HTML'i oluştur
+                const widgetHtml = `
+                    <div class="col-md-${widgetData.columnSize}" data-widget-id="${widgetData.id}">
+                        <div class="card widget-card">
+                            <div class="card-header">
+                                <h3 class="card-title">${widgetData.title}</h3>
+                                ${renderWidgetActions(widgetData.id)}
+                            </div>
+                            <div class="card-body">
+                                ${renderWidgetContent(widgetData)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // DOM'a ekle
+                elements.dashboardContainer.insertAdjacentHTML('beforeend', widgetHtml);
+            }
+
+            function renderWidgetActions(widgetId) {
+                return `
+                        <div class="card-actions">
+                            <button class="btn btn-sm btn-icon btn-edit-widget" title="Edit widget" data-id="${widgetId}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+                                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" />
+                                    <path d="M16 5l3 3" />
+                                </svg>
+                            </button>
+                            <button class="btn btn-sm btn-icon btn-delete-widget" title="Delete widget" data-id="${widgetId}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon text-danger" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M4 7l16 0" />
+                                    <path d="M10 11l0 6" />
+                                    <path d="M14 11l0 6" />
+                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                </svg>
+                            </button>
+                        </div>
+                    `;
+            }
+
+            function renderWidgetContent(widgetData) {
+                if (widgetData.type === 'PipelineResultsTable') {
+                    return renderPipelineWidget(widgetData);
+                } else if (widgetData.type === 'TestResultsChart') {
+                    return renderChartWidget(widgetData);
+                } else if (widgetData.type === 'TestResultsTable') {
+                    return renderTestResultsTableWidget(widgetData);
+                } else if (widgetData.type === 'RecentExecutions') {
+                    return renderRecentExecutionsWidget(widgetData);
+                } else if (widgetData.type === 'RecentJobs') {
+                    return renderRecentJobsWidget(widgetData);
+                }
+                return `<div class="text-muted">Unknown widget type for ${CICDToolType[widgetData.cicdToolType] || 'Unknown'} CI/CD</div>`;
+            }
+
+            function saveWidget() {
+                const widgetType = document.querySelector('#widgetConfigModal input[name="widgetType"]').value;
+                console.log(widgetType);
+                const formData = {
+                    id: state.currentEditId || 'widget-' + Date.now() + '-' + (++state.widgetCounter),
+                    type: widgetType,
+                    title: document.querySelector('#widgetConfigModal input[name="widgetTitle"]').value,
+                    columnSize: document.querySelector('#widgetConfigModal select[name="columnSize"]').value
+                };
+
+                // Sadece CI/CD widget'ları için ek alanları ekleyelim
+                const isGeneralWidget = ['RecentExecutions', 'RecentJobs'].includes(widgetType);
+                if (!isGeneralWidget) {
+                    const pipelineSelect = document.getElementById('pipelineSelect');
+                    const selectedPipelineOption = pipelineSelect.options[pipelineSelect.selectedIndex];
+
+                    formData.cicdToolId = document.getElementById('cicdToolSelect').value;
+                    formData.cicdToolType = parseInt(document.getElementById('cicdToolSelect').options[document.getElementById('cicdToolSelect').selectedIndex].dataset.tooltype);
+                    formData.project = document.getElementById('projectSelect').value;
+                    formData.pipelineId = pipelineSelect.value ? parseInt(pipelineSelect.value) : null;
+                    formData.pipelineName = selectedPipelineOption ? selectedPipelineOption.text : null;
+                }
+
+                // Mevcut widget'ı güncelle veya yeni ekle
+                const index = state.currentEditId
+                    ? state.widgets.findIndex(w => w.id === state.currentEditId)
+                    : -1;
+
+                if (index !== -1) {
+                    state.widgets[index] = formData;
+                } else {
+                    state.widgets.push(formData);
+                }
+
+                // Sunucuya kaydet
+                saveToServer();
+                elements.widgetConfigModal.hide();
+            }
+
+            function editWidget(widgetId) {
+                const widget = state.widgets.find(w => w.id === widgetId);
+                if (widget) {
+                    state.currentEditId = widgetId;
+                    openConfigModal(widget.type, widgetId);
+
+                    // Widget verilerini modal açıldıktan sonra yükle
+                    setTimeout(() => {
+                        if (widget.cicdToolId) {
+                            document.getElementById('cicdToolSelect').value = widget.cicdToolId;
+                            document.getElementById('cicdToolSelect').dispatchEvent(new Event('change'));
+
+                            // Proje ve pipeline yüklendikten sonra değerleri set et
+                            setTimeout(() => {
+                                if (widget.project) {
+                                    document.getElementById('projectSelect').value = widget.project;
+                                    document.getElementById('projectSelect').dispatchEvent(new Event('change'));
+
+                                    setTimeout(() => {
+                                        if (widget.pipeline) {
+                                            document.getElementById('pipelineSelect').value = widget.pipeline;
+                                        }
+                                    }, 500);
+                                }
+                            }, 500);
+                        }
+                    }, 100);
+                }
+            }
+
+            let currentWidgetToDelete = null;
+            const deleteConfirmationModal = new bootstrap.Modal('#deleteConfirmationModal');
+
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.btn-delete-widget')) {
+                    e.preventDefault();
+                    const widgetId = e.target.closest('.btn-delete-widget').dataset.id;
+                    showDeleteConfirmation(widgetId);
+                }
+            });
+
+            function showDeleteConfirmation(widgetId) {
+                currentWidgetToDelete = widgetId;
+                deleteConfirmationModal.show();
+            }
+
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                if (currentWidgetToDelete) {
+                    const widgetId = currentWidgetToDelete;
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                    const widgetIndex = state.widgets.findIndex(w => w.id === widgetId);
+
+                    if (widgetIndex === -1) return;
+
+                    const widgetElement = document.querySelector(`[data-widget-id="${widgetId}"]`);
+                    if (widgetElement) widgetElement.remove();
+
+                    state.widgets.splice(widgetIndex, 1);
+
+                    const requestData = {
+                        DashboardWidgets: state.widgets
+                    };
+
+                    fetch('/Dashboard/SaveDashboardWidgets', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': token
+                        },
+                        body: JSON.stringify(requestData)
+                    })
+                    .then(async response => {
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Failed to delete widget');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        state.widgets = data.widgets || state.widgets;
+                        if (state.widgets.length === 0) showEmptyState();
+                        showCustomToast('success', 'Widget deleted successfully!');
+                    })
+                    .catch(error => {
+                        console.error('Error deleting widget:', error);
+                        showCustomToast('danger', 'Error deleting widget: ' + error.message);
+                        if (widgetIndex !== -1) {
+                            state.widgets.splice(widgetIndex, 0, state.widgets[widgetIndex]);
+                            refreshDashboard();
+                        }
+                    });
+
+                    deleteConfirmationModal.hide();
+                    currentWidgetToDelete = null;
+                }
+            });
+
+            function loadWidgets() {
+                state.widgets = [];
+                elements.dashboardContainer.innerHTML = '';
+
+                fetch('/Dashboard/GetDashboardData')
+                .then(response => response.json())
+                .then(data => {
+                    state.widgets = data.dashboardWidgets || [];
+                    state.widgetCounter = state.widgets.length;
+
+                    if (state.widgets.length === 0) {
+                        showEmptyState();
+                    } else {
+                        state.widgets.forEach(widget => renderWidget(widget));
+                        loadWidgetData(); // Widget verilerini yükle
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading widgets:', error);
+                    showEmptyState();
+                });
+            }
+
+            function loadWidgetData() {
+                state.widgets.forEach(widget => {
+                    if (widget.type === 'RecentExecutions') {
+                        fetchWidgetData(widget.id, widget.type, null, null, null);
+                    }
+                    else if (widget.type === 'RecentJobs') {
+                        fetchWidgetData(widget.id, widget.type, null, null, null);
+                    }
+                    else if (widget.cicdToolId && widget.project && widget.pipelineId !== null) {
+                        fetchWidgetData(
+                            widget.id,
+                            widget.type,
+                            widget.cicdToolId,
+                            widget.project,
+                            widget.pipelineId
+                        );
+                    } 
+                    else {
+                        const widgetElement = document.querySelector(`[data-widget-id="${widget.id}"] .card-body`);
+                        if (widgetElement) {
+                            widgetElement.innerHTML = '<div class="alert alert-warning">Widget configuration incomplete</div>';
+                        }
+                    }
+                });
+            }
+
+            // 6. RENDER HELPERS
+            function renderPipelineWidget(widgetData) {
+                return `
+                    <div class="table-responsive">
+                        <table class="table table-hover table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Build</th>
+                                    <th>Status</th>
+                                    <th>Duration</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            Loading pipeline data...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            function renderChartWidget(widgetData) {
+                return `
+                    <div class="chart-container" style="height: 250px; position: relative;">
+                        <canvas id="chart-${widgetData.id}"></canvas>
+                        <div class="chart-loading-overlay d-flex justify-content-center align-items-center bg-white bg-opacity-90">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-2" role="status"></div>
+                                <div class="text-muted">Loading chart data...</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderTestResultsTableWidget(widgetData) {
+                return `
+                    <div class="table-responsive">
+                        <table class="table table-hover table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Build</th>
+                                    <th>Status</th>
+                                    <th>Total</th>
+                                    <th>Passed</th>
+                                    <th>Failed</th>
+                                    <th>Skipped</th>
+                                    <th>Pass Rate</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            Loading test results data...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            function renderRecentExecutionsWidget(widgetData) {
+                return `
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Start Time</th>
+                                    <th>Status</th>
+                                    <th class="w-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="3" class="text-center text-muted">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            Loading recent executions...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            function renderRecentJobsWidget(widgetData) {
+                return `
+                    <div class="table-responsive">
+                        <table class="table table-vcenter card-table">
+                            <thead>
+                                <tr>
+                                    <th>Job ID</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th class="w-1">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted">
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            Loading job data...
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            function showEmptyState() {
+                const emptyStateHtml = `
+                    <div class="empty">
+                        <div class="empty-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-layout-dashboard" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                <path d="M3 5a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2v-14z"></path>
+                                <path d="M3 10h18"></path>
+                                <path d="M10 3v18"></path>
+                            </svg>
+                        </div>
+                        <p class="empty-title">No widgets added yet</p>
+                        <p class="empty-subtitle text-muted">
+                            Get started by adding your first widget to customize your dashboard
+                        </p>
+                    </div>
+                `;
+                elements.dashboardContainer.innerHTML = emptyStateHtml;
+            }
+
+            // 7. OVERLAY FUNCTIONS
+            function toggleOverlay(show) {
+                if (show) {
+                    elements.settingsOverlay.classList.remove('d-none');
+                    setTimeout(() => elements.settingsOverlay.classList.add('show'), 10);
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    elements.settingsOverlay.classList.remove('show');
+                    setTimeout(() => {
+                        if (!elements.settingsOverlay.classList.contains('show')) {
+                            elements.settingsOverlay.classList.add('d-none');
+                        }
+                    }, 300);
+                    document.body.style.overflow = '';
+                }
+            }
+
+            function handleWidgetSearch(e) {
+                const searchTerm = e.target.value.toLowerCase();
+                const widgets = elements.availableWidgets.querySelectorAll('.widget-selector');
+
+                widgets.forEach(widget => {
+                    const title = widget.querySelector('h4').textContent.toLowerCase();
+                    const description = widget.querySelector('p').textContent.toLowerCase();
+                    const parentCol = widget.closest('.col-md-6');
+
+                    parentCol.style.display = (title.includes(searchTerm) || description.includes(searchTerm))
+                        ? 'block'
+                        : 'none';
+                });
+            }
+
+            // 8. CONFIG MODAL - GÜNCELLENMİŞ VERSİYON
+            function openConfigModal(widgetType, widgetId = null) {
+                const isEdit = !!widgetId;
+                const widget = isEdit ? state.widgets.find(w => w.id === widgetId) : null;
+
+                // RecentExecutions widget'ı için özel form
+                if (widgetType === 'RecentExecutions') {
+                    let formHtml = `
+                        <div class="mb-3">
+                            <label class="form-label">Widget Title</label>
+                            <input type="text" class="form-control" name="widgetTitle"
+                                   value="${isEdit ? widget.title : 'Recent Executions'}">
+                            <input type="hidden" name="widgetType" value="${widgetType}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Column Size</label>
+                            <select class="form-select" name="columnSize">
+                                <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
+                                <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info">
+                            This widget shows your recent test executions. No additional configuration needed.
+                        </div>
+                    `;
+
+                    elements.widgetConfigContent.innerHTML = formHtml;
+                    elements.widgetConfigModal.show();
+                    return;
+                }
+                if (widgetType === 'RecentJobs') {
+                    let formHtml = `
+                        <div class="mb-3">
+                            <label class="form-label">Widget Title</label>
+                            <input type="text" class="form-control" name="widgetTitle"
+                                   value="${isEdit ? widget.title : 'Recent Jobs'}">
+                            <input type="hidden" name="widgetType" value="${widgetType}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Column Size</label>
+                            <select class="form-select" name="columnSize">
+                                <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
+                                <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info">
+                            This widget shows recently executed Hangfire jobs. No additional configuration needed.
+                        </div>
+                    `;
+
+                    elements.widgetConfigContent.innerHTML = formHtml;
+                    elements.widgetConfigModal.show();
+                    return;
+                }
+
+                // Diğer widget'lar için mevcut form
+                let formHtml = `
+                    <div class="mb-3">
+                        <label class="form-label">Widget Title</label>
+                        <input type="text" class="form-control" name="widgetTitle"
+                               value="${isEdit ? widget.title : widgetType === 'PipelineResultsTable' ? 'Pipeline Results' : 'Test Results'}">
+                        <input type="hidden" name="widgetType" value="${widgetType}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Column Size</label>
+                        <select class="form-select" name="columnSize">
+                            <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
+                            <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">CI/CD Tool</label>
+                        <select class="form-select" name="cicdTool" id="cicdToolSelect">
+                            <option value="">Select CI/CD Tool</option>
+                            ${state.cicdSettings.map(setting =>
+                                `<option value="${setting.id}"
+                                    data-tooltype="${setting.toolType}"
+                                    data-apiurl="${setting.apiUrl}"
+                                    data-project="${setting.project}"
+                                    data-accesstoken="${setting.accessToken}"
+                                    ${(isEdit && widget.cicdToolId === setting.id) ? 'selected' : ''}>
+                                    ${setting.name} (${state.cicdToolTypes[setting.toolType]})
+                                </option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="projectSelectContainer">
+                        <label class="form-label">Project</label>
+                        <select class="form-select" name="project" id="projectSelect" disabled>
+                            <option value="">Select a project</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 d-none" id="pipelineSelectContainer">
+                        <label class="form-label">Pipeline</label>
+                        <select class="form-select" name="pipeline" id="pipelineSelect" disabled>
+                            <option value="">Select a pipeline</option>
+                        </select>
+                    </div>
+                `;
+
+                elements.widgetConfigContent.innerHTML = formHtml;
+                elements.widgetConfigModal.show();
+                if (widgetType !== 'RecentJobs') {
+                    // CI/CD tool seçimi için event listener'ları ekle
+                    document.getElementById('cicdToolSelect').addEventListener('change', function() {
+                        // Mevcut CI/CD tool seçim mantığı
+                    });
+                }
+                // Sadece CI/CD widget'ları için dropdown event listeners ekleyelim
+                if (widgetType !== 'RecentExecutions') {
+                    document.getElementById('cicdToolSelect').addEventListener('change', function() {
+                        const selectedOption = this.options[this.selectedIndex];
+                        if (!selectedOption.value) return;
+
+                        const toolType = selectedOption.dataset.tooltype;
+                        const apiUrl = selectedOption.dataset.apiurl;
+                        const project = selectedOption.dataset.project;
+                        const accessToken = selectedOption.dataset.accesstoken;
+
+                        loadProjects(toolType, apiUrl, project, accessToken);
+                    });
+
+                    const projectSelect = document.getElementById('projectSelect');
+                    if (projectSelect) {
+                        projectSelect.addEventListener('change', function() {
+                            const project = this.value;
+                            if (!project) return;
+
+                            const cicdToolSelect = document.getElementById('cicdToolSelect');
+                            const selectedOption = cicdToolSelect.options[cicdToolSelect.selectedIndex];
+                            const toolType = selectedOption.dataset.tooltype;
+                            const apiUrl = selectedOption.dataset.apiurl;
+                            const accessToken = selectedOption.dataset.accesstoken;
+
+                            loadPipelines(toolType, apiUrl, project, accessToken);
+                        });
+                    }
+                }
+
+                // Eğer düzenleme modundaysak, önceki değerleri yükle
+                if (isEdit && widgetType !== 'RecentExecutions') {
+                    if (widget.cicdToolId) {
+                        document.getElementById('cicdToolSelect').value = widget.cicdToolId;
+                        // ToolType'a göre uygun seçeneği işaretle
+                        const toolType = widget.cicdToolType;
+                        if (toolType) {
+                            const options = document.getElementById('cicdToolSelect').options;
+                            for (let i = 0; i < options.length; i++) {
+                                if (parseInt(options[i].dataset.tooltype) === toolType) {
+                                    options[i].selected = true;
+                                    break;
+                                }
+                            }
+                        }
+                        document.getElementById('cicdToolSelect').dispatchEvent(new Event('change'));
+
+                        // Proje ve pipeline yüklendikten sonra değerleri set et
+                        setTimeout(() => {
+                            if (widget.project) {
+                                document.getElementById('projectSelect').value = widget.project;
+                                document.getElementById('projectSelect').dispatchEvent(new Event('change'));
+
+                                setTimeout(() => {
+                                    if (widget.pipelineId) {
+                                        document.getElementById('pipelineSelect').value = widget.pipelineId;
+                                    }
+                                }, 500);
+                            }
+                        }, 500);
+                    }
+                }
+            }
+
+            function loadProjects(toolType, apiUrl, project, accessToken) {
+                const projectSelect = document.getElementById('projectSelect');
+                const projectContainer = document.getElementById('projectSelectContainer');
+                const pipelineContainer = document.getElementById('pipelineSelectContainer');
+
+                projectSelect.innerHTML = '<option value="">Loading projects...</option>';
+                projectSelect.disabled = true;
+                projectContainer.classList.remove('d-none');
+                pipelineContainer.classList.add('d-none');
+
+                const toolTypeNum = parseInt(toolType);
+
+                // Azure için projeleri yükle
+                if (toolTypeNum === 3) { // Azure
+                    fetch(`/Dashboard/GetAzureProjects?apiUrl=${encodeURIComponent(apiUrl)}&accessToken=${encodeURIComponent(accessToken)}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Failed to load projects');
+                            return response.json();
+                        })
+                        .then(data => {
+                            projectSelect.innerHTML = '<option value="">Select a project</option>' +
+                                data.map(proj => `<option value="${proj.name}">${proj.name}</option>`).join('');
+                            projectSelect.disabled = false;
+
+                            if (project) {
+                                projectSelect.value = project;
+                                projectSelect.dispatchEvent(new Event('change'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading projects:', error);
+                            projectSelect.innerHTML = '<option value="">Error loading projects</option>';
+                        });
+                }
+                // Jenkins için projeleri yükle
+                else if (toolTypeNum === 2) { // Jenkins
+                    // Jenkins için proje yükleme implementasyonu
+                    projectSelect.innerHTML = '<option value="">Jenkins projects not implemented yet</option>';
+                }
+                // GitLab için projeleri yükle
+                else if (toolTypeNum === 1) { // GitLab
+                    // GitLab için proje yükleme implementasyonu
+                    projectSelect.innerHTML = '<option value="">GitLab projects not implemented yet</option>';
+                }
+            }
+
+            function loadPipelines(toolType, apiUrl, project, accessToken) {
+                const pipelineSelect = document.getElementById('pipelineSelect');
+                const pipelineContainer = document.getElementById('pipelineSelectContainer');
+
+                pipelineSelect.innerHTML = '<option value="">Loading pipelines...</option>';
+                pipelineSelect.disabled = true;
+                pipelineContainer.classList.remove('d-none');
+
+                const toolTypeNum = parseInt(toolType);
+
+                // Azure için pipeline'ları yükle
+                if (toolTypeNum === 3) { // Azure
+                    fetch(`/Dashboard/GetAzurePipelines?apiUrl=${encodeURIComponent(apiUrl)}&project=${encodeURIComponent(project)}&accessToken=${encodeURIComponent(accessToken)}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Failed to load pipelines');
+                            return response.json();
+                        })
+                        .then(data => {
+                            pipelineSelect.innerHTML = '<option value="">Select a pipeline</option>' +
+                                data.map(pipe => `<option value="${pipe.id}">${pipe.name}</option>`).join('');
+                            pipelineSelect.disabled = false;
+                        })
+                        .catch(error => {
+                            console.error('Error loading pipelines:', error);
+                            pipelineSelect.innerHTML = '<option value="">Error loading pipelines</option>';
+                        });
+                }
+                // Jenkins için pipeline'ları yükle
+                else if (toolTypeNum === 2) { // Jenkins
+                    // Jenkins için pipeline yükleme implementasyonu
+                    pipelineSelect.innerHTML = '<option value="">Jenkins pipelines not implemented yet</option>';
+                }
+                // GitLab için pipeline'ları yükle
+                else if (toolTypeNum === 1) { // GitLab
+                    // GitLab için pipeline yükleme implementasyonu
+                    pipelineSelect.innerHTML = '<option value="">GitLab pipelines not implemented yet</option>';
+                }
+            }
+
+            // 9. SERVER COMMUNICATION
+            function saveToServer() {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                // DashboardVm formatında veri gönder
+                const requestData = {
+                    DashboardWidgets: state.widgets
+                };
+
+                fetch('/Dashboard/SaveDashboardWidgets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(requestData)
+                })
+                .then(async response => {
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to save widgets');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    state.widgets = data.widgets || state.widgets;
+                    refreshDashboard();
+                    showCustomToast('success', 'Widgets saved successfully!');
+                })
+                .catch(error => {
+                    console.error('Error saving widgets:', error);
+                    showCustomToast('danger', error.message);
+                });
+            }
+
+            function refreshDashboard() {
+                elements.dashboardContainer.innerHTML = '';
+
+                if (state.widgets.length === 0) {
+                    showEmptyState();
+                    return;
+                }
+
+                state.widgets.forEach(widget => {
+                    const widgetHtml = `
+                        <div class="col-md-${widget.columnSize}" data-widget-id="${widget.id}">
+                            <div class="card widget-card">
+                                <div class="card-header">
+                                    <h3 class="card-title">${widget.title}</h3>
+                                    ${renderWidgetActions(widget.id)}
+                                </div>
+                                <div class="card-body">
+                                    ${renderWidgetContent(widget)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    elements.dashboardContainer.insertAdjacentHTML('beforeend', widgetHtml);
+                });
+
+                loadWidgetData();
+            }
+
+            // 10. DATA FETCHING
+            function fetchWidgetData(widgetId, widgetType, cicdToolId, project, pipelineId) {
+                const widgetElement = document.querySelector(`[data-widget-id="${widgetId}"]`);
+                if (!widgetElement) return;
+
+                const widget = state.widgets.find(w => w.id === widgetId);
+                if (!widget) return;
+
+                if (widgetType === 'RecentExecutions') {
+                    fetch('/Scenarios/GetRecentProcesses')
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            return response.json();
+                        })
+                        .then(data => {
+                            updateWidgetContent(widgetId, widgetType, data);
+                        })
+                        .catch(error => {
+                            console.error('Error loading recent executions:', error);
+                            const contentElement = widgetElement.querySelector('.card-body');
+                            if (contentElement) {
+                                contentElement.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                            }
+                        });
+                }
+
+                else if (widgetType === 'RecentJobs') 
+                {
+                    fetch('/Dashboard/GetRecentJobs')
+                        .then(response => {
+                            if (!response.ok)
+                            {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            updateWidgetContent(widgetId, widgetType, data);
+                        })
+                        .catch(error => {
+                            console.error('Error loading recent jobs:', error);
+                            const contentElement = document.querySelector(`[data-widget-id="${widgetId}"] .card-body`);
+                            if (contentElement) {
+                                contentElement.innerHTML = `
+                                    <div class="alert alert-danger">
+                                        Error loading job data: ${error.message}
+                                        <button class="btn btn-sm btn-retry" onclick="retryLoadWidget('${widgetId}', '${widgetType}')">
+                                            Retry
+                                        </button>
+                                    </div>`;
+                            }
+                        });
+                }
+                else 
+                {
+                    const endpoint = widgetType === 'PipelineResultsTable'
+                        ? `/Dashboard/GetPipelineData?cicdToolId=${encodeURIComponent(cicdToolId)}&project=${encodeURIComponent(project)}&pipeline=${pipelineId}`
+                        : `/Dashboard/GetTestResultsData?cicdToolId=${encodeURIComponent(cicdToolId)}&project=${encodeURIComponent(project)}&pipeline=${pipelineId}`;
+
+                    fetch(endpoint)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Received widget data:', data);
+                            if (!Array.isArray(data)) {
+                                throw new Error('Invalid data format received');
+                            }
+                            updateWidgetContent(widgetId, widgetType, data);
+                        })
+                        .catch(error => {
+                            console.error(`Error loading ${widgetType} data:`, error);
+                            const contentElement = widgetElement.querySelector('.card-body');
+                            if (contentElement) {
+                                contentElement.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                            }
+                        });
+                }
+            }
+
+            function updateWidgetContent(widgetId, widgetType, data) {
+                const widgetElement = document.querySelector(`[data-widget-id="${widgetId}"]`);
+                if (!widgetElement) return;
+
+                const widget = state.widgets.find(w => w.id === widgetId);
+                if (!widget) return;
+
+                if (widgetType === 'PipelineResultsTable') {
+                    updatePipelineWidget(widgetElement, data);
+                } else if (widgetType === 'TestResultsChart') {
+                    updateChartWidget(widgetElement, data);
+                } else if (widgetType === 'TestResultsTable') {
+                    updateTestResultsTableWidget(widgetElement, data);
+                } else if (widgetType === 'RecentExecutions') {
+                    updateRecentExecutionsWidget(widgetElement, data);
+                }else if (widgetType === 'RecentJobs') {
+                    updateRecentJobsWidget(widgetElement, data);
+                }
+                else {
+                    const contentElement = widgetElement.querySelector('.card-body');
+                    if (contentElement) {
+                        contentElement.innerHTML = `<div class="alert alert-warning">Unsupported widget type for ${CICDToolType[widget.cicdToolType] || 'Unknown'} CI/CD</div>`;
+                    }
+                }
+            }
+
+            function updatePipelineWidget(widgetElement, data,cicdToolId) {
+                const tableBody = widgetElement.querySelector('tbody');
+                if (!tableBody) return;
+
+                tableBody.innerHTML = '';
+
+                data.forEach(run => {
+                    const status = getStatusIcon(run.result);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="text-muted">${run.name}</td>
+                        <td>
+                            <div class="d-flex align-items-center" data-bs-toggle="tooltip" title="${status.title}">
+                                ${status.icon}
+                                <span class="ms-2">${run.result}</span>
+                            </div>
+                        </td>
+                        <td class="text-muted">${formatDuration(run.duration)}</td>
+                        <td class="text-muted">${new Date(run.finishedDate).toLocaleDateString()}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                const tooltipTriggerList = [].slice.call(widgetElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+
+            function updateChartWidget(widgetElement, data) {
+                const canvas = widgetElement.querySelector('canvas');
+                const loadingOverlay = widgetElement.querySelector('.chart-loading-overlay');
+
+                if (loadingOverlay) {
+                    loadingOverlay.remove();
+                }
+
+                if (!canvas) return;
+
+                if (!data || !Array.isArray(data) || data.length === 0) {
+                    canvas.insertAdjacentHTML('afterend',
+                        `<div class="alert alert-warning mt-3">No test data available</div>`);
+                    return;
+                }
+
+                try {
+                    const ctx = canvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map((item) => `Build ${item.pipelineBuildNumber ?? 'N/A'}`),
+                            datasets: [
+                                {
+                                    label: 'Passed',
+                                    data: data.map(item => item.passedCount || 0),
+                                    backgroundColor: '#40c057',
+                                    borderColor: '#2b8a3e',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Failed',
+                                    data: data.map(item => item.failedCount || 0),
+                                    backgroundColor: '#fa5252',
+                                    borderColor: '#c92a2a',
+                                    borderWidth: 1
+                                },
+                                {
+                                    label: 'Skipped',
+                                    data: data.map(item => item.skippedCount || 0),
+                                    backgroundColor: '#fab005',
+                                    borderColor: '#e67700',
+                                    borderWidth: 1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            interaction: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            plugins: {
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        footer: (tooltipItems) => {
+                                            let total = 0;
+                                            tooltipItems.forEach(item => {
+                                                total += item.parsed.y || 0;
+                                            });
+                                            return `Total: ${total}`;
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        usePointStyle: true,
+                                        padding: 20
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    grid: {
+                                        display: false
+                                    }
+                                },
+                                y: {
+                                    stacked: true,
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    } catch (error) {
+                        canvas.insertAdjacentHTML('afterend',
+                            `<div class="alert alert-danger mt-3">Chart error: ${error.message}</div>`);
+                    }
+            }
+
+            function updateTestResultsTableWidget(widgetElement, data) {
+                const tableBody = widgetElement.querySelector('tbody');
+                if (!tableBody) return;
+
+                tableBody.innerHTML = '';
+
+                data.forEach(testRun => {
+                   console.log(testRun);
+                    const passRate = testRun.totalCount > 0 ? Math.round(((testRun.passedCount || 0) / testRun.totalCount) * 100) : 0;
+                    const passRateClass = passRate >= 80 ? 'pass-rate-high' :
+                                        passRate >= 50 ? 'pass-rate-medium' : 'pass-rate-low';
+
+                    // Widget'in ait olduğu CI/CD tool bilgisini al
+                    const widget = state.widgets.find(w => w.id === widgetElement.closest('[data-widget-id]').dataset.widgetId);
+                    const cicdToolId = widget?.cicdToolId;
+
+                    const resultIcon = testRun.failedCount > 0 ?
+                        `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e03131" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                        </svg>` :
+                        `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2fb344" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>`;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="text-muted">${testRun.pipelineBuildNumber || 'N/A'}</td>
+                        <td>
+                            <div class="results-badge">
+                                ${resultIcon}
+                                ${testRun.failedCount > 0 ? 'Failed' : 'Passed'}
+                            </div>
+                        </td>
+                        <td><span class="text-muted">${testRun.totalCount || 0}</span></td>
+                        <td><span class="test-count" style="color: #2fb344">${testRun.passedCount || 0}</span></td>
+                        <td><span class="test-count" style="color: #e03131">${testRun.failedCount || 0}</span></td>
+                        <td><span class="test-count" style="color: #fd7e14">${testRun.skippedCount || 0}</span></td>
+                        <td class="pass-rate-cell ${passRateClass}">${passRate}%</td>
+                        <td>
+                            ${testRun.failedCount > 0 ?
+                                `<a href="/Dashboard/CheckResults?cicdToolId=${encodeURIComponent(cicdToolId)}&runId=${testRun.testRunId}"
+                                   class="btn-check-fails"
+                                   data-bs-toggle="tooltip"
+                                   title="View ${testRun.failedCount} failed tests">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                    </svg>
+                                    Check Fails (Build: ${testRun.pipelineBuildNumber})
+                                </a>` :
+                                '<span class="text-muted">No failures</span>'
+                            }
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Tooltip'leri aktif et
+                const tooltipTriggerList = [].slice.call(widgetElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+
+            function updateRecentExecutionsWidget(widgetElement, data) {
+                const tableBody = widgetElement.querySelector('tbody');
+                if (!tableBody) return;
+
+                tableBody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">No recent executions found</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                data.forEach(process => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="text-muted">${new Date(process.startTime).toLocaleString()}</td>
+                        <td>
+                            <span class="badge ${getProcessStatusBadgeClass(process.status)}">
+                                ${process.status}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/Scenarios/ExecutionAllTestOutput?processId=${process.id}"
+                               class="btn btn-sm btn-icon"
+                               title="View details"
+                               data-bs-toggle="tooltip">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                </svg>
+                            </a>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+
+                // Tooltip'leri yeniden başlat
+                const tooltipTriggerList = [].slice.call(widgetElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+
+            function updateRecentJobsWidget(widgetElement, data) {
+                const tableBody = widgetElement.querySelector('tbody');
+                if (!tableBody) return;
+
+                tableBody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No recent jobs found</td>
+                        </tr>`;
+                    return;
+                }
+
+                data.forEach(job => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="text-muted">${job.id}</td>
+                        <td>${job.methodName || 'Unknown'}</td>
+                        <td>
+                            <span class="badge ${window.getJobStatusBadgeClass(job.state)}">
+                                ${job.state}
+                            </span>
+                        </td>
+                        <td class="text-muted">${job.formattedCreatedAt || job.createdAt || 'N/A'}</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-icon view-job-details"
+                               title="View details"
+                               data-job-id="${job.id}"
+                               data-bs-toggle="tooltip">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                </svg>
+                            </a>
+                        </td>`;
+                    tableBody.appendChild(row);
+                });
+
+                // Job detay butonları için event listener
+                widgetElement.querySelectorAll('.view-job-details').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const jobId = this.dataset.jobId;
+                        window.showJobDetails(jobId);
+                    });
+                });
+
+                // Tooltip'leri başlat
+                const tooltipTriggerList = [].slice.call(widgetElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            }
+
+            window.showJobDetails = function(jobId) {
+                const modalId = `job-modal-${jobId.replace(/[^a-z0-9]/gi, '')}`;
+
+                // Modal HTML'i
+                const modalHTML = `
+                <div class="modal fade" id="${modalId}" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">Job Details - ${jobId}</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4" id="${modalId}-body">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+                                    <p class="mt-3 text-muted">Loading job details...</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+                // Modalı DOM'a ekle
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                const modalElement = document.getElementById(modalId);
+                const modal = new bootstrap.Modal(modalElement);
+
+                // Modal gösterildiğinde verileri yükle
+                modalElement.addEventListener('shown.bs.modal', () => {
+                    window.loadJobDetails(jobId, modalId);
+                });
+
+                // Modal kapatıldığında temizle
+                modalElement.addEventListener('hidden.bs.modal', () => {
+                    modal.dispose();
+                    modalElement.remove();
+                });
+
+                modal.show();
+            };
+
+            window.getJobStatusBadgeClass = function(status) {
+                const statusMap = {
+                    'Enqueued': 'bg-blue-lt',
+                    'Processing': 'bg-cyan-lt',
+                    'Succeeded': 'bg-green-lt',
+                    'Failed': 'bg-red-lt',
+                    'Deleted': 'bg-gray-lt'
+                };
+                return statusMap[status] || 'bg-secondary-lt';
+            };
+
+            window.loadJobDetails = function(jobId, modalId) {
+                const modalBody = document.getElementById(`${modalId}-body`);
+
+                modalBody.innerHTML = `
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+                        <p class="mt-3 text-muted">Loading job details...</p>
+                    </div>
+                `;
+
+                fetch(`/Dashboard/GetJobDetails?jobId=${jobId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(result => {
+                        console.log("API Response:", result);
+
+                        const isSuccess = result.Success || result.success;
+                        if (!isSuccess) {
+                            throw new Error(result.Error || result.error || "Failed to load job details");
+                        }
+
+                        const data = result.Data || result.data;
+                        const job = data.Job || data.job;
+                        const state = data.State || data.state;
+                        const reason = data.Reason || data.reason || "No reason provided";
+                        const history = data.History || data.history || [];
+
+                        let detailsHtml = `
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">Job Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Job ID:</label>
+                                                <p>${jobId}</p>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Type:</label>
+                                                <p>${job.Type || job.type}</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Method:</label>
+                                                <p>${job.Method || job.method}</p>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Created At:</label>
+                                                <p>${job.CreatedAt || job.createdAt}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">Current Status</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">State:</label>
+                                        <span class="badge ${window.getJobStatusBadgeClass(state)}">
+                                            ${state}
+                                        </span>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Reason:</label>
+                                        <p>${reason}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">History</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="timeline">
+                        `;
+
+                        history.forEach(item => {
+                            const itemState = item.State || item.state;
+                            const itemDate = item.Date || item.date;
+                            const itemReason = item.Reason || item.reason;
+
+                            detailsHtml += `
+                                <div class="timeline-item">
+                                    <div class="timeline-badge ${window.getJobStatusBadgeClass(itemState)}"></div>
+                                    <div class="timeline-content">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold">${itemState}</span>
+                                            <span class="text-muted">${itemDate}</span>
+                                        </div>
+                                        ${itemReason !== 'N/A' ? `<p class="text-muted mb-0">${itemReason}</p>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        detailsHtml += `
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+
+                        modalBody.innerHTML = detailsHtml;
+                    })
+                    .catch(error => {
+                        console.error('Error loading job details:', error);
+
+                        modalBody.innerHTML = `
+                            <div class="alert alert-danger">
+                                <h5>Error Loading Job Details</h5>
+                                <p>${error.message}</p>
+                                <button class="btn btn-primary mt-2" onclick="window.retryJobDetails('${jobId}', '${modalId}')">
+                                    Retry
+                                </button>
+                            </div>
+                        `;
+                    });
+            };
+
+            window.retryJobDetails = function(jobId, modalId) {
+                window.loadJobDetails(jobId, modalId);
+            };
+
+            function getProcessStatusBadgeClass(status) {
+                const statusMap = {
+                    'Running': 'bg-blue-lt',
+                    'Executed': 'bg-green-lt',
+                    'Failed': 'bg-red-lt',
+                    'Cancelled': 'bg-yellow-lt'
+                };
+                return statusMap[status] || 'bg-secondary-lt';
+            }
+
+            function getStatusIcon(status) {
+                const statusMap = {
+                    'succeeded': {
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2fb344" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                              </svg>`,
+                        title: 'Success'
+                    },
+                    'failed': {
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e03131" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="15" y1="9" x2="9" y2="15"></line>
+                                <line x1="9" y1="9" x2="15" y2="15"></line>
+                              </svg>`,
+                        title: 'Failed'
+                    },
+                    'partiallysucceeded': {
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fcc419" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                              </svg>`,
+                        title: 'Partially Succeeded'
+                    },
+                    'running': {
+                        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#228be6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 2v4"></path>
+                                <path d="M12 18v4"></path>
+                                <path d="M4.93 4.93l2.83 2.83"></path>
+                                <path d="M16.24 16.24l2.83 2.83"></path>
+                                <path d="M2 12h4"></path>
+                                <path d="M18 12h4"></path>
+                                <path d="M4.93 19.07l2.83-2.83"></path>
+                                <path d="M16.24 7.76l2.83-2.83"></path>
+                              </svg>`,
+                        title: 'Running'
+                    }
+                };
+
+                const defaultIcon = {
+                    icon: `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#868e96" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                          </svg>`,
+                    title: 'Unknown'
+                };
+
+                return statusMap[status.toLowerCase()] || defaultIcon;
+            }
+
+
+            function formatDuration(minutes) {
+                if (minutes < 1) return '< 1m';
+                if (minutes < 60) return `${minutes}m`;
+                const hours = Math.floor(minutes / 60);
+                const remainingMinutes = minutes % 60;
+                return `${hours}h ${remainingMinutes}m`;
+            }
+
+        });
+    </script>
+}

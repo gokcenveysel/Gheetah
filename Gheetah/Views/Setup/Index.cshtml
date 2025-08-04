@@ -1,0 +1,41 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Gheetah.Models.ViewModels.Setup.SsoSelectionVm
+
+<div class="page-body">
+    <div class="container-xl d-flex flex-column justify-content-center">
+        <div class="card card-md">
+            <div class="card-body text-center py-4 p-sm-5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-auth0 text-blue" width="48" height="48" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 14.5l-5.5 3.5l2 -6l-4.5 -4h6l2 -5l2 5h6l-4.5 4l2 6z" />
+                </svg>
+                <h1 class="mt-4">SSO Integration Setup</h1>
+                <p class="text-muted">Select your Single Sign-On provider to continue</p>
+            </div>
+            <div class="hr-text hr-text-center hr-text-spaceless">choose provider</div>
+            <div class="card-body">
+                <form asp-action="SelectSso">
+                    <div class="mb-4">
+                        <label class="form-label">Select SSO Provider</label>
+                        <select asp-for="SelectedSso" class="form-select">
+                            <option value="None">No SSO</option>
+                            <option value="Azure">Azure AD</option>
+                            <option value="Google">Google Workspace</option>
+                        </select>
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">
+                            Next
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrow-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M5 12l14 0" />
+                                <path d="M13 18l6 -6" />
+                                <path d="M13 6l6 6" />
+                            </svg>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

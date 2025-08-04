@@ -1,0 +1,41 @@
+﻿@{
+    Layout = "_LayoutAuth";
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="page page-center">
+    <div class="container container-tight py-4">
+        <div class="empty">
+            <div class="empty-header">
+                <div class="empty-status">403</div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon icon icon-tabler icon-tabler-lock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+                    <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                    <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
+                </svg>
+            </div>
+            <p class="empty-title">Access Denied</p>
+            <p class="empty-subtitle text-muted">
+                You don't have permission to access this resource.
+            </p>
+            <div class="empty-action">
+                <a href="/" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                    </svg>
+                    Return to Home
+                </a>
+            </div>
+            @if (ViewBag.ReturnUrl != null)
+            {
+                <div class="mt-3 text-muted small">
+                    Attempted to access: <code class="user-select-all">@ViewBag.ReturnUrl</code>
+                </div>
+            }
+        </div>
+    </div>
+</div>

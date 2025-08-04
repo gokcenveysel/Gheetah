@@ -1,0 +1,299 @@
+﻿@model List<Gheetah.Models.ProjectModel.Project>
+@{
+    ViewData["Title"] = "Project List";
+}
+
+<form id="antiForgeryForm" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+<style>
+    .toast {
+        border: none;
+        box-shadow: var(--tblr-shadow-lg);
+        margin-bottom: 1rem;
+    }
+
+    .toast-header {
+        font-weight: var(--tblr-font-weight-bold);
+    }
+
+    .bg-success .toast-header,
+    .bg-danger .toast-header {
+        color: white !important;
+    }
+</style>
+
+<div class="page-header d-print-none">
+    <div class="row align-items-center">
+        <div class="col">
+            <h2 class="page-title">Project List</h2>
+            <div class="text-muted mt-1">All cloned projects in the system</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-striped">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Language</th>
+                    <th>Repository</th>
+                    <th>Cloned Date</th>
+                    <th>Status</th>
+                    <th class="w-1">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr data-project-id="@p.Id">
+                        <td>
+                            <div class="d-flex py-1 align-items-center">
+                                @if (p.LanguageType?.ToLower() == "c#")
+                                {
+                                    <span class="avatar me-2" style="background-image: url(/img/icons8-c-32.png)"></span>
+                                }
+                                else if (p.LanguageType?.ToLower() == "java")
+                                {
+                                    <span class="avatar me-2" style="background-image: url(/img/icons8-java-33.png)"></span>
+                                }
+                                else
+                                {
+                                    <span class="avatar me-2" style="background-image: url(/img/icons8-file-32.png)"></span>
+                                }
+                                <div class="flex-fill">
+                                    <div class="font-weight-medium">@p.Name</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span>@p.LanguageType</span></td>
+                        <td class="text-muted">
+                            <a href="@p.RepoUrl" target="_blank" class="text-reset text-truncate d-block" style="max-width: 200px;">
+                                @p.RepoUrl
+                            </a>
+                        </td>
+                        <td class="text-muted">
+                            <div class="d-flex align-items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar me-1" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z" />
+                                    <path d="M16 3v4" />
+                                    <path d="M8 3v4" />
+                                    <path d="M4 11h16" />
+                                    <path d="M11 15h1" />
+                                    <path d="M12 15v3" />
+                                </svg>
+                                @p.ClonedDate.ToString("dd MMM yyyy")
+                            </div>
+                        </td>
+                        <td>
+                            @if (p.IsBuilt)
+                            {
+                                <span class="badge bg-success-lt">Built</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-lt">Not Built</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                @if (!p.IsBuilt)
+                                {
+                                    <button type="button"
+                                            class="btn btn-icon build-btn"
+                                            data-project-id="@p.Id"
+                                            data-language-type="@p.LanguageType"
+                                            data-project-name="@p.Name"
+                                            title="Build Project">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon text-green" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M9 15h.01" />
+                                            <path d="M3 6l1.721 10.329a2 2 0 0 0 1.973 1.671h10.612a2 2 0 0 0 1.973 -1.671l1.721 -10.329" />
+                                            <path d="M12 15h.01" />
+                                            <path d="M15 15h.01" />
+                                            <path d="M15 12h.01" />
+                                            <path d="M12 12h.01" />
+                                            <path d="M9 12h.01" />
+                                            <path d="M3.486 8.965c.168 .02 .34 .033 .514 .035c.79 .009 1.539 -.178 2 -.5c.461 -.32 1.21 -.507 2 -.5c.79 -.007 1.539 .18 2 .5c.461 .322 1.21 .509 2 .5c.79 .009 1.539 -.178 2 -.5c.461 -.32 1.21 -.507 2 -.5c.79 -.007 1.539 .18 2 .5c.461 .322 1.21 .509 2 .5c.17 0 .339 -.014 .503 -.034" />
+                                        </svg>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <a asp-action="ScenarioDetail" asp-controller="Scenarios" asp-route-id="@p.Id" class="btn btn-icon" title="View Scenarios">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon text-blue" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                                            <path d="M10 13l-1 2l1 2" />
+                                            <path d="M14 13l1 2l-1 2" />
+                                        </svg>
+                                    </a>
+                                }
+
+                                <button type="button" class="btn btn-icon" title="Delete" 
+                                        onclick="showDeleteModal('@p.Id', '@p.Name.Replace("'","\\'")')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-red" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M4 7h16"/>
+                                        <path d="M10 11v6"/>
+                                        <path d="M14 11v6"/>
+                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/>
+                                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="deleteProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M12 9v2m0 4v.01" />
+                    <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" />
+                </svg>
+                <h3>Delete Project?</h3>
+                <div class="text-muted">You are about to delete <strong id="modalProjectName"></strong>. This action cannot be undone.</div>
+            </div>
+            <div class="modal-footer">
+                <div class="row g-2">
+                    <div class="col">
+                        <button class="btn w-100" data-bs-dismiss="modal">Cancel</button>
+                    </div>
+                    <div class="col">
+                        <form id="deleteProjectForm" method="post" asp-action="DeleteProject" asp-controller="Projects">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="modalProjectId" name="projectId" value="" />
+                            <button type="submit" class="btn btn-danger w-100">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showDeleteModal(projectId, projectName) {
+            try {
+                const modalEl = document.getElementById('deleteProjectModal');
+                const projectIdInput = document.getElementById('modalProjectId');
+                const projectNameSpan = document.getElementById('modalProjectName');
+
+                if (!modalEl || !projectIdInput || !projectNameSpan) {
+                    throw new Error("Modal elements not initialized");
+                }
+
+                projectIdInput.value = projectId;
+                projectNameSpan.textContent = projectName;
+
+                new bootstrap.Modal(modalEl).show();
+            } catch (error) {
+                console.error("Modal error:", error);
+                showCustomToast('danger', 'System error: Could not initialize delete dialog');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+        @if (TempData["Success"] != null)
+        {
+            <text>showCustomToast('success', '@Html.Raw(TempData["Success"])');</text>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <text>showCustomToast('danger', '@Html.Raw(TempData["Error"])');</text>
+        }
+
+            document.querySelectorAll('.build-btn').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    const projectId = this.dataset.projectId;
+                    const languageType = this.dataset.languageType;
+                    const projectName = this.dataset.projectName;
+
+                    Loader.show(`Building ${projectName}...`);
+
+                    try {
+                        const response = await fetch('@Url.Action("BuildProject", "Projects")', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            },
+                            body: JSON.stringify({ projectId, languageType })
+                        });
+
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || "Build failed");
+
+                        showCustomToast('success', data.message);
+                        setTimeout(() => location.reload(), 2000);
+                    }
+                    catch (err) {
+                        showCustomToast('danger', err.message);
+                    }
+                    finally {
+                        Loader.hide();
+                    }
+                });
+            });
+
+            document.getElementById('deleteProjectForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const form = e.target;
+                const btn = form.querySelector('button[type="submit"]');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('deleteProjectModal'));
+
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Processing...`;
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        headers: {
+                            'Accept': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    });
+
+                    const result = await response.json();
+        
+                    if (!result.success) {
+                        const userMessage = result.message.includes("partially completed")
+                            ? "Project removed from database but some files couldn't be deleted. " + 
+                              "System will automatically retry later."
+                            : result.message;
+            
+                        throw new Error(userMessage);
+                    }
+
+                    showCustomToast('success', result.message);
+                    modal.hide();
+                    setTimeout(() => location.reload(), 1000);
+                }
+                catch (error) {
+                    showCustomToast('danger', error.message);
+                }
+                finally {
+                    btn.disabled = false;
+                    btn.textContent = 'Delete';
+                }
+            });
+        });
+    </script>
+}
