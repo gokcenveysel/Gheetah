@@ -642,7 +642,7 @@
 			<div id="first-installation" class="content-section">
 				<h2 class="mb-4">First Installation Wizard</h2>
 				<div class="mt-4 p-4 rounded">
-					<p>When you deploy Gheetah to a compatible server meeting the system requirements or run it via Visual Studio, you will be greeted by the "First Installation" wizard. This intuitive setup process guides you through the initial configuration steps to ensure a smooth onboarding experience.</p>
+					<p>When you deploy <strong>Gheetah</strong> to a compatible server meeting the system requirements or run it via Visual Studio, you will be greeted by the <strong>"First Installation"</strong> wizard. This intuitive setup process guides you through the initial configuration steps to ensure a smooth onboarding experience.</p>
 					
 					<h3>Configuration Steps</h3>
 					<ol>
@@ -691,6 +691,8 @@
 						<li>Create the default data structures</li>
 						<li>Redirect you to the related(Azure, Google or Custom)<strong> Login</strong> screen
 							<div style="margin-top: 10px;">
+								<img src="img/login-azure.jpeg" alt="Provider" style="max-width: 100%;">
+								<img src="img/login-google.jpeg" alt="Provider" style="max-width: 100%;">
 								<img src="img/login.jpeg" alt="Provider" style="max-width: 100%;">
 							</div>
 						</li>
@@ -708,78 +710,436 @@
 			</div>
             
             <!-- SSO INTEGRATION -->
-            <div id="google-workspace" class="content-section">
-                <h2>Google Workspace</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>To configure Google Workspace SSO:</p>
-                    <ol>
-                        <li>Go to Google Cloud Console</li>
-                        <li>Create OAuth 2.0 Client ID</li>
-                        <li>Configure authorized redirect URI</li>
-                    </ol>
-                </div>
-            </div>
+			<div id="google-workspace" class="content-section">
+				<h2 class="section-title">Google Workspace Single Sign-On (SSO) Integration</h2>
+				<div class="mt-4 p-4 rounded documentation-block">
+					<p class="lead">This guide explains how to configure Google Workspace as an identity provider (IdP) for secure Single Sign-On (SSO) authentication.</p>
+					
+					<!-- Google OAuth Configuration Image -->
+					<div class="mt-3 mb-4 text-center">
+						<img src="img/provider-google.jpeg" alt="Google OAuth 2.0 Setup" class="img-fluid rounded border shadow-sm" style="max-width: 90%;">
+						<p class="text-muted mt-2"><small>Google Cloud Console → OAuth Consent Screen → Credentials</small></p>
+					</div>
+					
+					<ol class="step-list">
+						<li>
+							<h5>Access Google Cloud Console</h5>
+							<ul>
+								<li>Go to the <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>.</li>
+								<li>Select an existing project or <strong>create a new one</strong>.</li>
+								<li>Ensure <strong>Google Workspace APIs</strong> are enabled under <code>APIs & Services > Library</code>.</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Configure OAuth Consent Screen</h5>
+							<ul>
+								<li>Navigate to <strong>APIs & Services > OAuth Consent Screen</strong>.</li>
+								<li>Select <strong>External</strong> (for all users) or <strong>Internal</strong> (for Workspace-only).</li>
+								<li>Fill in:
+									<ul>
+										<li><strong>Application Name</strong> (e.g., "MyApp SSO")</li>
+										<li><strong>Support Email</strong> (admin contact)</li>
+										<li><strong>Authorized Domains</strong> (your company domain)</li>
+									</ul>
+								</li>
+								<li>Add required scopes: <code>email</code>, <code>profile</code>, <code>openid</code>.</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Create OAuth 2.0 Client ID</h5>
+							<ul>
+								<li>Go to <strong>APIs & Services > Credentials</strong>.</li>
+								<li>Click <strong>Create Credentials > OAuth Client ID</strong>.</li>
+								<li>Select <strong>Web Application</strong>.</li>
+								<li>Under <strong>Authorized Redirect URIs</strong>, add:
+									<div class="alert alert-warning mt-2">
+										<strong>⚠️ Required Callback URL:</strong><br>
+										<code>https://yourdomain.com/sso/google/callback</code><br>
+										<small>This <strong>must</strong> match exactly; otherwise, authentication will fail.</small>
+									</div>
+								</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Save Credentials & Configure Your App</h5>
+							<ul>
+								<li>Copy the <strong>Client ID</strong> and <strong>Client Secret</strong>.</li>
+								<li>In your application's SSO settings, enter:
+									<ul>
+										<li><strong>Google Client ID</strong></li>
+										<li><strong>Google Client Secret</strong></li>
+										<li><strong>Callback URL:</strong> <code>/sso/google/callback</code></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ol>
+					
+					<!-- Troubleshooting Tips -->
+					<div class="alert alert-info mt-4">
+						<h5>🔍 Troubleshooting</h5>
+						<ul>
+							<li><strong>Error: "Redirect URI mismatch"</strong> → Verify the callback URL matches exactly.</li>
+							<li><strong>Error: "Invalid scope"</strong> → Ensure <code>openid</code>, <code>email</code>, and <code>profile</code> are included.</li>
+							<li><strong>403 Access Denied</strong> → Check domain restrictions in Google Workspace Admin.</li>
+						</ul>
+					</div>
+				</div>
+			</div>
             
-            <div id="azure-ad" class="content-section">
-                <h2>Azure AD</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Azure AD integration steps:</p>
-                    <ol>
-                        <li>Navigate to Azure Active Directory</li>
-                        <li>Create new app registration</li>
-                        <li>Configure API permissions</li>
-                    </ol>
-                </div>
-            </div>
+			<div id="azure-ad" class="content-section">
+				<h2 class="section-title">Microsoft Azure Active Directory (AD) SSO Integration</h2>
+				<div class="mt-4 p-4 rounded documentation-block">
+					<p class="lead">Follow these steps to set up Azure AD as an identity provider (IdP) for secure Single Sign-On (SSO).</p>
+					
+					<!-- Azure App Registration Image -->
+					<div class="mt-3 mb-4 text-center">
+						<img src="img/provider-azure.jpeg" alt="Azure App Registration" class="img-fluid rounded border shadow-sm" style="max-width: 90%;">
+						<p class="text-muted mt-2"><small>Azure Portal → App Registrations → Authentication → API Permissions</small></p>
+					</div>
+					
+					<ol class="step-list">
+						<li>
+							<h5>Access Azure Active Directory</h5>
+							<ul>
+								<li>Log in to the <a href="https://portal.azure.com/" target="_blank" rel="noopener noreferrer">Microsoft Azure Portal</a>.</li>
+								<li>Go to <strong>Azure Active Directory > App Registrations</strong>.</li>
+								<li>Click <strong>New Registration</strong>.</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Register a New Application</h5>
+							<ul>
+								<li>Enter a <strong>Name</strong> (e.g., "MyApp SSO").</li>
+								<li>Select <strong>Accounts in this organizational directory only</strong> (for single-tenant).</li>
+								<li>Under <strong>Redirect URI</strong>, select <strong>Web</strong> and enter:
+									<div class="alert alert-warning mt-2">
+										<strong>⚠️ Required Callback URL:</strong><br>
+										<code>https://yourdomain.com/sso/azure/callback</code><br>
+										<small>This <strong>must</strong> be exactly <code>/sso/azure/callback</code> for authentication to work.</small>
+									</div>
+								</li>
+								<li>Click <strong>Register</strong>.</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Configure Authentication Settings</h5>
+							<ul>
+								<li>Go to <strong>Authentication</strong>.</li>
+								<li>Ensure <strong>ID Tokens</strong> is checked.</li>
+								<li>Add additional redirect URIs if needed (e.g., for dev/staging environments).</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Set API Permissions</h5>
+							<ul>
+								<li>Navigate to <strong>API Permissions</strong>.</li>
+								<li>Click <strong>Add a permission > Microsoft Graph</strong>.</li>
+								<li>Add delegated permissions:
+									<ul>
+										<li><code>openid</code></li>
+										<li><code>profile</code></li>
+										<li><code>email</code></li>
+									</ul>
+								</li>
+								<li>Click <strong>Grant admin consent</strong>.</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Generate Client Secret</h5>
+							<ul>
+								<li>Go to <strong>Certificates & Secrets</strong>.</li>
+								<li>Click <strong>New client secret</strong>.</li>
+								<li>Set an expiration (recommended: 12 months).</li>
+								<li>Copy the <strong>Secret Value</strong> (you won’t see it again).</li>
+							</ul>
+						</li>
+						
+						<li>
+							<h5>Configure Your Application</h5>
+							<ul>
+								<li>In your app’s SSO settings, enter:
+									<ul>
+										<li><strong>Domain</strong></li>
+										<li><strong>Azure Tenant ID</strong> (found in Azure AD > Overview)</li>
+										<li><strong>Application (Client) ID</strong></li>
+										<li><strong>Client Secret</strong></li>
+										<li><strong>Callback URL:</strong> <code>/sso/azure/callback</code></li>
+									</ul>
+								</li>
+							</ul>
+						</li>
+					</ol>
+					
+					<!-- Troubleshooting Tips -->
+					<div class="alert alert-info mt-4">
+						<h5>🔍 Troubleshooting</h5>
+						<ul>
+							<li><strong>Error: "AADSTS50011 - Redirect URI mismatch"</strong> → Verify the callback URL is registered in Azure AD.</li>
+							<li><strong>Error: "Invalid client secret"</strong> → Generate a new secret in Azure.</li>
+							<li><strong>Error: "Insufficient permissions"</strong> → Re-grant admin consent in API Permissions.</li>
+						</ul>
+					</div>
+				</div>
+			</div>
             
-            <div id="no-sso" class="content-section">
-                <h2>No SSO (Local Auth)</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Local authentication features:</p>
-                    <ul>
-                        <li>User registration</li>
-                        <li>Password reset functionality</li>
-                        <li>Account locking</li>
-                    </ul>
-                </div>
-            </div>
+			<div id="no-sso" class="content-section">
+				<h2 class="section-title">Local Authentication (No SSO)</h2>
+				<div class="mt-4 p-4 rounded documentation-block">
+					<p class="lead">
+						Gheetah's built-in authentication system provides a secure local user management solution 
+						without requiring external identity providers. This is the <strong>default option</strong> 
+						during initial setup.
+					</p>
+
+					<div class="alert alert-success mt-3">
+						<strong>🚀 Zero Configuration Required</strong><br>
+						No additional setup is needed. Simply select <strong>"No SSO"</strong> during initial configuration 
+						to activate Gheetah's native authentication system.
+					</div>
+
+					<h5 class="mt-4">Key Features:</h5>
+					<ul class="feature-list">
+						<li>
+							<strong>Automatic JWT-Based Authentication</strong><br>
+							<small>
+								Gheetah automatically implements OpenID-compatible authentication using 
+								<code>JWT Bearer tokens</code> for secure API access.
+							</small>
+						</li>
+						<li>
+							<strong>Seamless User Onboarding</strong><br>
+							<small>
+								Custom registration and login endpoints are generated automatically when you choose this option.
+							</small>
+						</li>
+						<li>
+							<strong>Complete User Management</strong>
+							<ul>
+								<li>User self-registration (configurable)</li>
+								<li>Secure password reset functionality</li>
+								<li>Account locking after failed attempts</li>
+								<li>Email verification workflows</li>
+							</ul>
+						</li>
+					</ul>
+
+					<h5 class="mt-4">Implementation Details:</h5>
+					<div class="technical-details p-3 bg-white rounded border">
+						<p>
+							When you select <strong>"No SSO"</strong> during initial setup:
+						</p>
+						<ol>
+							<li>Gheetah generates:
+								<ul>
+									<li><code>account/register</code> endpoint (POST)</li>
+									<li><code>account/login</code> endpoint (POST)</li>
+									<li>JWT token generation/validation system</li>
+								</ul>
+							</li>
+							<li>All authentication flows use:
+								<ul>
+									<li>OpenID-compatible JWT tokens</li>
+									<li>HS256 signing algorithm (configurable)</li>
+									<li>Secure HTTP-only cookies for web sessions</li>
+								</ul>
+							</li>
+						</ol>
+						<p class="mt-2">
+							Users created through this system are immediately available in Gheetah with default 
+							<strong>basic user permissions</strong> (configurable in admin panel).
+						</p>
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/create-account.jpeg" alt="Provider" style="max-width: 100%;">
+						<img src="img/login.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<div class="alert alert-info mt-3">
+						<p>Should you encounter any issues during the setup process, our support team is ready to assist:</p>
+						<ul class="mb-0">
+							<li><strong>Email Support:</strong> Contact the creator, Veysel Gökçen, at <a href="mailto:gokcenveysel@gmail.com">gokcenveysel@gmail.com</a></li>
+							<li><strong>Community Support:</strong> Report issues or suggest improvements via our <a href="https://github.com/gokcenveysel/Gheetah" target="_blank">GitHub repository</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
             
             <!-- GROUPS AND ROLES -->
-            <div id="defined-groups" class="content-section">
-                <h2>Defined Groups</h2>
-                <div class="mt-4 p-4 rounded">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Group</th>
-                                <th>Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Administrators</td>
-                                <td>Full system access</td>
-                            </tr>
-                            <tr>
-                                <td>QA Managers</td>
-                                <td>Test management team</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+			<div id="defined-groups" class="content-section">
+				<h2>Defined Groups</h2>
+				<div class="mt-4 p-4 rounded">
+					<p class="lead">Gheetah features a fully customizable group management system where you can define groups with any naming convention that suits your organization's structure.</p>
+					<div style="margin-top: 10px;">
+						<img src="img/manage-groups.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<div class="alert alert-info mt-3">
+						<h5 class="alert-heading">Flexible Group Management</h5>
+						<p>While you can create completely custom groups tailored to your company or team structure, Gheetah comes with pre-configured default groups defined in the <code>appsettings.json</code> configuration file for immediate usability.</p>
+					</div>
+					
+					<h4 class="mt-4 mb-3">Default Group Configuration</h4>
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Group ID</th>
+								<th>Group Name</th>
+								<th>Description</th>
+								<th>Access Level</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>admin-grp</code></td>
+								<td>Admin</td>
+								<td>Full system administration privileges</td>
+								<td><span class="badge bg-danger">Full Access</span></td>
+							</tr>
+							<tr>
+								<td><code>lead-grp</code></td>
+								<td>Lead</td>
+								<td>Project management capabilities</td>
+								<td><span class="badge bg-warning">Elevated Access</span></td>
+							</tr>
+							<tr>
+								<td><code>runner-grp</code></td>
+								<td>Runner</td>
+								<td>Execution privileges for assigned test runs</td>
+								<td><span class="badge bg-primary">Limited Access</span></td>
+							</tr>
+						</tbody>
+					</table>
+					
+					<div class="mt-4">
+						<h4>Key Features of Group Management</h4>
+						<ul>
+							<li><strong>Custom Naming:</strong> Groups are managed by unique IDs, allowing complete flexibility in naming conventions</li>
+							<li><strong>Initial Setup Configuration:</strong> Permissions can be assigned to groups during the first installation wizard</li>
+							<li><strong>Enterprise Ready:</strong> Supports complex organizational structures with hierarchical permissions</li>
+							<li><strong>Dynamic Updates:</strong> Groups can be modified post-installation through the admin interface</li>
+						</ul>
+						
+						<div class="alert alert-warning mt-3">
+							<h5 class="alert-heading">Implementation Note</h5>
+							<p>The group IDs (<code>admin-grp</code>, <code>lead-grp</code>, <code>runner-grp</code>) are hardcoded references in the permission system. While you can change the display names, we recommend maintaining the original IDs for compatibility with future updates.</p>
+						</div>
+					</div>
+					
+					<div class="alert alert-success mt-4">
+						<h5 class="alert-heading">Need Assistance?</h5>
+						<p>For any questions or issues regarding group configuration, please don't hesitate to contact the creator:</p>
+						<p class="mb-0"><strong>Veysel Gökçen</strong> – <a href="mailto:gokcenveysel@gmail.com" class="alert-link">gokcenveysel@gmail.com</a></p>
+					</div>
+				</div>
+			</div>
             
-            <div id="manage-roles" class="content-section">
-                <h2>Manage Roles</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Role management interface allows you to:</p>
-                    <ul>
-                        <li>Create new roles</li>
-                        <li>Assign permissions</li>
-                        <li>Manage role hierarchies</li>
-                    </ul>
-                </div>
-            </div>
+			<div id="manage-roles" class="content-section">
+				<h2>Role and Permission Management</h2>
+				<div class="mt-4 p-4 rounded">
+					<p class="lead">Gheetah provides a comprehensive role-based access control (RBAC) system with fully customizable permissions tailored to your organizational needs.</p>
+					<div style="margin-top: 10px;">
+						<img src="img/assign-permission.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<div class="alert alert-primary mt-3">
+						<h5 class="alert-heading">Customizable Role System</h5>
+						<p>While you can create completely custom roles with specific naming conventions, Gheetah comes pre-configured with default roles and permissions defined in the <code>appsettings.json</code> file for immediate deployment.</p>
+					</div>
+
+					<h4 class="mt-4">Default Permission Configuration</h4>
+					<div class="table-responsive">
+						<table class="table table-bordered">
+							<thead class="table-light">
+								<tr>
+									<th>Role ID</th>
+									<th>Role Name</th>
+									<th>Allowed Actions</th>
+									<th>Scope</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><code>admin-perm</code></td>
+									<td>Administrator</td>
+									<td>
+										<div class="d-flex flex-wrap gap-1">
+											<span class="badge bg-primary">Clone</span>
+											<span class="badge bg-primary">Build</span>
+											<span class="badge bg-primary">Delete</span>
+											<span class="badge bg-danger">ManageUsers</span>
+											<span class="badge bg-danger">ManageGroups</span>
+											<span class="badge bg-danger">ManagePermissions</span>
+											<span class="badge bg-success">ViewDashboard</span>
+											<span class="badge bg-success">RunScenarios</span>
+											<span class="badge bg-success">ViewResults</span>
+										</div>
+									</td>
+									<td>System-wide</td>
+								</tr>
+								<tr>
+									<td><code>lead-perm</code></td>
+									<td>Team Lead</td>
+									<td>
+										<div class="d-flex flex-wrap gap-1">
+											<span class="badge bg-primary">Clone</span>
+											<span class="badge bg-primary">Build</span>
+											<span class="badge bg-primary">Delete</span>
+											<span class="badge bg-success">ViewDashboard</span>
+											<span class="badge bg-success">RunScenarios</span>
+											<span class="badge bg-success">ViewResults</span>
+										</div>
+									</td>
+									<td>Project-level</td>
+								</tr>
+								<tr>
+									<td><code>runner-perm</code></td>
+									<td>Test Runner</td>
+									<td>
+										<div class="d-flex flex-wrap gap-1">
+											<span class="badge bg-success">RunScenarios</span>
+											<span class="badge bg-success">ViewResults</span>
+										</div>
+									</td>
+									<td>Execution-only</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<div class="mt-4">
+						<h4>Key Features</h4>
+						<ul>
+							<li><strong>Flexible Role Assignment:</strong> Roles can be assigned to groups during initial setup or modified later</li>
+							<li><strong>ID-Based Management:</strong> Roles are managed by unique IDs, allowing complete naming flexibility</li>
+							<li><strong>Granular Permissions:</strong> Fine-grained control over system actions and capabilities</li>
+						</ul>
+
+						<div class="alert alert-warning mt-3">
+							<h5 class="alert-heading">Important Implementation Notes</h5>
+							<ol>
+								<li><strong>Authentication Mechanism:</strong> The authorization system references role IDs directly. If you modify these IDs, you must update:
+									<ul>
+										<li>The <code>Program.cs</code> configuration</li>
+										<li>All Controller classes with <code>[Auth]</code> attributes</li>
+									</ul>
+								</li>
+								<li><strong>Post-Setup Modifications:</strong> While role permissions can theoretically be modified after initial setup, this functionality remains <strong class="text-danger">untested</strong> in production environments.</li>
+							</ol>
+						</div>
+					</div>
+
+					<div class="alert alert-info mt-4">
+						<h5 class="alert-heading">Need Assistance?</h5>
+						<p>For any questions regarding role configuration or permission management, please contact:</p>
+						<p class="mb-0"><strong>Veysel Gökçen</strong> – <a href="mailto:gokcenveysel@gmail.com" class="alert-link">gokcenveysel@gmail.com</a></p>
+					</div>
+				</div>
+			</div>
             
             <!-- DASHBOARD -->
             <div id="manage-dashboard" class="content-section">
