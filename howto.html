@@ -1142,17 +1142,88 @@
 			</div>
             
             <!-- DASHBOARD -->
-            <div id="manage-dashboard" class="content-section">
-                <h2>Manage Dashboard</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Dashboard customization options:</p>
-                    <ul>
-                        <li>Drag-and-drop widgets</li>
-                        <li>Custom layouts</li>
-                        <li>Personalized views</li>
-                    </ul>
-                </div>
-            </div>
+			<div id="manage-dashboard" class="content-section">
+				<h2>Dashboard Management</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Initial Access Privileges</h5>
+						<p>Upon first login after installation, the initial user account is automatically registered with <strong>Administrator privileges</strong>, granting full access to all Gheetah functionality. This includes comprehensive dashboard management capabilities.</p>
+					</div>
+
+					<h4 class="mt-4">Dashboard Customization Features</h4>
+					<div class="row">
+						<div class="col-md-6">
+							<div class="feature-card p-3 mb-3 border rounded">
+								<div class="d-flex align-items-center mb-2">
+									<i class="ti ti-layout-dashboard me-2 text-primary"></i>
+									<h5 class="mb-0">Personalized Layouts</h5>
+								</div>
+								<p>Click the <i class="ti ti-settings text-secondary"></i> gear icon to access dashboard customization options where you can:</p>
+								<ul>
+									<li>Add, remove, and configure widgets</li>
+									<li>Rearrange elements via drag-and-drop</li>
+									<li>Save personalized layouts</li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="feature-card p-3 mb-3 border rounded">
+								<div class="d-flex align-items-center mb-2">
+									<i class="ti ti-apps me-2 text-primary"></i>
+									<h5 class="mb-0">Widget Management</h5>
+								</div>
+								<p>Gheetah offers flexible widget configuration:</p>
+								<ul>
+									<li>Resizable components with multiple size presets</li>
+									<li>Custom positioning on the dashboard grid</li>
+									<li>User-specific widget preferences</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="mt-4">
+						<h4>User-Specific Dashboard Experience</h4>
+						<div class="d-flex align-items-start">
+							<i class="ti ti-user-check me-3 mt-1 text-primary"></i>
+							<div>
+								<p>The dashboard system is <strong>user-specific</strong>, meaning:</p>
+								<ul>
+									<li>Each user maintains their own saved dashboard configuration</li>
+									<li>Layout changes are automatically persisted per user</li>
+									<li>Administrators can set default templates for new users</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-info mt-4">
+						<h5 class="alert-heading">Visual Indicator</h5>
+						<p>The dashboard displays a <strong>privilege indicator</strong> showing your current access level. Administrators will see additional management controls and system-wide options not available to standard users.</p>
+					</div>
+
+					<div class="alert alert-warning mt-3">
+						<h5 class="alert-heading">Note for First-Time Users</h5>
+						<p>If you're the initial setup user, ensure you:</p>
+						<ol>
+							<li>Properly configure your admin dashboard before creating additional user accounts</li>
+							<li>Consider setting up template dashboards for different user roles</li>
+							<li>Review default widget placements for optimal user experience</li>
+						</ol>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.feature-card {
+					transition: all 0.3s ease;
+					height: 100%;
+				}
+				.feature-card:hover {
+					transform: translateY(-3px);
+					box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+				}
+			</style>
             
             <div id="widgets" class="content-section">
                 <h2>Widgets</h2>
@@ -1278,13 +1349,131 @@
             </div>
             
             <!-- DEFAULT PLACEHOLDER -->
-            <div id="no-content" class="content-section active">
-                <div class="text-center py-5 my-5">
-                    <i class="ti ti-info-circle mb-3" style="font-size: 3rem; color: var(--gh-primary);"></i>
-                    <h3>Select a topic from the sidebar</h3>
-                    <p class="text-muted">Choose a documentation section to view its content</p>
-                </div>
-            </div>
+			<div id="no-content" class="content-section active">
+				<div class="text-center mt-3">
+					<i class="ti ti-info-circle mb-3" style="font-size: 3rem; color: var(--gh-primary);"></i>
+					<h3>Welcome to Gheetah Documentation</h3>
+					
+					<div class="welcome-message mx-auto" style="max-width: 800px;">
+						<div class="alert alert-success mt-4">
+							<p class="lead">We're thrilled to have you here exploring Gheetah, our open-source test orchestration platform. Your interest in this documentation demonstrates your commitment to quality test automation.</p>
+						</div>
+
+						<div class="card mt-4">
+							<div class="card-body">
+								<h5 class="card-title"><i class="ti ti-license me-2"></i>License Information</h5>
+								<div class="license-info">
+									<p>Gheetah is released under the <strong>MIT License</strong> with important considerations:</p>
+									<ul>
+										<li>Complete open-source codebase (both framework and implementation)</li>
+										<li>Strictly <strong>non-commercial</strong> use only</li>
+										<li>No warranty or liability for untested features</li>
+										<li>Transparent about potential limitations in production environments</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="alert alert-warning mt-4">
+							<h5 class="alert-heading"><i class="ti ti-alert-triangle me-2"></i>Important Disclaimer</h5>
+							<p>While we've used reputable open-source components and followed security best practices:</p>
+							<ul>
+								<li>Some features remain theoretically implemented and not fully tested</li>
+								<li>The Gheetah team assumes <strong>no responsibility</strong> for any issues encountered</li>
+								<li>Users should perform their own security assessments before deployment</li>
+							</ul>
+						</div>
+
+						<div class="card mt-4">
+							<div class="card-body">
+								<h5 class="card-title"><i class="ti ti-headset me-2"></i>Support & Consulting</h5>
+								<p>For professional support regarding:</p>
+								<ul>
+									<li>Test automation strategies</li>
+									<li>Gheetah implementation</li>
+									<li>Custom development and integration</li>
+								</ul>
+								
+								<div class="contact-channels mt-4">
+									<div class="d-flex align-items-center mb-3">
+										<div class="contact-icon me-3">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-linkedin text-primary">
+												<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+												<rect x="2" y="9" width="4" height="12"></rect>
+												<circle cx="4" cy="4" r="2"></circle>
+											</svg>
+										</div>
+										<div>
+											<a href="https://www.linkedin.com/in/veyselgokcen/" target="_blank" class="text-decoration-none">
+												linkedin.com/in/veyselgokcen/
+											</a>
+										</div>
+									</div>
+									
+									<div class="d-flex align-items-center mb-3">
+										<div class="contact-icon me-3">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail text-primary">
+												<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+												<polyline points="22,6 12,13 2,6"></polyline>
+											</svg>
+										</div>
+										<div>
+											<a href="mailto:gokcenveysel@gmail.com" class="text-decoration-none">
+												gokcenveysel@gmail.com
+											</a>
+										</div>
+									</div>
+									
+									<div class="d-flex align-items-center">
+										<div class="contact-icon me-3">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github text-primary">
+												<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+											</svg>
+										</div>
+										<div>
+											<a href="https://github.com/gokcenveysel/Gheetah" target="_blank" class="text-decoration-none">
+												github.com/gokcenveysel/Gheetah
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
+						<style>
+							.contact-channels a {
+								color: var(--gh-secondary);
+								transition: color 0.2s ease;
+							}
+							.contact-channels a:hover {
+								color: var(--gh-primary);
+								text-decoration: underline;
+							}
+							.contact-icon {
+								width: 24px;
+								text-align: center;
+							}
+						</style>
+
+						<p class="text-muted mt-4">Select a documentation topic from the sidebar to begin your exploration</p>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.welcome-message {
+					text-align: left;
+				}
+				.license-info {
+					background-color: #f8f9fa;
+					padding: 15px;
+					border-radius: 5px;
+				}
+				.card {
+					border: none;
+					box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+				}
+			</style>
         </div>
     </div>
 
