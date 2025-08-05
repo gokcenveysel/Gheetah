@@ -1,0 +1,11 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="CucumberTestSuite">
+    <listeners>
+        <listener class-name="org.testng.reporters.XMLReporter"/>
+    </listeners>
+    <test name="CucumberTests">
+        <classes>
+            <class name="runner.CucumberRunner"/>
+        </classes>
+    </test>
+</suite>
