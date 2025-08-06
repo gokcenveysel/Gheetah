@@ -254,148 +254,352 @@
 
     <div class="d-flex">
         <!-- SIDEBAR -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h4 class="mb-0 text-white">Gheetah Documentation</h4>
-            </div>
-            <div class="sidebar-content">
-                <ul class="nav flex-column">
-                    <!-- INTRODUCTION -->
-                    <li>
-                        <div class="nav-item-header" data-target="intro-menu">
-                            <span>Introduction</span>
-                            <i class="ti ti-chevron-right menu-toggle"></i>
-                        </div>
-                        <div id="intro-menu" class="submenu">
-                            <a class="nav-link" href="#" data-section="what-is-gheetah">
-                                <i class="ti ti-info-circle"></i> What is Gheetah
-                            </a>
-                        </div>
-                    </li>
-                    
-                    <!-- INSTALLATION -->
-                    <li>
-                        <div class="nav-item-header" data-target="installation-menu">
-                            <span>Installation</span>
-                            <i class="ti ti-chevron-right menu-toggle"></i>
-                        </div>
-                        <div id="installation-menu" class="submenu">
-                            <a class="nav-link" href="#" data-section="requirement">
-                                <i class="ti ti-checklist"></i> Requirement
-                            </a>
-                            <a class="nav-link" href="#" data-section="first-installation">
-                                <i class="ti ti-wizard"></i> First installation wizard
-                            </a>
-                            
-                            <!-- SSO INTEGRATION -->
-                            <div class="nav-item-header" data-target="sso-submenu">
-                                <span><i class="ti ti-shield-lock me-1"></i>SSO integration</span>
-                                <i class="ti ti-chevron-right menu-toggle"></i>
-                            </div>
-                            <div id="sso-submenu" class="submenu">
-                                <a class="nav-link" href="#" data-section="google-workspace">
-                                    <i class="ti ti-brand-google"></i> Google Workspace
-                                </a>
-                                <a class="nav-link" href="#" data-section="azure-ad">
-                                    <i class="ti ti-brand-azure"></i> Azure AD
-                                </a>
-                                <a class="nav-link" href="#" data-section="no-sso">
-                                    <i class="ti ti-user"></i> No SSO
-                                </a>
-                            </div>
-                            
-                            <!-- GROUPS AND ROLES -->
-                            <div class="nav-item-header" data-target="groups-submenu">
-                                <span><i class="ti ti-users me-1"></i>Groups and Roles</span>
-                                <i class="ti ti-chevron-right menu-toggle"></i>
-                            </div>
-                            <div id="groups-submenu" class="submenu">
-                                <a class="nav-link" href="#" data-section="defined-groups">
-                                    <i class="ti ti-users-group"></i> Defined groups
-                                </a>
-                                <a class="nav-link" href="#" data-section="manage-roles">
-                                    <i class="ti ti-user-plus"></i> Manage roles
-                                </a>
-                            </div>
-                            
-                            <!-- DASHBOARD -->
-                            <div class="nav-item-header" data-target="dashboard-submenu">
-                                <span><i class="ti ti-dashboard me-1"></i>Dashboard</span>
-                                <i class="ti ti-chevron-right menu-toggle"></i>
-                            </div>
-                            <div id="dashboard-submenu" class="submenu">
-                                <a class="nav-link" href="#" data-section="manage-dashboard">
-                                    <i class="ti ti-layout-dashboard"></i> Manage dashboard
-                                </a>
-                                <a class="nav-link" href="#" data-section="widgets">
-                                    <i class="ti ti-apps"></i> Widgets
-                                </a>
-                            </div>
-                            
-                            <!-- PROJECTS -->
-                            <div class="nav-item-header" data-target="projects-submenu">
-                                <span><i class="ti ti-versions me-1"></i>Projects</span>
-                                <i class="ti ti-chevron-right menu-toggle"></i>
-                            </div>
-                            <div id="projects-submenu" class="submenu">
-                                <a class="nav-link" href="#" data-section="add-projects">
-                                    <i class="ti ti-plus"></i> Add projects
-                                </a>
-                                <a class="nav-link" href="#" data-section="manage-projects">
-                                    <i class="ti ti-settings"></i> Manage projects
-                                </a>
-                            </div>
-                            
-                            <!-- AGENTS -->
-                            <div class="nav-item-header" data-target="agents-submenu">
-                                <span><i class="ti ti-server me-1"></i>Agents</span>
-                                <i class="ti ti-chevron-right menu-toggle"></i>
-                            </div>
-                            <div id="agents-submenu" class="submenu">
-                                <a class="nav-link" href="#" data-section="agent-requirements">
-                                    <i class="ti ti-checklist"></i> Requirements
-                                </a>
-                                <a class="nav-link" href="#" data-section="agent-working">
-                                    <i class="ti ti-player-play"></i> How agent is working
-                                </a>
-                                <a class="nav-link" href="#" data-section="pending-request">
-                                    <i class="ti ti-clock"></i> What does it mean Pending Request
-                                </a>
-                            </div>
-                            
-                            <!-- ADMIN -->
-                            <div class="nav-item-header" data-target="admin-submenu">
-                                <span><i class="ti ti-settings me-1"></i>Admin</span>
-                                <i class="ti ti-chevron-right menu-toggle"></i>
-                            </div>
-                            <div id="admin-submenu" class="submenu">
-                                <div class="nav-item-header" data-target="site-settings-submenu">
-                                    <span><i class="ti ti-adjustments me-1"></i>Site Settings</span>
-                                    <i class="ti ti-chevron-right menu-toggle"></i>
-                                </div>
-                                <div id="site-settings-submenu" class="submenu">
-                                    <a class="nav-link" href="#" data-section="cicd-integration">
-                                        <i class="ti ti-brand-docker"></i> CI/CD integration
-                                    </a>
-                                    <a class="nav-link" href="#" data-section="project-folder">
-                                        <i class="ti ti-folder"></i> Project folder
-                                    </a>
-                                    <a class="nav-link" href="#" data-section="remote-repo">
-                                        <i class="ti ti-brand-git"></i> Remote Repo integration
-                                    </a>
-                                    <a class="nav-link" href="#" data-section="mail-integration">
-                                        <i class="ti ti-mail"></i> Mail integration
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
+	<div class="sidebar">
+		<div class="sidebar-header">
+			<h4 class="mb-0 text-white">Gheetah Documentation</h4>
+		</div>
+		<div class="sidebar-content">
+			<ul class="nav flex-column">
+				<!-- INTRODUCTION -->
+				<li>
+					<div class="nav-item-header" data-target="intro-menu">
+						<span>Introduction</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="intro-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="what-is-gheetah">
+							<i class="ti ti-info-circle"></i> What is Gheetah
+						</a>
+					</div>
+				</li>
+				
+				<!-- INSTALLATION -->
+				<li>
+					<div class="nav-item-header" data-target="installation-menu">
+						<span>Installation</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="installation-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="requirement">
+							<i class="ti ti-checklist"></i> Requirement
+						</a>
+						<a class="nav-link" href="#" data-section="first-installation">
+							<i class="ti ti-player-play"></i> First installation wizard
+						</a>
+						
+						<!-- ADMIN -->
+						<div class="nav-item-header" data-target="admin-submenu">
+							<span><i class="ti ti-settings me-1"></i>Admin</span>
+							<i class="ti ti-chevron-right menu-toggle"></i>
+						</div>
+						<div id="admin-submenu" class="submenu">
+							<div class="nav-item-header" data-target="site-settings-submenu">
+								<span><i class="ti ti-adjustments me-1"></i>Site Settings</span>
+								<i class="ti ti-chevron-right menu-toggle"></i>
+							</div>
+							<div id="site-settings-submenu" class="submenu">
+								<a class="nav-link" href="#" data-section="cicd-integration">
+									<i class="ti ti-brand-docker"></i> CI/CD integration
+								</a>
+								<a class="nav-link" href="#" data-section="project-folder">
+									<i class="ti ti-folder"></i> Project folder
+								</a>
+								<a class="nav-link" href="#" data-section="remote-repo">
+									<i class="ti ti-brand-git"></i> Remote Repo integration
+								</a>
+								<a class="nav-link" href="#" data-section="mail-integration">
+									<i class="ti ti-mail"></i> Mail integration
+								</a>
+							</div>
+						</div>
+						
+						<!-- SSO INTEGRATION -->
+						<div class="nav-item-header" data-target="sso-submenu">
+							<span><i class="ti ti-shield-lock me-1"></i>SSO integration</span>
+							<i class="ti ti-chevron-right menu-toggle"></i>
+						</div>
+						<div id="sso-submenu" class="submenu">
+							<a class="nav-link" href="#" data-section="google-workspace">
+								<i class="ti ti-brand-google"></i> Google Workspace
+							</a>
+							<a class="nav-link" href="#" data-section="azure-ad">
+								<i class="ti ti-brand-windows"></i> Azure AD
+							</a>
+							<a class="nav-link" href="#" data-section="no-sso">
+								<i class="ti ti-user"></i> No SSO
+							</a>
+						</div>
+						
+						<!-- GROUPS AND ROLES -->
+						<div class="nav-item-header" data-target="groups-submenu">
+							<span><i class="ti ti-users me-1"></i>Groups and Roles</span>
+							<i class="ti ti-chevron-right menu-toggle"></i>
+						</div>
+						<div id="groups-submenu" class="submenu">
+							<a class="nav-link" href="#" data-section="defined-groups">
+								<i class="ti ti-users"></i> Defined groups
+							</a>
+							<a class="nav-link" href="#" data-section="manage-roles">
+								<i class="ti ti-user-plus"></i> Manage roles
+							</a>
+						</div>
+						
+						<!-- DASHBOARD -->
+						<div class="nav-item-header" data-target="dashboard-submenu">
+							<span><i class="ti ti-dashboard me-1"></i>Dashboard</span>
+							<i class="ti ti-chevron-right menu-toggle"></i>
+						</div>
+						<div id="dashboard-submenu" class="submenu">
+							<a class="nav-link" href="#" data-section="manage-dashboard">
+								<i class="ti ti-layout-dashboard"></i> Manage dashboard
+							</a>
+							<a class="nav-link" href="#" data-section="widgets">
+								<i class="ti ti-apps"></i> Widgets
+							</a>
+						</div>
+						
+						<!-- PROJECTS -->
+						<div class="nav-item-header" data-target="projects-submenu">
+							<span><i class="ti ti-versions me-1"></i>Projects</span>
+							<i class="ti ti-chevron-right menu-toggle"></i>
+						</div>
+						<div id="projects-submenu" class="submenu">
+							<a class="nav-link" href="#" data-section="add-projects">
+								<i class="ti ti-plus"></i> Add projects
+							</a>
+							<a class="nav-link" href="#" data-section="manage-projects">
+								<i class="ti ti-settings"></i> Manage projects
+							</a>
+						</div>
+						
+						<!-- AGENTS -->
+						<div class="nav-item-header" data-target="agents-submenu">
+							<span><i class="ti ti-server me-1"></i>Agents</span>
+							<i class="ti ti-chevron-right menu-toggle"></i>
+						</div>
+						<div id="agents-submenu" class="submenu">
+							<a class="nav-link" href="#" data-section="agent-requirements">
+								<i class="ti ti-checklist"></i> Requirements
+							</a>
+							<a class="nav-link" href="#" data-section="agent-working">
+								<i class="ti ti-player-play"></i> How agent is working
+							</a>
+							<a class="nav-link" href="#" data-section="pending-request">
+								<i class="ti ti-clock"></i> What does it mean Pending Request
+							</a>
+						</div>
+
+						<!-- TEST EXECUTION -->
+						<div class="nav-item-header" data-target="test-execution-submenu">
+							<span><i class="ti ti-test-pipe me-1"></i>Test Execution</span>
+							<i class="ti ti-chevron-right menu-toggle"></i>
+						</div>
+						<div id="test-execution-submenu" class="submenu">
+							<a class="nav-link" href="#" data-section="run-specific-scenario">
+								<i class="ti ti-player-play"></i> Run Specific Scenario
+							</a>
+							<a class="nav-link" href="#" data-section="run-all-scenarios">
+								<i class="ti ti-player-track-next"></i> Run All Scenarios
+							</a>
+						</div>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
 
         <!-- CONTENT -->
         <div class="content">
+		            <!-- ADMIN -->
+			<div id="cicd-integration" class="content-section">
+				<h2>CI/CD Integration</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Dashboard Enhancement Integration</h5>
+						<p>CI/CD integration primarily serves to enable powerful dashboard widgets that visualize your pipeline data in real-time. While currently focused on Azure DevOps, we're continuously expanding our integration capabilities.</p>
+					</div>
+
+					<h4 class="mt-4">Currently Supported Platforms</h4>
+					<div class="row">
+						<div class="col-md-4">
+							<div class="integration-card p-3 mb-3 border rounded text-center h-100">
+								<div class="integration-icon mb-3">
+									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg" class="integration-logo" width="64" height="64">
+								</div>
+								<h5>Azure DevOps</h5>
+								<p>Full integration with widgets for pipeline monitoring and test result visualization</p>
+								<div style="margin-top: 10px;">
+									<img src="img/admin-site-settings-add-new-azure-cicd.jpeg" alt="Provider" style="max-width: 100%;">
+								</div>
+							</div>
+						</div>
+						<div class="col-md-4">
+							<div class="integration-card p-3 mb-3 border rounded text-center h-100">
+								<div class="integration-icon mb-3">
+									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jenkins/jenkins-original.svg" class="integration-logo" width="64" height="64">
+								</div>
+								<h5>Jenkins</h5>
+								<p>Basic integration with plans for expanded widget support</p>
+								<div style="margin-top: 10px;">
+									<img src="img/admin-site-settings-add-new-jenkins-cicd.jpeg" alt="Provider" style="max-width: 100%;">
+								</div>
+							</div>
+						</div>
+						<div class="col-md-4">
+							<div class="integration-card p-3 mb-3 border rounded text-center h-100">
+								<div class="integration-icon mb-3">
+									<img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/gitlab/gitlab-original.svg" class="integration-logo" width="64" height="64">
+								</div>
+								<h5>GitLab CI/CD</h5>
+								<p>Basic pipeline integration with future widget enhancements planned</p>
+								<div style="margin-top: 10px;">
+									<img src="img/admin-site-settings-add-new-gitlab-cicd.jpeg" alt="Provider" style="max-width: 100%;">
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-info mt-3">
+						<h5 class="alert-heading">Roadmap & Custom Development</h5>
+						<p>Our integration capabilities are continuously evolving:</p>
+						<ul>
+							<li>Currently optimized for Azure DevOps widgets</li>
+							<li>Additional widget types for all platforms in development</li>
+							<li>Custom dashboard widgets available through professional services</li>
+						</ul>
+					</div>
+
+					<div class="custom-development mt-4">
+						<h4>Need Custom CI/CD Widgets?</h4>
+						<div class="d-flex align-items-center">
+							<div class="flex-shrink-0 me-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+								</svg>
+							</div>
+							<div>
+								<p>Contact the creator for custom widget development tailored to your specific CI/CD needs and dashboard requirements.</p>
+								<div class="contact-channels mt-2">
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-linkedin">
+												<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+												<rect x="2" y="9" width="4" height="12"></rect>
+												<circle cx="4" cy="4" r="2"></circle>
+											</svg>
+										</div>
+										<div>
+											<a href="https://www.linkedin.com/in/veyselgokcen/" target="_blank" class="text-decoration-none">
+												linkedin.com/in/veyselgokcen/
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
+												<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+												<polyline points="22,6 12,13 2,6"></polyline>
+											</svg>
+										</div>
+										<div>
+											<a href="mailto:gokcenveysel@gmail.com" class="text-decoration-none">
+												gokcenveysel@gmail.com
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github">
+												<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+											</svg>
+										</div>
+										<div>
+											<a href="https://github.com/gokcenveysel/Gheetah" target="_blank" class="text-decoration-none">
+												github.com/gokcenveysel/Gheetah
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.integration-card {
+					transition: all 0.3s ease;
+				}
+				.integration-card:hover {
+					transform: translateY(-5px);
+					box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+				}
+				.integration-icon {
+					height: 60px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.integration-icon svg {
+					max-width: 100%;
+					max-height: 100%;
+				}
+				.contact-channels a {
+					color: var(--gh-secondary);
+					transition: color 0.2s ease;
+				}
+				.contact-channels a:hover {
+					color: var(--gh-primary);
+					text-decoration: underline;
+				}
+				.contact-icon {
+					width: 24px;
+					text-align: center;
+				}
+				.custom-development {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+					border-left: 4px solid var(--gh-primary);
+				}
+			</style>
+            
+            <div id="project-folder" class="content-section">
+                <h2>Project Folder</h2>
+                <div class="mt-4 p-4 rounded">
+                    <p>Project folder structure:</p>
+                    <pre>
+/projects
+  /{project-id}
+    /src
+    /tests
+    /reports</pre>
+                </div>
+            </div>
+            
+            <div id="remote-repo" class="content-section">
+                <h2>Remote Repo Integration</h2>
+                <div class="mt-4 p-4 bg-light rounded">
+                    <p>Supported version control systems:</p>
+                    <ul>
+                        <li>Git</li>
+                        <li>SVN</li>
+                        <li>Mercurial</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div id="mail-integration" class="content-section">
+                <h2>Mail Integration</h2>
+                <div class="mt-4 p-4 bg-light rounded">
+                    <p>Email notification settings:</p>
+                    <ul>
+                        <li>SMTP configuration</li>
+                        <li>Notification templates</li>
+                        <li>Recipient groups</li>
+                    </ul>
+                </div>
+            </div>
             <!-- INTRODUCTION -->
             <div id="what-is-gheetah" class="content-section">
                 <h2>What is Gheetah?</h2>
@@ -1425,116 +1629,746 @@
 			</style>
             
             <!-- PROJECTS -->
-            <div id="add-projects" class="content-section">
-                <h2>Add Projects</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>To add a new project:</p>
-                    <ol>
-                        <li>Click "Add Project" button</li>
-                        <li>Select project type (.NET/Java)</li>
-                        <li>Configure project settings</li>
-                    </ol>
-                </div>
-            </div>
+			<div id="add-projects" class="content-section">
+				<h2>Adding Projects to Gheetah</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Core Functionality</h5>
+						<p>This section covers the fundamental process of adding test automation projects to your Gheetah orchestration platform - one of the most critical features of the system.</p>
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/add-projects.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<h4 class="mt-4">Accessing the Project Creation Interface</h4>
+					<ol>
+						<li>Navigate to the <strong>"Projects"</strong> section from the top navigation bar</li>
+						<li>Select <strong>"Add Project"</strong> from the dropdown menu</li>
+						<li>You'll be presented with a tab-based interface for project configuration</li>
+					</ol>
+					<div class="row mt-4">
+						<div class="col-md-12">
+							<div class="method-card p-3 mb-3 border rounded h-100">
+								<div class="d-flex align-items-center mb-2">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-git-branch me-2 text-primary">
+										<line x1="6" y1="3" x2="6" y2="15"></line>
+										<circle cx="18" cy="6" r="3"></circle>
+										<circle cx="6" cy="18" r="3"></circle>
+										<path d="M18 9a9 9 0 0 1-9 9"></path>
+									</svg>
+									<h5>Method 1: Remote Repository Clone</h5>
+								</div>
+								<ul>
+									<li>Requires configured Remote Repository integration</li>
+									<li>Uses API connections to clone projects directly</li>
+									<li>Ideal for teams using version control systems</li>
+								</ul>
+							</div>
+						</div>
+						<div style="margin-top: 10px;">
+							<img src="img/clone-projects.jpeg" alt="Provider" style="max-width: 100%;">
+						</div>
+						<div class="col-md-12">
+							<div class="method-card p-3 mb-3 border rounded h-100">
+								<div class="d-flex align-items-center mb-2">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-upload me-2 text-primary">
+										<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+										<polyline points="17 8 12 3 7 8"></polyline>
+										<line x1="12" y1="3" x2="12" y2="15"></line>
+									</svg>
+									<h5>Method 2: Local ZIP Upload</h5>
+								</div>
+								<ul>
+									<li>Direct upload of Java or C# projects</li>
+									<li>Maximum file size: <strong>50MB</strong></li>
+									<li>Requires proper project structure</li>
+								</ul>
+							</div>
+						</div>
+						<div style="margin-top: 10px;">
+							<img src="img/upload-projects.jpeg" alt="Provider" style="max-width: 100%;">
+						</div>
+					</div>
+					<div class="alert alert-warning mt-3">
+						<h5 class="alert-heading"><i class="ti ti-alert-triangle me-1"></i> Critical Project Requirements</h5>
+						<p>As a BDD Test Orchestration platform, Gheetah requires specific project formats:</p>
+						<div class="row">
+							<div class="col-md-6">
+								<h6 class="mt-2">Java Projects</h6>
+								<ul>
+									<li>TestNG with Cucumber</li>
+									<li>JUnit with Cucumber</li>
+								</ul>
+							</div>
+							<div class="col-md-6">
+								<h6 class="mt-2">.NET Projects</h6>
+								<ul>
+									<li>xUnit with Reqnroll</li>
+									<li>xUnit with SpecFlow</li>
+								</ul>
+							</div>
+						</div>
+						<p class="mt-2"><strong>Warning:</strong> Projects not following these formats will fail to execute properly and may generate errors.</p>
+					</div>
+
+					<div class="alert alert-info mt-3">
+						<h5 class="alert-heading"><i class="ti ti-book me-1"></i> Reference Projects</h5>
+						<p>Before adding projects, we strongly recommend reviewing our BDD Test Automation Reference Projects to understand the required structure, particularly for Java projects which have strict formatting requirements.</p>
+					</div>
+
+					<h4 class="mt-4">Post-Upload Process</h4>
+					<div class="process-flow">
+						<div class="d-flex align-items-center mb-3">
+							<div class="process-step me-3">
+								<span class="badge bg-primary rounded-circle">1</span>
+							</div>
+							<div>
+								<p class="mb-0">After successful clone or upload, your project will appear in the Project List</p>
+							</div>
+						</div>
+						<div class="d-flex align-items-center">
+							<div class="process-step me-3">
+								<span class="badge bg-primary rounded-circle">2</span>
+							</div>
+							<div>
+								<p class="mb-0">Continue to the <strong>"Project Management"</strong> section (accessible from the menu) to configure and execute your tests</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.method-card {
+					transition: all 0.3s ease;
+				}
+				.method-card:hover {
+					transform: translateY(-3px);
+					box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+				}
+				.process-step {
+					width: 28px;
+					height: 28px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.process-flow {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+				}
+			</style>
             
-            <div id="manage-projects" class="content-section">
-                <h2>Manage Projects</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Project management features:</p>
-                    <ul>
-                        <li>Edit project settings</li>
-                        <li>Configure test suites</li>
-                        <li>Manage dependencies</li>
-                    </ul>
-                </div>
-            </div>
+			<div id="manage-projects" class="content-section">
+				<h2>Project Management</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Project Management Overview</h5>
+						<p>This interface serves as the central hub for all projects added to Gheetah Test Orchestration, whether cloned from remote repositories or uploaded as ZIP files. It provides comprehensive control over your test automation projects.</p>
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/project-management.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<h4 class="mt-4">Core Workflow</h4>
+					<div class="process-steps">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Initial Project Build</h5>
+								<p>After successful project addition (via clone or upload), users <strong>must</strong> first build the project. This is a mandatory step as unbuilt projects cannot execute scenarios.</p>
+								<div class="alert alert-info mt-2">
+									<i class="ti ti-info-circle me-1"></i> The build process prepares the project for test execution by resolving dependencies and compiling necessary components.
+								</div>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Scenario Management</h5>
+								<p>Following a successful build, all BDD scenarios become visible and available for execution. Users can:</p>
+								<ul>
+									<li>View scenario lists with their metadata</li>
+									<li>Execute individual or grouped scenarios</li>
+									<li>Monitor execution progress</li>
+								</ul>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Project Maintenance</h5>
+								<p>For projects no longer in use, administrators can perform cleanup operations:</p>
+								<ul>
+									<li>Permanent project deletion</li>
+									<li>Bulk management operations</li>
+									<li>Storage optimization</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/project-management-2.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<div class="alert alert-warning mt-4">
+						<h5 class="alert-heading"><i class="ti ti-shield-lock me-1"></i> Access Control Requirements</h5>
+						<p>The following project operations are restricted to specific user roles:</p>
+						<table class="table table-bordered mt-2">
+							<thead class="table-light">
+								<tr>
+									<th>Operation</th>
+									<th>Required Role</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>Project Cloning</td>
+									<td><span class="badge bg-danger">Admin</span> or <span class="badge bg-warning">Lead</span></td>
+								</tr>
+								<tr>
+									<td>Project Upload</td>
+									<td><span class="badge bg-danger">Admin</span> or <span class="badge bg-warning">Lead</span></td>
+								</tr>
+								<tr>
+									<td>Project Deletion</td>
+									<td><span class="badge bg-danger">Admin</span> or <span class="badge bg-warning">Lead</span></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+
+					<div class="alert alert-danger mt-3">
+						<h5 class="alert-heading"><i class="ti ti-alert-triangle me-1"></i> Important Security Constraints</h5>
+						<p>Project deletion is subject to the following system protections:</p>
+						<ul>
+							<li><strong>Execution Lock:</strong> Projects with active scenario executions cannot be deleted</li>
+							<li><strong>Resource Protection:</strong> The system automatically locks projects during test execution to prevent modification or deletion</li>
+							<li><strong>Safety Mechanism:</strong> Delete operations will fail if any scenarios from the project are currently running</li>
+						</ul>
+					</div>
+
+					<div class="feature-highlights mt-4">
+						<h4>Additional Management Features</h4>
+						<div class="row">
+							<div class="col-md-4">
+								<div class="feature-card p-3 border rounded h-100">
+									<div class="d-flex align-items-center mb-2">
+										<i class="ti ti-settings me-2 text-primary"></i>
+										<h5 class="mb-0">Project Settings</h5>
+									</div>
+									<p>Configure project-specific parameters, environment variables, and execution preferences</p>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="feature-card p-3 border rounded h-100">
+									<div class="d-flex align-items-center mb-2">
+										<i class="ti ti-stack me-2 text-primary"></i>
+										<h5 class="mb-0">Test Suites</h5>
+									</div>
+									<p>Organize scenarios into logical groups for batch execution and reporting</p>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="feature-card p-3 border rounded h-100">
+									<div class="d-flex align-items-center mb-2">
+										<i class="ti ti-link me-2 text-primary"></i>
+										<h5 class="mb-0">Dependencies</h5>
+									</div>
+									<p>Manage project dependencies and library requirements</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.process-steps {
+					counter-reset: step-counter;
+				}
+				.step {
+					position: relative;
+					padding-left: 50px;
+					margin-bottom: 30px;
+				}
+				.step-number {
+					position: absolute;
+					left: 0;
+					top: 0;
+					width: 36px;
+					height: 36px;
+					background-color: var(--gh-primary);
+					color: white;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+				}
+				.feature-card {
+					transition: all 0.3s ease;
+					height: 100%;
+				}
+				.feature-card:hover {
+					transform: translateY(-3px);
+					box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+				}
+				.table th {
+					white-space: nowrap;
+				}
+			</style>
             
-            <!-- AGENTS -->
-            <div id="agent-requirements" class="content-section">
-                <h2>Agent Requirements</h2>
-                <div class="mt-4 p-4 rounded">
-                    <ul>
-                        <li>Windows 10/11 or Linux</li>
-                        <li>4GB RAM minimum</li>
-                        <li>10GB free disk space</li>
-                    </ul>
-                </div>
-            </div>
+			<!-- AGENTS -->
+			<div id="agent-requirements" class="content-section">
+				<div class="requirement-card">
+					<div class="card-header">
+						<i class="icon icon-agent"></i>
+						<h3>Execution Agent</h3>
+						<span class="badge">Test Runner</span>
+					</div>
+					<div class="card-body">
+						<p class="intro">Lightweight components that execute test scenarios in distributed environments with minimal overhead.</p>
+						
+						<div class="alert alert-info">
+							<h5 class="alert-heading">Platform Availability Notice</h5>
+							<p>Currently, only Windows operating systems have a pre-built agent setup installer available. For Linux environments, you can prepare the agent manually using the <code>Gheetah.Agent</code> component from the project.</p>
+						</div>
+						<div class="requirement-section">
+							<h4>Infrastructure</h4>
+							<ul class="feature-list">
+								<li><span class="feature-name">Operating System:</span> Windows 10/11 or Linux (x64 distributions)</li>
+								<li><span class="feature-name">Compute:</span> 2 CPU cores minimum (4+ recommended for parallel execution)</li>
+								<li><span class="feature-name">Memory:</span> 4GB RAM minimum (scales with test suite complexity)</li>
+							</ul>
+						</div>
+						
+						<div class="requirement-section">
+							<h4>Runtime Environments</h4>
+							<div class="dependency-group">
+								<span class="dependency-pill">.NET 8.0</span>
+								<span class="dependency-pill">Java 11+</span>
+							</div>
+							
+							<h5 class="mt-3">Language-Specific Requirements:</h5>
+							<div class="language-requirements">
+								<div class="language-tab">
+									<h6>C#/SpecFlow</h6>
+									<ul>
+										<li>NuGet package restore capability</li>
+										<li>Build tools: MSBuild or dotnet CLI</li>
+									</ul>
+								</div>
+								<div class="language-tab">
+									<h6>Java/Cucumber</h6>
+									<ul>
+										<li>Maven or Gradle installation</li>
+										<li>Network access to artifact repositories</li>
+										<li>Proper <code>JAVA_HOME</code> configuration</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+
+						<div class="installation-guide mt-4">
+							<h4>Windows Agent Installation Process</h4>
+							<div class="steps">
+								<div class="step">
+									<div class="step-number">1</div>
+									<div class="step-content">
+										<h5>Download the Installer</h5>
+										<p>Navigate to the <strong>"Agent List"</strong> page in your Gheetah instance and download the <code>GheetahAgentSetup.exe</code> package from the Download section.</p>
+										<div style="margin-top: 10px;">
+											<img src="img/gheetah-setup-installer.jpeg" alt="Provider" style="max-width: 100%;">
+										</div>
+									</div>
+								</div>
+								<div class="step">
+									<div class="step-number">2</div>
+									<div class="step-content">
+										<h5>Run the Installer</h5>
+										<p>Execute the downloaded installer and follow the straightforward installation wizard. The process requires no special configuration - simply click <strong>"Next"</strong> through each step until completion.</p>
+										<div style="margin-top: 10px;">
+											<img src="img/gheetah-agent-setup-1.jpeg" alt="Provider" style="max-width: 70%;">
+										</div>
+									</div>
+								</div>
+								<div class="step">
+									<div class="step-number">3</div>
+									<div class="step-content">
+										<h5>Register with Gheetah Server</h5>
+										<p>After installation completes, launch the Agent and follow the on-screen instructions to register it with your Gheetah server instance.</p>
+										<div style="margin-top: 10px;">
+											<img src="img/gheetah-agent-setup-2.jpeg" alt="Provider" style="max-width: 100%;">
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="alert alert-success mt-3">
+								<h5 class="alert-heading">Simplified Deployment</h5>
+								<p>The Windows agent installation requires no additional configuration or technical expertise. The process is designed for maximum ease of deployment while maintaining enterprise-grade reliability.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.steps {
+					counter-reset: step-counter;
+				}
+				.step {
+					position: relative;
+					padding-left: 50px;
+					margin-bottom: 20px;
+				}
+				.step-number {
+					position: absolute;
+					left: 0;
+					top: 0;
+					width: 32px;
+					height: 32px;
+					background-color: var(--gh-primary);
+					color: white;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+				}
+				.step-content {
+					padding-top: 5px;
+				}
+				.installation-guide {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+					border-left: 4px solid var(--gh-primary);
+				}
+			</style>
+			<div id="agent-working" class="content-section">
+				<h2>Agent Operation Workflow</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Initial Agent Setup Process</h5>
+						<p>After successfully installing via <code>GheetahAgentSetup.exe</code> and launching the Agent, you'll be presented with a CLI interface that clearly guides you through the registration process.</p>
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/gheetah-agent-setup-3.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<h4 class="mt-4">Registration Procedure</h4>
+					<div class="steps">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Provide Gheetah URL</h5>
+								<p>The Agent will prompt you to enter your Gheetah Test Orchestration instance's <strong>root URL</strong> (without a trailing "/").</p>
+								<div class="alert alert-warning mt-2">
+									<i class="ti ti-alert-circle me-1"></i> Example: <code>https://your-gheetah-instance.com</code> (correct) vs <code>https://your-gheetah-instance.com/</code> (incorrect)
+								</div>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Registration Request</h5>
+								<p>Upon submitting the URL, the Agent sends a registration request to your Gheetah server.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Admin Approval</h5>
+								<p>The request appears as <strong>"Pending Request"</strong> in the Gheetah admin interface. Once approved by an administrator, your Agent becomes officially registered and ready for remote test execution.</p>
+							</div>
+						</div>
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/gheetah-agent-pending-request.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/gheetah-agent-registered-list.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<h4 class="mt-4">Test Execution Workflow</h4>
+					<div class="execution-flow">
+						<div class="flow-step">
+							<div class="flow-icon">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-play">
+									<polygon points="5 3 19 12 5 21 5 3"></polygon>
+								</svg>
+							</div>
+							<div class="flow-content">
+								<h5>1. Test Initiation</h5>
+								<p>When you select your registered Agent from the Agent list and initiate test execution for specific scenarios, Gheetah:</p>
+								<ul>
+									<li>Packages the relevant project into a .zip archive</li>
+									<li>Transmits it to the Agent's environment</li>
+								</ul>
+							</div>
+						</div>
+						<div class="flow-step">
+							<div class="flow-icon">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-package">
+									<line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+									<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+									<polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+									<line x1="12" y1="22.08" x2="12" y2="12"></line>
+								</svg>
+							</div>
+							<div class="flow-content">
+								<h5>2. Project Deployment</h5>
+								<p>The Agent:</p>
+								<ul>
+									<li>Receives the .zip package in its temp directory</li>
+									<li>Extracts the project contents</li>
+									<li>Navigates into the BDD project structure</li>
+								</ul>
+							</div>
+						</div>
+						<div class="flow-step">
+							<div class="flow-icon">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-terminal">
+									<polyline points="4 17 10 11 4 5"></polyline>
+									<line x1="12" y1="19" x2="20" y2="19"></line>
+								</svg>
+							</div>
+							<div class="flow-content">
+								<h5>3. Test Execution</h5>
+								<p>The Agent executes the specified scenarios while:</p>
+								<ul>
+									<li>Monitoring the execution in real-time</li>
+									<li>Streaming runtime results back to the Gheetah server</li>
+								</ul>
+							</div>
+						</div>
+						<div class="flow-step">
+							<div class="flow-icon">
+								<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
+									<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+									<polyline points="14 2 14 8 20 8"></polyline>
+									<line x1="16" y1="13" x2="8" y2="13"></line>
+									<line x1="16" y1="17" x2="8" y2="17"></line>
+									<polyline points="10 9 9 9 8 9"></polyline>
+								</svg>
+							</div>
+							<div class="flow-content">
+								<h5>4. Results & Cleanup</h5>
+								<p>After execution completes:</p>
+								<ul>
+									<li>Results are available in Gheetah as both <strong>HTML reports</strong> and <strong>CLI output</strong></li>
+									<li>The Agent automatically cleans up by removing the temporary .zip and project files</li>
+									<li>System resources are freed for subsequent executions</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-info mt-4">
+						<h5 class="alert-heading">Architecture Benefits</h5>
+						<p>This distributed execution model provides:</p>
+						<ul>
+							<li><strong>Resource efficiency:</strong> No persistent storage usage on agent machines</li>
+							<li><strong>Isolation:</strong> Clean environment for each test run</li>
+							<li><strong>Scalability:</strong> Multiple agents can execute tests in parallel</li>
+							<li><strong>Security:</strong> Sensitive data isn't retained on agent machines</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.steps {
+					counter-reset: step-counter;
+				}
+				.step {
+					position: relative;
+					padding-left: 50px;
+					margin-bottom: 20px;
+				}
+				.step-number {
+					position: absolute;
+					left: 0;
+					top: 0;
+					width: 32px;
+					height: 32px;
+					background-color: var(--gh-primary);
+					color: white;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+				}
+				.execution-flow {
+					border-left: 3px solid var(--gh-primary);
+					margin-left: 15px;
+				}
+				.flow-step {
+					position: relative;
+					padding-left: 50px;
+					margin-bottom: 30px;
+				}
+				.flow-icon {
+					position: absolute;
+					left: -15px;
+					top: 0;
+					width: 36px;
+					height: 36px;
+					background-color: white;
+					border: 3px solid var(--gh-primary);
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.flow-icon svg {
+					width: 18px;
+					height: 18px;
+				}
+			</style>
             
-            <div id="agent-working" class="content-section">
-                <h2>How Agent Works</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Agent communication flow:</p>
-                    <ol>
-                        <li>Agent registers with central server</li>
-                        <li>Receives test execution requests</li>
-                        <li>Returns results to server</li>
-                    </ol>
-                </div>
-            </div>
-            
-            <div id="pending-request" class="content-section">
-                <h2>Pending Request</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Pending requests indicate:</p>
-                    <ul>
-                        <li>Agent is processing the request</li>
-                        <li>Waiting for resource allocation</li>
-                        <li>Queue position information</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <!-- ADMIN -->
-            <div id="cicd-integration" class="content-section">
-                <h2>CI/CD Integration</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Supported CI/CD systems:</p>
-                    <ul>
-                        <li>Jenkins</li>
-                        <li>Azure DevOps</li>
-                        <li>GitHub Actions</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div id="project-folder" class="content-section">
-                <h2>Project Folder</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Project folder structure:</p>
-                    <pre>
-/projects
-  /{project-id}
-    /src
-    /tests
-    /reports</pre>
-                </div>
-            </div>
-            
-            <div id="remote-repo" class="content-section">
-                <h2>Remote Repo Integration</h2>
-                <div class="mt-4 p-4 bg-light rounded">
-                    <p>Supported version control systems:</p>
-                    <ul>
-                        <li>Git</li>
-                        <li>SVN</li>
-                        <li>Mercurial</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div id="mail-integration" class="content-section">
-                <h2>Mail Integration</h2>
-                <div class="mt-4 p-4 bg-light rounded">
-                    <p>Email notification settings:</p>
-                    <ul>
-                        <li>SMTP configuration</li>
-                        <li>Notification templates</li>
-                        <li>Recipient groups</li>
-                    </ul>
-                </div>
-            </div>
-            
+			<div id="pending-request" class="content-section">
+				<h2>Pending Request Security Mechanism</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-warning">
+						<h5 class="alert-heading">Security-First Approach</h5>
+						<p>The Pending Request system serves as a critical security gateway, ensuring only authorized Agents can register with your Gheetah Test Orchestration instance and perform remote test executions.</p>
+					</div>
+					<div style="margin-top: 10px;">
+						<img src="img/gheetah-agent-pending-request.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<h4 class="mt-4">Registration Workflow</h4>
+					<div class="workflow-steps">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Agent Registration Request</h5>
+								<p>After completing installation via <code>GheetahAgentSetup.exe</code>, users launch the Agent and submit a registration request by entering the Gheetah instance URL.</p>
+							</div>
+							<div style="margin-top: 10px;">
+								<img src="img/gheetah-agent-setup-5.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Pending Request Status</h5>
+								<p>The request appears in the system as <strong>"Pending Request"</strong>, awaiting administrator approval.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Admin Review</h5>
+								<p>Administrators must manually review and approve each request before the Agent becomes operational.</p>
+							</div>
+							<div style="margin-top: 10px;">
+								<img src="img/gheetah-agent-setup-6.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</div>
+					</div>
+					<div class="alert alert-danger mt-4">
+						<h5 class="alert-heading">Important Security Notice</h5>
+						<p>To maintain system integrity:</p>
+						<ul>
+							<li>Always <strong>communicate with your Gheetah administrators</strong> before submitting Agent registration requests</li>
+							<li>Unauthorized registration attempts may result in the Agent being <strong>blacklisted</strong></li>
+							<li>Declined requests require manual intervention to reset</li>
+						</ul>
+					</div>
+
+					<h4 class="mt-4">Blacklist Recovery Process</h4>
+					<p>If your Agent gets blacklisted, follow these steps to re-register:</p>
+					<div style="margin-top: 10px; margin-bottom: 15px;">
+						<img src="img/gheetah-agent-declined-request.jpeg" alt="Provider" style="max-width: 100%;">
+					</div>
+					<div class="recovery-steps">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Clear Server Blacklist</h5>
+								<p>Remove the corresponding entry from: <br><code>Gheetah/Data/agents-black-list.json</code></p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Clean Agent Data</h5>
+								<p>Navigate to the Agent installation directory and clear all JSON files in the <code>Data</code> folder.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Resubmit Request</h5>
+								<p>Restart the Agent and submit a new registration request.</p>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-info mt-4">
+						<h5 class="alert-heading">Future Improvements</h5>
+						<p>This process is currently manual but has been prioritized for enhancement:</p>
+						<ul>
+							<li>Pending Request management interface is on our <strong>TODO list</strong></li>
+							<li>Planned features include:
+								<ul>
+									<li>Administrative approval screens</li>
+									<li>Blacklist management UI</li>
+									<li>Automated notification system</li>
+								</ul>
+							</li>
+							<li>These updates will eliminate the need for manual file modifications</li>
+						</ul>
+					</div>
+
+					<div class="alert alert-success mt-3">
+						<h5 class="alert-heading">Best Practices</h5>
+						<ul>
+							<li>Always coordinate Agent registrations with your team administrators</li>
+							<li>Document all Agent deployments for audit purposes</li>
+							<li>Consider establishing internal procedures for Agent management</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.workflow-steps,
+				.recovery-steps {
+					counter-reset: step-counter;
+				}
+				.step {
+					position: relative;
+					padding-left: 50px;
+					margin-bottom: 20px;
+				}
+				.step-number {
+					position: absolute;
+					left: 0;
+					top: 0;
+					width: 32px;
+					height: 32px;
+					background-color: var(--gh-primary);
+					color: white;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+				}
+				.recovery-steps .step-number {
+					background-color: var(--gh-secondary);
+				}
+				.step-content {
+					padding-top: 5px;
+				}
+				code {
+					background-color: #f8f9fa;
+					padding: 2px 4px;
+					border-radius: 4px;
+					font-family: monospace;
+				}
+			</style>
+                        
             <!-- DEFAULT PLACEHOLDER -->
 			<div id="no-content" class="content-section active">
 				<div class="text-center mt-3">
