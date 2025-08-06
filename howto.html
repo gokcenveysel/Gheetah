@@ -286,122 +286,130 @@
 						<a class="nav-link" href="#" data-section="first-installation">
 							<i class="ti ti-player-play"></i> First installation wizard
 						</a>
-						
-						<!-- ADMIN -->
-						<div class="nav-item-header" data-target="admin-submenu">
-							<span><i class="ti ti-settings me-1"></i>Admin</span>
-							<i class="ti ti-chevron-right menu-toggle"></i>
-						</div>
-						<div id="admin-submenu" class="submenu">
-							<div class="nav-item-header" data-target="site-settings-submenu">
-								<span><i class="ti ti-adjustments me-1"></i>Site Settings</span>
-								<i class="ti ti-chevron-right menu-toggle"></i>
-							</div>
-							<div id="site-settings-submenu" class="submenu">
-								<a class="nav-link" href="#" data-section="cicd-integration">
-									<i class="ti ti-brand-docker"></i> CI/CD integration
-								</a>
-								<a class="nav-link" href="#" data-section="project-folder">
-									<i class="ti ti-folder"></i> Project folder
-								</a>
-								<a class="nav-link" href="#" data-section="remote-repo">
-									<i class="ti ti-brand-git"></i> Remote Repo integration
-								</a>
-								<a class="nav-link" href="#" data-section="mail-integration">
-									<i class="ti ti-mail"></i> Mail integration
-								</a>
-							</div>
-						</div>
-						
-						<!-- SSO INTEGRATION -->
-						<div class="nav-item-header" data-target="sso-submenu">
-							<span><i class="ti ti-shield-lock me-1"></i>SSO integration</span>
-							<i class="ti ti-chevron-right menu-toggle"></i>
-						</div>
-						<div id="sso-submenu" class="submenu">
-							<a class="nav-link" href="#" data-section="google-workspace">
-								<i class="ti ti-brand-google"></i> Google Workspace
-							</a>
-							<a class="nav-link" href="#" data-section="azure-ad">
-								<i class="ti ti-brand-windows"></i> Azure AD
-							</a>
-							<a class="nav-link" href="#" data-section="no-sso">
-								<i class="ti ti-user"></i> No SSO
-							</a>
-						</div>
-						
-						<!-- GROUPS AND ROLES -->
-						<div class="nav-item-header" data-target="groups-submenu">
-							<span><i class="ti ti-users me-1"></i>Groups and Roles</span>
-							<i class="ti ti-chevron-right menu-toggle"></i>
-						</div>
-						<div id="groups-submenu" class="submenu">
-							<a class="nav-link" href="#" data-section="defined-groups">
-								<i class="ti ti-users"></i> Defined groups
-							</a>
-							<a class="nav-link" href="#" data-section="manage-roles">
-								<i class="ti ti-user-plus"></i> Manage roles
-							</a>
-						</div>
-						
-						<!-- DASHBOARD -->
-						<div class="nav-item-header" data-target="dashboard-submenu">
-							<span><i class="ti ti-dashboard me-1"></i>Dashboard</span>
-							<i class="ti ti-chevron-right menu-toggle"></i>
-						</div>
-						<div id="dashboard-submenu" class="submenu">
-							<a class="nav-link" href="#" data-section="manage-dashboard">
-								<i class="ti ti-layout-dashboard"></i> Manage dashboard
-							</a>
-							<a class="nav-link" href="#" data-section="widgets">
-								<i class="ti ti-apps"></i> Widgets
-							</a>
-						</div>
-						
-						<!-- PROJECTS -->
-						<div class="nav-item-header" data-target="projects-submenu">
-							<span><i class="ti ti-versions me-1"></i>Projects</span>
-							<i class="ti ti-chevron-right menu-toggle"></i>
-						</div>
-						<div id="projects-submenu" class="submenu">
-							<a class="nav-link" href="#" data-section="add-projects">
-								<i class="ti ti-plus"></i> Add projects
-							</a>
-							<a class="nav-link" href="#" data-section="manage-projects">
-								<i class="ti ti-settings"></i> Manage projects
-							</a>
-						</div>
-						
-						<!-- AGENTS -->
-						<div class="nav-item-header" data-target="agents-submenu">
-							<span><i class="ti ti-server me-1"></i>Agents</span>
-							<i class="ti ti-chevron-right menu-toggle"></i>
-						</div>
-						<div id="agents-submenu" class="submenu">
-							<a class="nav-link" href="#" data-section="agent-requirements">
-								<i class="ti ti-checklist"></i> Requirements
-							</a>
-							<a class="nav-link" href="#" data-section="agent-working">
-								<i class="ti ti-player-play"></i> How agent is working
-							</a>
-							<a class="nav-link" href="#" data-section="pending-request">
-								<i class="ti ti-clock"></i> What does it mean Pending Request
-							</a>
-						</div>
+					</div>
+				</li>
 
-						<!-- TEST EXECUTION -->
-						<div class="nav-item-header" data-target="test-execution-submenu">
-							<span><i class="ti ti-test-pipe me-1"></i>Test Execution</span>
-							<i class="ti ti-chevron-right menu-toggle"></i>
-						</div>
-						<div id="test-execution-submenu" class="submenu">
-							<a class="nav-link" href="#" data-section="run-specific-scenario">
-								<i class="ti ti-player-play"></i> Run Specific Scenario
-							</a>
-							<a class="nav-link" href="#" data-section="run-all-scenarios">
-								<i class="ti ti-player-track-next"></i> Run All Scenarios
-							</a>
-						</div>
+				<!-- SITE SETTINGS -->
+				<li>
+					<div class="nav-item-header" data-target="site-settings-menu">
+						<span>Site Settings</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="site-settings-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="cicd-integration">
+							<i class="ti ti-brand-docker"></i> CI/CD integration
+						</a>
+						<a class="nav-link" href="#" data-section="project-folder">
+							<i class="ti ti-folder"></i> Project folder
+						</a>
+						<a class="nav-link" href="#" data-section="remote-repo">
+							<i class="ti ti-brand-git"></i> Remote Repo integration
+						</a>
+						<a class="nav-link" href="#" data-section="mail-integration">
+							<i class="ti ti-mail"></i> Mail integration
+						</a>
+					</div>
+				</li>
+				
+				<!-- SSO INTEGRATION -->
+				<li>
+					<div class="nav-item-header" data-target="sso-menu">
+						<span>SSO integration</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="sso-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="google-workspace">
+							<i class="ti ti-brand-google"></i> Google Workspace
+						</a>
+						<a class="nav-link" href="#" data-section="azure-ad">
+							<i class="ti ti-brand-windows"></i> Azure AD
+						</a>
+						<a class="nav-link" href="#" data-section="no-sso">
+							<i class="ti ti-user"></i> No SSO
+						</a>
+					</div>
+				</li>
+				
+				<!-- GROUPS AND ROLES -->
+				<li>
+					<div class="nav-item-header" data-target="groups-menu">
+						<span>Groups and Permissions</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="groups-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="defined-groups">
+							<i class="ti ti-users"></i> Defined groups
+						</a>
+						<a class="nav-link" href="#" data-section="manage-roles">
+							<i class="ti ti-user-plus"></i> Manage Permissions
+						</a>
+					</div>
+				</li>
+				
+				<!-- DASHBOARD -->
+				<li>
+					<div class="nav-item-header" data-target="dashboard-menu">
+						<span>Dashboard</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="dashboard-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="manage-dashboard">
+							<i class="ti ti-layout-dashboard"></i> Manage dashboard
+						</a>
+						<a class="nav-link" href="#" data-section="widgets">
+							<i class="ti ti-apps"></i> Widgets
+						</a>
+					</div>
+				</li>
+				
+				<!-- PROJECTS -->
+				<li>
+					<div class="nav-item-header" data-target="projects-menu">
+						<span>Projects</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="projects-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="add-projects">
+							<i class="ti ti-plus"></i> Add projects
+						</a>
+						<a class="nav-link" href="#" data-section="manage-projects">
+							<i class="ti ti-settings"></i> Manage projects
+						</a>
+					</div>
+				</li>
+				
+				<!-- AGENTS -->
+				<li>
+					<div class="nav-item-header" data-target="agents-menu">
+						<span>Agents</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="agents-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="agent-requirements">
+							<i class="ti ti-checklist"></i> Requirements
+						</a>
+						<a class="nav-link" href="#" data-section="agent-working">
+							<i class="ti ti-player-play"></i> How Agent is Working
+						</a>
+						<a class="nav-link" href="#" data-section="pending-request">
+							<i class="ti ti-clock"></i> Pending Request mean
+						</a>
+					</div>
+				</li>
+
+				<!-- TEST EXECUTION -->
+				<li>
+					<div class="nav-item-header" data-target="test-execution-menu">
+						<span>Test Execution</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="test-execution-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="run-specific-scenario">
+							<i class="ti ti-player-play"></i> Run Specific Scenario
+						</a>
+						<a class="nav-link" href="#" data-section="run-all-scenarios">
+							<i class="ti ti-player-track-next"></i> Run All Scenario
+						</a>
 					</div>
 				</li>
 			</ul>
@@ -654,29 +662,395 @@
 				}
 			</style>
             
-            <div id="remote-repo" class="content-section">
-                <h2>Remote Repo Integration</h2>
-                <div class="mt-4 p-4 bg-light rounded">
-                    <p>Supported version control systems:</p>
-                    <ul>
-                        <li>Git</li>
-                        <li>SVN</li>
-                        <li>Mercurial</li>
-                    </ul>
-                </div>
-            </div>
+			<div id="remote-repo" class="content-section">
+				<h2>Remote Repository Integration</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Centralized Project Cloning</h5>
+						<p>This integration enables direct cloning of test automation projects from version control systems into your Gheetah Test Orchestration instance, streamlining project setup and maintenance.</p>
+					</div>
+					<h4 class="mt-4">Platform Integration Status</h4>
+					<div class="integration-status">
+						<div class="row">
+							<div class="col-md-6">
+								<div class="platform-card p-3 mb-3 border rounded">
+									<div class="d-flex align-items-center">
+										<div class="status-icon me-3 text-success">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+												<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+												<polyline points="22 4 12 14.01 9 11.01"></polyline>
+											</svg>
+										</div>
+										<div>
+											<h5>Azure DevOps</h5>
+											<p class="mb-0">Fully tested and verified</p>
+										</div>
+										<div style="margin-top: 10px;">
+											<img src="img/admin-site-settings-add-azure-repo.jpeg" alt="Provider" style="max-width: 100%;">
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="platform-card p-3 mb-3 border rounded">
+									<div class="d-flex align-items-center">
+										<div class="status-icon me-3 text-success">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+												<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+												<polyline points="22 4 12 14.01 9 11.01"></polyline>
+											</svg>
+										</div>
+										<div>
+											<h5>GitHub</h5>
+											<p class="mb-0">Fully tested and verified</p>
+										</div>
+										<div style="margin-top: 10px;">
+											<img src="img/admin-site-settings-add-github-repo.jpeg" alt="Provider" style="max-width: 100%;">
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="platform-card p-3 mb-3 border rounded">
+									<div class="d-flex align-items-center">
+										<div class="status-icon me-3 text-warning">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+												<circle cx="12" cy="12" r="10"></circle>
+												<line x1="12" y1="8" x2="12" y2="12"></line>
+												<line x1="12" y1="16" x2="12.01" y2="16"></line>
+											</svg>
+										</div>
+										<div>
+											<h5>GitLab</h5>
+											<p class="mb-0">Available but not fully tested</p>
+										</div>
+										<div style="margin-top: 10px;">
+											<img src="img/admin-site-settings-add-gitlab-repo.jpeg" alt="Provider" style="max-width: 100%;">
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<div class="platform-card p-3 mb-3 border rounded">
+									<div class="d-flex align-items-center">
+										<div class="status-icon me-3 text-warning">
+											<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+												<circle cx="12" cy="12" r="10"></circle>
+												<line x1="12" y1="8" x2="12" y2="12"></line>
+												<line x1="12" y1="16" x2="12.01" y2="16"></line>
+											</svg>
+										</div>
+										<div>
+											<h5>Bitbucket</h5>
+											<p class="mb-0">Available but not fully tested</p>
+										</div>
+										<div style="margin-top: 10px;">
+											<img src="img/admin-site-settings-add-bitbucket-repo.jpeg" alt="Provider" style="max-width: 100%;">
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-warning mt-3">
+						<h5 class="alert-heading">Implementation Notes</h5>
+						<ul>
+							<li>While interfaces exist for GitLab and Bitbucket, these integrations haven't been fully tested</li>
+							<li>Users may encounter unexpected behavior with these platforms</li>
+							<li>Issues should be reported through our GitHub repository</li>
+						</ul>
+					</div>
+
+					<div class="custom-integration mt-4">
+						<h4>Need Custom Integration Support?</h4>
+						<div class="d-flex align-items-start">
+							<div class="flex-shrink-0 me-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+									<circle cx="9" cy="7" r="4"></circle>
+									<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+									<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+								</svg>
+							</div>
+							<div>
+								<p>For specialized integration requirements or troubleshooting assistance with GitLab/Bitbucket, please contact the creator through official channels:</p>
+								<div class="contact-channels mt-3">
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-linkedin">
+												<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+												<rect x="2" y="9" width="4" height="12"></rect>
+												<circle cx="4" cy="4" r="2"></circle>
+											</svg>
+										</div>
+										<div>
+											<a href="https://www.linkedin.com/in/veyselgokcen/" target="_blank" class="text-decoration-none">
+												linkedin.com/in/veyselgokcen/
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
+												<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+												<polyline points="22,6 12,13 2,6"></polyline>
+											</svg>
+										</div>
+										<div>
+											<a href="mailto:gokcenveysel@gmail.com" class="text-decoration-none">
+												gokcenveysel@gmail.com
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github">
+												<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+											</svg>
+										</div>
+										<div>
+											<a href="https://github.com/gokcenveysel/Gheetah" target="_blank" class="text-decoration-none">
+												github.com/gokcenveysel/Gheetah
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.repo-card {
+					transition: all 0.3s ease;
+				}
+				.repo-card:hover {
+					transform: translateY(-5px);
+					box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+				}
+				.repo-icon {
+					height: 60px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.repo-icon svg {
+					max-width: 100%;
+					max-height: 100%;
+				}
+				.platform-card {
+					transition: all 0.2s ease;
+				}
+				.platform-card:hover {
+					background-color: #f8f9fa;
+				}
+				.status-icon svg {
+					width: 24px;
+					height: 24px;
+				}
+				.contact-channels a {
+					color: var(--gh-secondary);
+					transition: color 0.2s ease;
+				}
+				.contact-channels a:hover {
+					color: var(--gh-primary);
+					text-decoration: underline;
+				}
+				.contact-icon {
+					width: 24px;
+					text-align: center;
+				}
+				.custom-integration {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+					border-left: 4px solid var(--gh-primary);
+				}
+			</style>
             
-            <div id="mail-integration" class="content-section">
-                <h2>Mail Integration</h2>
-                <div class="mt-4 p-4 bg-light rounded">
-                    <p>Email notification settings:</p>
-                    <ul>
-                        <li>SMTP configuration</li>
-                        <li>Notification templates</li>
-                        <li>Recipient groups</li>
-                    </ul>
-                </div>
-            </div>
+			<div id="mail-integration" class="content-section">
+				<h2>Email Integration</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-info">
+						<h5 class="alert-heading">Current Implementation Status</h5>
+						<p>While the email integration framework has been established for test result notifications and password recovery workflows, these features are not yet fully operational in current system flows. The infrastructure is prepared for upcoming enhancements.</p>
+					</div>
+
+					<h4 class="mt-4">Planned Email Functionality</h4>
+					<div class="row">
+						<div class="col-md-6">
+							<div class="feature-card p-3 mb-3 border rounded h-100">
+								<div class="d-flex align-items-center mb-2">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
+										<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+										<polyline points="14 2 14 8 20 8"></polyline>
+										<line x1="16" y1="13" x2="8" y2="13"></line>
+										<line x1="16" y1="17" x2="8" y2="17"></line>
+										<polyline points="10 9 9 9 8 9"></polyline>
+									</svg>
+									<h5 class="ms-2 mb-0">Test Result Notifications</h5>
+								</div>
+								<p>Scheduled for implementation to automatically send test execution reports to specified recipients.</p>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="feature-card p-3 mb-3 border rounded h-100">
+								<div class="d-flex align-items-center mb-2">
+									<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-key">
+										<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+									</svg>
+									<h5 class="ms-2 mb-0">Password Recovery</h5>
+								</div>
+								<p>Planned workflow for secure password reset functionality via email verification.</p>
+							</div>
+						</div>
+					</div>
+
+					<h4 class="mt-4">Available Email Services</h4>
+					<div class="service-cards">
+						<div class="row">
+							<div class="col-md-4">
+								<div class="service-card p-3 mb-3 border rounded text-center h-100">
+									<h5>SMTP</h5>
+									<p>Standard email protocol integration</p>
+									<div class="badge bg-secondary">Configuration Ready</div>
+									<div style="margin-top: 10px;">
+										<img src="img/admin-site-settings-add-new-smtp-mail.jpeg" alt="Provider" style="max-width: 100%;">
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="service-card p-3 mb-3 border rounded text-center h-100">
+									<h5>SendGrid</h5>
+									<p>Cloud-based email delivery</p>
+									<div class="badge bg-secondary">Configuration Ready</div>
+									<div style="margin-top: 10px;">
+										<img src="img/admin-site-settings-add-new-sendgrid-mail.jpeg" alt="Provider" style="max-width: 100%;">
+									</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="service-card p-3 mb-3 border rounded text-center h-100">
+									<h5>Azure Communication</h5>
+									<p>Enterprise email service</p>
+									<div class="badge bg-secondary">Configuration Ready</div>
+									<div style="margin-top: 10px;">
+										<img src="img/admin-site-settings-add-new-azure-connect-mail.jpeg" alt="Provider" style="max-width: 100%;">
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-warning mt-3">
+						<h5 class="alert-heading">Implementation Note</h5>
+						<p>While the configuration interfaces are fully functional and save settings correctly, the actual email sending functionality has not yet been implemented in system workflows. This is a planned enhancement on our development roadmap.</p>
+					</div>
+
+					<div class="custom-integration mt-4">
+						<h4>Custom Email Integration Services</h4>
+						<div class="d-flex align-items-start">
+							<div class="flex-shrink-0 me-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+									<polyline points="22,6 12,13 2,6"></polyline>
+								</svg>
+							</div>
+							<div>
+								<p>For specialized email integration requirements or priority implementation, please contact us through official channels:</p>
+								<div class="contact-channels mt-3">
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-linkedin">
+												<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+												<rect x="2" y="9" width="4" height="12"></rect>
+												<circle cx="4" cy="4" r="2"></circle>
+											</svg>
+										</div>
+										<div>
+											<a href="https://www.linkedin.com/in/veyselgokcen/" target="_blank" class="text-decoration-none">
+												linkedin.com/in/veyselgokcen/
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
+												<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+												<polyline points="22,6 12,13 2,6"></polyline>
+											</svg>
+										</div>
+										<div>
+											<a href="mailto:gokcenveysel@gmail.com" class="text-decoration-none">
+												gokcenveysel@gmail.com
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github">
+												<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+											</svg>
+										</div>
+										<div>
+											<a href="https://github.com/gokcenveysel/Gheetah" target="_blank" class="text-decoration-none">
+												github.com/gokcenveysel/Gheetah
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.feature-card {
+					transition: all 0.3s ease;
+				}
+				.feature-card:hover {
+					transform: translateY(-3px);
+					box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+				}
+				.service-card {
+					transition: all 0.3s ease;
+				}
+				.service-card:hover {
+					transform: translateY(-5px);
+					box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+				}
+				.service-icon {
+					height: 60px;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+				}
+				.service-icon svg {
+					max-width: 100%;
+					max-height: 100%;
+				}
+				.contact-channels a {
+					color: var(--gh-secondary);
+					transition: color 0.2s ease;
+				}
+				.contact-channels a:hover {
+					color: var(--gh-primary);
+					text-decoration: underline;
+				}
+				.contact-icon {
+					width: 24px;
+					text-align: center;
+				}
+				.custom-integration {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+					border-left: 4px solid var(--gh-primary);
+				}
+			</style>
             <!-- INTRODUCTION -->
             <div id="what-is-gheetah" class="content-section">
                 <h2>What is Gheetah?</h2>
@@ -2445,7 +2819,521 @@
 					font-family: monospace;
 				}
 			</style>
-                        
+			<div id="run-specific-scenario" class="content-section">
+				<h2>Running Specific Scenarios</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-success">
+						<h5 class="alert-heading">Execution Readiness</h5>
+						<p>By reaching this stage, you've successfully completed all necessary integrations, added projects to Gheetah Test Orchestration via clone/upload, and built them. This interface represents the core functionality of Gheetah - executing individual test scenarios with precision.</p>
+					</div>
+					<div class="feature-overview mt-4">
+						<div class="d-flex align-items-start">
+							<div class="flex-shrink-0 me-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<polyline points="4 17 10 11 4 5"></polyline>
+									<line x1="12" y1="19" x2="20" y2="19"></line>
+								</svg>
+							</div>
+							<div>
+								<h4>Scenario Discovery & Tagging System</h4>
+								<p>After successful project build, Gheetah automatically:</p>
+								<ul>
+									<li>Scans your project for <code>.feature</code> files</li>
+									<li>Identifies all test scenarios</li>
+									<li>Assigns unique tags to each scenario</li>
+								</ul>
+								<p>This tagging system enables precise execution of individual scenarios.</p>
+							</div>
+						</div>
+						<div style="margin-top: 10px;">
+							<img src="img/scenario-execution.jpeg" alt="Provider" style="max-width: 100%;">
+						</div>
+					</div>
+
+					<h4 class="mt-4">Execution Workflow</h4>
+					<div class="workflow-steps">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Scenario Selection</h5>
+								<p>Locate your scenario either by:</p>
+								<ul>
+									<li>Searching in the Scenario List</li>
+									<li>Browsing the Tree View</li>
+								</ul>
+								<p>Selected scenario content appears in the Scenario Content panel.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Execution Configuration</h5>
+								<p>Click <strong>"Run Options"</strong> to reveal the configuration panel with:</p>
+								<ul>
+									<li>Tag selection dropdown</li>
+									<li>Agent selection dropdown</li>
+								</ul>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Tag Selection</h5>
+								<p>Select the unique tag Gheetah generated for your specific scenario.</p>
+							</div>
+							<div style="margin-top: 10px;">
+								<img src="img/scenario-execution-2.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">4</div>
+							<div class="step-content">
+								<h5>Execution Method</h5>
+								<div class="execution-options">
+									<div class="option">
+										<div class="option-header">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-server">
+												<rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+												<rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+												<line x1="6" y1="6" x2="6.01" y2="6"></line>
+												<line x1="6" y1="18" x2="6.01" y2="18"></line>
+											</svg>
+											<span>Local Execution</span>
+										</div>
+										<p>Click <strong>"Run Scenario"</strong> without selecting an agent (not recommended for production)</p>
+									</div>
+									<div class="option">
+										<div class="option-header">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-cpu">
+												<rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+												<rect x="9" y="9" width="6" height="6"></rect>
+												<line x1="9" y1="1" x2="9" y2="4"></line>
+												<line x1="15" y1="1" x2="15" y2="4"></line>
+												<line x1="9" y1="20" x2="9" y2="23"></line>
+												<line x1="15" y1="20" x2="15" y2="23"></line>
+												<line x1="20" y1="9" x2="23" y2="9"></line>
+												<line x1="20" y1="14" x2="23" y2="14"></line>
+												<line x1="1" y1="9" x2="4" y2="9"></line>
+												<line x1="1" y1="14" x2="4" y2="14"></line>
+											</svg>
+											<span>Remote Execution</span>
+										</div>
+										<p>Select an available agent from the dropdown before clicking <strong>"Run Scenario"</strong> for distributed testing</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">5</div>
+							<div class="step-content">
+								<h5>Real-time Monitoring</h5>
+								<p>Track execution progress through the modal window, which displays:</p>
+								<ul>
+									<li>Live output via SignalR technology</li>
+									<li>Step-by-step execution status</li>
+								</ul>
+							</div>
+							<div style="margin-top: 10px;">
+								<img src="img/scenario-execution-3.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">6</div>
+							<div class="step-content">
+								<h5>Results Analysis</h5>
+								<p>View detailed HTML reports in the Execution Report section showing:</p>
+								<ul>
+									<li>Individual step outcomes</li>
+									<li>Execution timings</li>
+									<li>Scenario status</li>
+								</ul>
+							</div>
+							<div style="margin-top: 10px;">
+								<img src="img/scenario-execution-4.jpeg" alt="Provider" style="max-width: 100%;">
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-warning mt-4">
+						<h5 class="alert-heading">Important Limitation</h5>
+						<p>Currently, execution results are <strong>not persisted historically</strong>. Reports and runtime outputs will be lost if you navigate away from the page. We strongly recommend remaining on the execution page until you've captured all necessary information.</p>
+					</div>
+
+					<div class="custom-reporting mt-4">
+						<h4>Need Historical Reporting?</h4>
+						<div class="d-flex align-items-start">
+							<div class="flex-shrink-0 me-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+								</svg>
+							</div>
+							<div>
+								<p>For customized reporting solutions that preserve execution history and display results in your Dashboard through tailored visualizations, please contact us:</p>
+								<div class="contact-channels mt-3">
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-linkedin">
+												<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+												<rect x="2" y="9" width="4" height="12"></rect>
+												<circle cx="4" cy="4" r="2"></circle>
+											</svg>
+										</div>
+										<div>
+											<a href="https://www.linkedin.com/in/veyselgokcen/" target="_blank" class="text-decoration-none">
+												linkedin.com/in/veyselgokcen/
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
+												<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+												<polyline points="22,6 12,13 2,6"></polyline>
+											</svg>
+										</div>
+										<div>
+											<a href="mailto:gokcenveysel@gmail.com" class="text-decoration-none">
+												gokcenveysel@gmail.com
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github">
+												<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+											</svg>
+										</div>
+										<div>
+											<a href="https://github.com/gokcenveysel/Gheetah" target="_blank" class="text-decoration-none">
+												github.com/gokcenveysel/Gheetah
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.workflow-steps {
+					counter-reset: step-counter;
+				}
+				.step {
+					position: relative;
+					padding-left: 50px;
+					margin-bottom: 20px;
+				}
+				.step-number {
+					position: absolute;
+					left: 0;
+					top: 0;
+					width: 32px;
+					height: 32px;
+					background-color: var(--gh-primary);
+					color: white;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+				}
+				.execution-options {
+					display: grid;
+					grid-template-columns: 1fr 1fr;
+					gap: 15px;
+					margin-top: 10px;
+				}
+				.option {
+					background-color: #f8f9fa;
+					padding: 15px;
+					border-radius: 8px;
+				}
+				.option-header {
+					display: flex;
+					align-items: center;
+					gap: 10px;
+					margin-bottom: 10px;
+					font-weight: 600;
+				}
+				.option-header svg {
+					color: var(--gh-primary);
+				}
+				.contact-channels a {
+					color: var(--gh-secondary);
+					transition: color 0.2s ease;
+				}
+				.contact-channels a:hover {
+					color: var(--gh-primary);
+					text-decoration: underline;
+				}
+				.contact-icon {
+					width: 24px;
+					text-align: center;
+				}
+				.custom-reporting {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+					border-left: 4px solid var(--gh-primary);
+				}
+				@media (max-width: 768px) {
+					.execution-options {
+						grid-template-columns: 1fr;
+					}
+				}
+			</style>
+			<div id="run-all-scenarios" class="content-section">
+				<h2>Running All Scenarios</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-success">
+						<h5 class="alert-heading">Full Test Suite Execution</h5>
+						<p>You've reached the final stage of test orchestration - executing your entire test suite with minimal effort. This interface represents Gheetah's powerful bulk execution capability.</p>
+					</div>
+
+					<div class="feature-overview mt-4">
+						<div class="d-flex align-items-start">
+							<div class="flex-shrink-0 me-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<polyline points="22 12 16 12 14 15 10 9 8 12 2 12"></polyline>
+									<path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+								</svg>
+							</div>
+							<div>
+								<h4>Comprehensive Test Execution</h4>
+								<p>After successful project build, Gheetah provides:</p>
+								<ul>
+									<li>Complete visibility of all <code>.feature</code> files</li>
+									<li>Scenario count and project details</li>
+									<li>Automated tagging of all scenarios</li>
+									<li>One-click execution of your entire test suite</li>
+								</ul>
+							</div>
+						</div>
+						<div style="margin-top: 10px;">
+							<img src="img/scenario-execution.jpeg" alt="Provider" style="max-width: 100%;">
+						</div>
+					</div>
+
+					<h4 class="mt-4">Bulk Execution Workflow</h4>
+					<div class="workflow-steps">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Initiate Execution</h5>
+								<p>Click <strong>"Run All Scenarios"</strong> to open the configuration panel with agent selection options.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Execution Method</h5>
+								<div class="execution-options">
+									<div class="option">
+										<div class="option-header">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-server">
+												<rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+												<rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+												<line x1="6" y1="6" x2="6.01" y2="6"></line>
+												<line x1="6" y1="18" x2="6.01" y2="18"></line>
+											</svg>
+											<span>Local Execution</span>
+										</div>
+										<p>Click <strong>"Run Scenarios"</strong> without agent selection (not recommended for production environments)</p>
+									</div>
+									<div class="option">
+										<div class="option-header">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-cpu">
+												<rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
+												<rect x="9" y="9" width="6" height="6"></rect>
+												<line x1="9" y1="1" x2="9" y2="4"></line>
+												<line x1="15" y1="1" x2="15" y2="4"></line>
+												<line x1="9" y1="20" x2="9" y2="23"></line>
+												<line x1="15" y1="20" x2="15" y2="23"></line>
+												<line x1="20" y1="9" x2="23" y2="9"></line>
+												<line x1="20" y1="14" x2="23" y2="14"></line>
+												<line x1="1" y1="9" x2="4" y2="9"></line>
+												<line x1="1" y1="14" x2="4" y2="14"></line>
+											</svg>
+											<span>Remote Execution</span>
+										</div>
+										<p>Select an available agent from the dropdown before clicking <strong>"Run Scenarios"</strong> for distributed test execution</p>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Real-time Monitoring</h5>
+								<p>Track execution progress through the modal window, which displays:</p>
+								<ul>
+									<li>Live output via SignalR technology</li>
+									<li>Aggregated execution status</li>
+									<li>Individual scenario progress</li>
+								</ul>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">4</div>
+							<div class="step-content">
+								<h5>Hangfire Integration</h5>
+								<div class="d-flex align-items-start">
+									<div class="flex-shrink-0 me-3">
+										<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+											<circle cx="12" cy="12" r="10"></circle>
+											<polyline points="12 6 12 12 16 14"></polyline>
+										</svg>
+									</div>
+									<div>
+										<p>With the <strong>"Hangfire Recent Jobs"</strong> widget added to your dashboard, you can:</p>
+										<ul>
+											<li>Monitor job status for up to 1 hour</li>
+											<li>View execution outputs on a dedicated page</li>
+											<li>Track historical runs within the retention period</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-warning mt-4">
+						<h5 class="alert-heading">Important Limitation</h5>
+						<p>Execution results are <strong>not persisted historically</strong> by default. Reports and outputs will be lost if you navigate away from the page, except for:</p>
+						<ul>
+							<li>Hangfire job information (retained for 1 hour)</li>
+							<li>Widget-displayed data within the retention period</li>
+						</ul>
+					</div>
+
+					<div class="custom-reporting mt-4">
+						<h4>Need Persistent Historical Reporting?</h4>
+						<div class="d-flex align-items-start">
+							<div class="flex-shrink-0 me-3">
+								<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gh-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+								</svg>
+							</div>
+							<div>
+								<p>For customized reporting solutions that preserve execution history and display comprehensive results in your Dashboard, contact us through these channels:</p>
+								<div class="contact-channels mt-3">
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-linkedin">
+												<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+												<rect x="2" y="9" width="4" height="12"></rect>
+												<circle cx="4" cy="4" r="2"></circle>
+											</svg>
+										</div>
+										<div>
+											<a href="https://www.linkedin.com/in/veyselgokcen/" target="_blank" class="text-decoration-none">
+												linkedin.com/in/veyselgokcen/
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center mb-2">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-mail">
+												<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+												<polyline points="22,6 12,13 2,6"></polyline>
+											</svg>
+										</div>
+										<div>
+											<a href="mailto:gokcenveysel@gmail.com" class="text-decoration-none">
+												gokcenveysel@gmail.com
+											</a>
+										</div>
+									</div>
+									<div class="d-flex align-items-center">
+										<div class="contact-icon me-2">
+											<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-github">
+												<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+											</svg>
+										</div>
+										<div>
+											<a href="https://github.com/gokcenveysel/Gheetah" target="_blank" class="text-decoration-none">
+												github.com/gokcenveysel/Gheetah
+											</a>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.workflow-steps {
+					counter-reset: step-counter;
+				}
+				.step {
+					position: relative;
+					padding-left: 50px;
+					margin-bottom: 20px;
+				}
+				.step-number {
+					position: absolute;
+					left: 0;
+					top: 0;
+					width: 32px;
+					height: 32px;
+					background-color: var(--gh-primary);
+					color: white;
+					border-radius: 50%;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					font-weight: bold;
+				}
+				.execution-options {
+					display: grid;
+					grid-template-columns: 1fr 1fr;
+					gap: 15px;
+					margin-top: 10px;
+				}
+				.option {
+					background-color: #f8f9fa;
+					padding: 15px;
+					border-radius: 8px;
+				}
+				.option-header {
+					display: flex;
+					align-items: center;
+					gap: 10px;
+					margin-bottom: 10px;
+					font-weight: 600;
+				}
+				.option-header svg {
+					color: var(--gh-primary);
+				}
+				.contact-channels a {
+					color: var(--gh-secondary);
+					transition: color 0.2s ease;
+				}
+				.contact-channels a:hover {
+					color: var(--gh-primary);
+					text-decoration: underline;
+				}
+				.contact-icon {
+					width: 24px;
+					text-align: center;
+				}
+				.custom-reporting {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+					border-left: 4px solid var(--gh-primary);
+				}
+				@media (max-width: 768px) {
+					.execution-options {
+						grid-template-columns: 1fr;
+					}
+				}
+			</style>
+           
             <!-- DEFAULT PLACEHOLDER -->
 			<div id="no-content" class="content-section active">
 				<div class="text-center mt-3">
