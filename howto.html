@@ -564,18 +564,95 @@
 				}
 			</style>
             
-            <div id="project-folder" class="content-section">
-                <h2>Project Folder</h2>
-                <div class="mt-4 p-4 rounded">
-                    <p>Project folder structure:</p>
-                    <pre>
-/projects
-  /{project-id}
-    /src
-    /tests
-    /reports</pre>
-                </div>
-            </div>
+			<div id="project-folder" class="content-section">
+				<h2>Project Folder Configuration</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-danger">
+						<h5 class="alert-heading">Critical System Configuration</h5>
+						<p>While this interface appears simple, it represents one of the most crucial settings in Gheetah Test Orchestration and <strong>must</strong> be properly configured for the system to function.</p>
+					</div>
+
+					<h4 class="mt-4">Directory Structure Specification</h4>
+					<div class="directory-structure">
+						<div class="d-flex">
+							<div class="flex-shrink-0 me-4">
+								<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-folder">
+									<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2z"></path>
+								</svg>
+							</div>
+							<div>
+								<p>This screen defines the root directory where all BDD test automation projects will be stored when cloned or uploaded to your Gheetah instance.</p>
+								<div style="margin-top: 10px;">
+									<img src="img/admin-site-settings-add-directory.jpeg" alt="Provider" style="max-width: 100%;">
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="alert alert-warning mt-4">
+						<h5 class="alert-heading">Default Fallback Behavior</h5>
+						<p>If no directory is specified:</p>
+						<ul>
+							<li>Projects will default to <code>Gheetah\CopiedProjects</code> in the application's root directory</li>
+							<li>The system will <strong>appear</strong> to accept clone/upload operations</li>
+							<li>However, critical failures will occur because:
+								<ul>
+									<li>The <code>projects-folder.json</code> file will remain empty</li>
+									<li>Test scenarios cannot execute - neither remotely on Agents nor locally on the Gheetah server</li>
+									<li>Build processes will fail completely</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+
+					<div class="technical-details mt-4 p-4 bg-light rounded">
+						<h4><i class="ti ti-file-code me-2"></i> Technical Implementation</h4>
+						<p>The system relies on the <code>projects-folder.json</code> configuration file to:</p>
+						<ul>
+							<li>Track the location of all test projects</li>
+							<li>Manage file operations during test execution</li>
+							<li>Coordinate between the Gheetah server and remote Agents</li>
+							<li>Maintain project isolation and organization</li>
+						</ul>
+						<p class="mt-3"><strong>Without this configuration:</strong> The entire test orchestration pipeline will be non-functional, as all workflows depend on the directory path specified in <code>projects-folder.json</code>.</p>
+					</div>
+
+					<div class="alert alert-success mt-4">
+						<h5 class="alert-heading">Configuration Best Practices</h5>
+						<ul>
+							<li>Choose a dedicated directory with sufficient storage space</li>
+							<li>Ensure the location has proper read/write permissions</li>
+							<li>Consider using high-performance storage for better execution speed</li>
+							<li>For enterprise deployments, use a network-accessible location</li>
+							<li>Document the chosen location for administrative reference</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<style>
+				.directory-structure {
+					background-color: #f8f9fa;
+					padding: 20px;
+					border-radius: 8px;
+					border-left: 4px solid var(--gh-primary);
+				}
+				.highlighted-structure {
+					border: 1px solid #dee2e6;
+				}
+				.technical-details {
+					border-left: 4px solid var(--gh-secondary);
+				}
+				pre {
+					background-color: #f8f9fa;
+					padding: 15px;
+					border-radius: 4px;
+					overflow-x: auto;
+				}
+				.feather-folder {
+					color: var(--gh-primary);
+				}
+			</style>
             
             <div id="remote-repo" class="content-section">
                 <h2>Remote Repo Integration</h2>
