@@ -1,6 +1,6 @@
 # Gheetah - Test Orchestration Platform
 
-https://github.com/gokcenveysel/Gheetah/Gheetah/wwwwroot/img/gheetah_logo.png
+https://github.com/gokcenveysel/Gheetah/tree/main/Gheetah/wwwroot/img/gheetah_logo.png
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Open--Source-brightgreen)
