@@ -99,8 +99,7 @@ For professional support regarding:
 
 Contact:
 - [LinkedIn](https://linkedin.com/in/veyselgokcen/)
-- Email: [gokcenveysel@gmail.com](mailto:gokcenveysel@gmail.com)
-- [GitHub Repository](https://github.com/gokcenveysel/Gheetah)
+- Email: [gheetahinfo@gmail.com](mailto:gheetahinfo@gmail.com)
 
 ## License
 
