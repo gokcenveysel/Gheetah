@@ -1,17 +1,18 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 
 namespace Gheetah.Agent
 {
     public static class JavaAllScenariosExecutor
     {
-        public static async Task ExecuteAllAsync(string projectPath,string processId)
+        public static async Task ExecuteAllAsync(string projectPath, string processId)
         {
             bool xmlReportGenerated = false;
             string zipFilePath = projectPath + ".zip";
             try
             {
                 StatusUI.ShowStatus($"Entering JavaAllScenariosExecutor.ExecuteAsync: ProjectPath={projectPath}, ProcessId={processId}");
-                LogToFile($"Entering JavaAllScenariosExecutor.ExecuteAsync: ProjectPath={projectPath} ProcessId={processId}");
+                LogToFile($"Entering JavaAllScenariosExecutor.ExecuteAsync: ProjectPath={projectPath}, ProcessId={processId}");
 
                 StatusUI.ShowStatus($"Checking project directory: {projectPath}");
                 LogToFile($"Checking project directory: {projectPath}");
@@ -89,7 +90,7 @@ namespace Gheetah.Agent
                 string command;
                 if (pomFiles.Length > 0)
                 {
-                    command = $@"cd '{buildDir}'; mvn test";
+                    command = $@"cd '{buildDir}'; mvn clean test";
                 }
                 else if (gradleFiles.Length > 0)
                 {
@@ -164,7 +165,6 @@ namespace Gheetah.Agent
                     else
                     {
                         await SendOutputWithTimeout($"Test execution failed with exit code {process.ExitCode}.", processId);
-                        return;
                     }
                 }
 
@@ -174,7 +174,7 @@ namespace Gheetah.Agent
                 {
                     if (Directory.Exists(testResultsDir))
                     {
-                        var xmlFiles = Directory.GetFiles(testResultsDir, $"*_test_results.xml")
+                        var xmlFiles = Directory.GetFiles(testResultsDir, "*_test_results.xml")
                             .OrderByDescending(f => File.GetLastWriteTime(f))
                             .ToList();
                         if (xmlFiles.Any())
@@ -237,9 +237,9 @@ namespace Gheetah.Agent
             }
             catch (Exception ex)
             {
-                StatusUI.ShowStatus($"Error executing Java scenario: {ex.Message}, StackTrace: {ex.StackTrace}");
-                LogToFile($"Error executing Java scenario: {ex.Message}, StackTrace: {ex.StackTrace}");
-                await SendOutputWithTimeout($"Error executing Java scenario: {ex.Message}", processId);
+                StatusUI.ShowStatus($"Error executing Java scenarios: {ex.Message}, StackTrace: {ex.StackTrace}");
+                LogToFile($"Error executing Java scenarios: {ex.Message}, StackTrace: {ex.StackTrace}");
+                await SendOutputWithTimeout($"Error executing Java scenarios: {ex.Message}", processId);
                 await SendResultWithTimeout($"Error:Scenario execution failed:{ex.Message}", processId);
             }
             finally
@@ -322,7 +322,7 @@ namespace Gheetah.Agent
             try
             {
                 string logPath = Path.Combine(Path.GetTempPath(), "Gheetah_Agent.log");
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] JavaScenarioExecutor: {message}{Environment.NewLine}");
+                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] JavaAllScenariosExecutor: {message}{Environment.NewLine}");
             }
             catch
             {

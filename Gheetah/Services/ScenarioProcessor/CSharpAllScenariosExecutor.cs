@@ -15,7 +15,7 @@ namespace Gheetah.Services.ScenarioProcessor
         private readonly IProjectService _projectService;
         private readonly IHubContext<GheetahHub> _hubContext;
 
-        public CSharpAllScenariosExecutor(IProcessService processService, IHubContext<GheetahHub> hubContext,IProjectService projectService)
+        public CSharpAllScenariosExecutor(IProcessService processService, IHubContext<GheetahHub> hubContext, IProjectService projectService)
         {
             _processService = processService;
             _hubContext = hubContext;
@@ -50,8 +50,7 @@ namespace Gheetah.Services.ScenarioProcessor
                         cd '{buildedTestFileFullPath}'
                         dotnet test -v detailed '{projectInfo.BuildedTestFileName}' --logger 'trx;LogFileName={testResultsFilePath}'";
 
-
-                Console.WriteLine($"Executing scenario for processId: {processId}, agentId: {request.AgentId}");
+                    Console.WriteLine($"Executing all scenarios for processId: {processId}, agentId: {request.AgentId}");
 
                     if (!string.IsNullOrEmpty(request.AgentId))
                     {
@@ -68,16 +67,16 @@ namespace Gheetah.Services.ScenarioProcessor
                         );
                     }
                 }
-                await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveHtmlReport", processInfo.HtmlReport);
+
                 processInfo.Status = ProcessStatus.Executed;
-                await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveCompletionMessage", "Scenario executed successfully");
+                await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveCompletionMessage", "All scenarios executed successfully");
             }
             catch (Exception ex)
             {
                 processInfo.Status = ProcessStatus.Failed;
                 processInfo.Output.Add($"Error: {ex.Message}");
                 await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", $"Error: {ex.Message}");
-                await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveCompletionMessage", $"Scenario execution failed: {ex.Message}");
+                await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveCompletionMessage", $"All scenarios execution failed: {ex.Message}");
                 throw;
             }
         }

@@ -390,7 +390,7 @@ public class ScenariosController : Controller
             var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
             if (string.IsNullOrWhiteSpace(clonesRoot) || !Directory.Exists(clonesRoot))
             {
-                await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"FAILED: Project folder config not found.");
+                await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"FAILED: Project folder config not found or invalid: {clonesRoot}.");
                 return BadRequest("Project folder config not found.");
             }
 
@@ -401,8 +401,9 @@ public class ScenariosController : Controller
                 return BadRequest($"No ProjectInfo with scenarios found for project {project.Name}.");
             }
 
-            var projectPath = Path.Combine(clonesRoot, projectInfo.ProjectName);
-            if (!Directory.Exists(projectPath))
+            // Use BuildInfoFileFullPath to get the project directory (contains pom.xml, build.gradle, or .csproj)
+            var projectPath = Path.GetDirectoryName(projectInfo.BuildInfoFileFullPath);
+            if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
             {
                 await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"FAILED: Project path {projectPath} does not exist.");
                 return BadRequest($"Project path {projectPath} does not exist.");

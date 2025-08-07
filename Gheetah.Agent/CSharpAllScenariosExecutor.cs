@@ -4,9 +4,9 @@ namespace Gheetah.Agent
 {
     public static class CSharpAllScenariosExecutor
     {
-        public static async Task ExecuteAllAsync(string projectPath,string processId, string buildedTestFileName)
+        public static async Task ExecuteAllAsync(string projectPath, string processId, string buildedTestFileName)
         {
-            StatusUI.ShowStatus($"Executing C# scenario: ProjectPath={projectPath},ProcessId={processId}, BuildedTestFileName={buildedTestFileName}");
+            StatusUI.ShowStatus($"Executing all C# scenarios: ProjectPath={projectPath}, ProcessId={processId}, BuildedTestFileName={buildedTestFileName}");
             try
             {
                 StatusUI.ShowStatus($"Searching for {buildedTestFileName} in {projectPath}");
@@ -23,7 +23,7 @@ namespace Gheetah.Agent
                 string dllDir = Path.GetDirectoryName(dllPath);
                 StatusUI.ShowStatus($"Selected .dll file: {dllPath}, Directory: {dllDir}");
 
-                string testResultsFilePath = AgentService.GetTestResultsFilePath(dllDir, scenarioTag:null);
+                string testResultsFilePath = AgentService.GetTestResultsFilePath(dllDir, scenarioTag: "AllScenarios");
                 StatusUI.ShowStatus($"Test results file path: {testResultsFilePath}");
 
                 string powerShellCommand = $@"cd '{dllDir}'; dotnet test -v detailed '{buildedTestFileName}' --logger 'trx;LogFileName={testResultsFilePath}' --no-build --no-restore";
@@ -91,8 +91,8 @@ namespace Gheetah.Agent
             }
             catch (Exception ex)
             {
-                StatusUI.ShowStatus($"Error executing C# scenario: {ex.Message}, StackTrace: {ex.StackTrace}");
-                await AgentService.SendOutputAsync($"Error executing C# scenario: {ex.Message}", processId);
+                StatusUI.ShowStatus($"Error executing C# scenarios: {ex.Message}, StackTrace: {ex.StackTrace}");
+                await AgentService.SendOutputAsync($"Error executing C# scenarios: {ex.Message}", processId);
                 await AgentService.SendResultAsync($"Error:Scenario execution failed:{ex.Message}", processId);
             }
             finally

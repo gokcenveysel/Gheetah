@@ -75,7 +75,7 @@ namespace Gheetah.Services.ScenarioProcessor
             else if (project.LanguageType.Equals("java", StringComparison.OrdinalIgnoreCase))
             {
                 _backgroundJobClient.Enqueue<JavaAllScenariosExecutor>(x =>
-                    x.ExecuteAsync(processId, project, request, cancellationTokenSource.Token));
+                    x.ExecuteAllAsync(processId, project, request, cancellationTokenSource.Token));
             }
 
             return processId;
