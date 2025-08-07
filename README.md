@@ -1,4 +1,5 @@
 <img width="110" height="128" alt="image" src="https://github.com/user-attachments/assets/86382633-41b0-4c7d-aed9-a9b68106a1df" />
+
 # Gheetah - Test Orchestration Platform
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
