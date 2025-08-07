@@ -20,6 +20,7 @@ namespace Gheetah.Middleware
         public async Task InvokeAsync(HttpContext context)
         {
             var path = context.Request.Path.Value?.ToLowerInvariant();
+            _logger.LogInformation($"Request Path: {path}, Setup Complete: {_fileService.IsSetupComplete()}");
 
             if (path.StartsWith("/setup/") || 
                 path.StartsWith("/sso/") || 
@@ -30,17 +31,19 @@ namespace Gheetah.Middleware
                 path.EndsWith(".jpg") || 
                 path.EndsWith(".ico"))
             {
+                _logger.LogInformation($"Bypassing middleware for path: {path}");
                 await _next(context);
                 return;
             }
 
             if (!_fileService.IsSetupComplete())
             {
-                var setupFile = Path.Combine(_dataPath, "setup_completed.json");
+                _logger.LogInformation("Setup not complete, redirecting to /setup/index");
                 context.Response.Redirect("/setup/index");
                 return;
             }
 
+            _logger.LogInformation("Setup complete, proceeding to next middleware");
             await _next(context);
         }
     }

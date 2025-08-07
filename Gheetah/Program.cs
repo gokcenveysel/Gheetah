@@ -231,10 +231,14 @@ try
 
     app.MapHub<GheetahHub>("/gheetahHub");
     app.MapControllers();
+    app.MapGet("/", context =>
+    {
+        context.Response.Redirect("/account/login");
+        return Task.CompletedTask;
+    });
     app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Account}/{action=Login}/{id?}");
-
     app.Logger.LogInformation("Gheetah starting...");
     app.Run();
 }

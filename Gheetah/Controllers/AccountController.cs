@@ -76,10 +76,15 @@ namespace Gheetah.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login()
         {
+            _controllerLogger.LogInformation("AccountController.Login GET called");
             if (User.Identity?.IsAuthenticated == true)
+            {
+                _controllerLogger.LogInformation("User is authenticated, redirecting to Dashboard");
                 return RedirectToAction("Index", "Dashboard");
+            }
 
             var provider = await _dynamicAuthService.GetConfiguredProviderAsync();
+            _controllerLogger.LogInformation($"SSO Provider: {provider}");
             ViewBag.Provider = provider.ToString();
 
             return View();
