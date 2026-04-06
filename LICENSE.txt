@@ -1,21 +1,26 @@
-MIT License
+# Gheetah Community License
 
-Copyright (c) [year] [fullname]
+**Copyright (c) 2026 Veysel Gökçen**
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, and merge the software for **non-commercial purposes**, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+---
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+### 1. NON-COMMERCIAL USE ONLY
+The software may not be used for commercial purposes, sold, or integrated into a paid product/service without prior written permission from the copyright holder.
+
+**Definition of Commercial Use:**
+For the purposes of this license, "Commercial Use" includes, but is not limited to:
+* Offering the software as a service (SaaS).
+* Bundling or integrating the software into a paid package, product, or tool.
+* Direct resale or redistribution of the software for a fee.
+* Using the software to provide paid consultancy or managed testing services to third parties.
+
+### 2. AUDIENCE
+The software is intended for free use by individual developers and QA engineers for testing, automation development, and educational purposes.
+
+### 3. ATTRIBUTION
+The original copyright notice and this permission notice must be included in all copies or substantial portions of the Software.
+
+### 4. SECURITY & LIABILITY
+**THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.** Users are solely responsible for performing their own security assessments before deployment. The authors shall not be liable for any claims, damages, or other liability arising from the use of the software.
