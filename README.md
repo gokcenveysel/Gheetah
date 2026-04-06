@@ -103,8 +103,29 @@ Contact:
 
 ## License
 
-Gheetah is released under the MIT License with important considerations:
-- Complete open-source codebase
-- Strictly non-commercial use only
-- No warranty or liability for untested features
-- Users should perform their own security assessments
+# Gheetah Community License
+
+**Copyright (c) 2026 Veysel Gökçen**
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, and merge the software for **non-commercial purposes**, subject to the following conditions:
+
+---
+
+### 1. NON-COMMERCIAL USE ONLY
+The software may not be used for commercial purposes, sold, or integrated into a paid product/service without prior written permission from the copyright holder.
+
+**Definition of Commercial Use:**
+For the purposes of this license, "Commercial Use" includes, but is not limited to:
+* Offering the software as a service (SaaS).
+* Bundling or integrating the software into a paid package, product, or tool.
+* Direct resale or redistribution of the software for a fee.
+* Using the software to provide paid consultancy or managed testing services to third parties.
+
+### 2. AUDIENCE
+The software is intended for free use by individual developers and QA engineers for testing, automation development, and educational purposes.
+
+### 3. ATTRIBUTION
+The original copyright notice and this permission notice must be included in all copies or substantial portions of the Software.
+
+### 4. SECURITY & LIABILITY
+**THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.** Users are solely responsible for performing their own security assessments before deployment. The authors shall not be liable for any claims, damages, or other liability arising from the use of the software.
