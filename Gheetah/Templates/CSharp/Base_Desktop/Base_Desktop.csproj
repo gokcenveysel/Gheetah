@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework> <!-- Desktop için windows suffix şart -->
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+    <RootNamespace>{{ProjectName}}</RootNamespace>
+    <AssemblyName>{{ProjectName}}</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Reqnroll" Version="2.1.0" />
+    {{AdapterDependencies}}
+    <PackageReference Include="Appium.WebDriver" Version="5.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+    {{AddonDependencies}}
+  </ItemGroup>
+</Project>

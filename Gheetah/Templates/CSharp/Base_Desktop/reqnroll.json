@@ -1,0 +1,8 @@
+{
+  "language": {
+    "feature": "en-US"
+  },
+  "bindingAssemblies": [
+    { "assembly": "{{ProjectName}}" }
+  ]
+}

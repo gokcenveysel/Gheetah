@@ -1,0 +1,14 @@
+{
+	"Platforms": {
+    "Mobile": "<PackageReference Include=\"Appium.WebDriver\" Version=\"5.1.0\" />",
+    "Desktop": "<PackageReference Include=\"Appium.WebDriver\" Version=\"5.1.0\" />"
+  },
+  "Adapters": {
+    "xUnit": "<PackageReference Include=\"Reqnroll.xUnit\" Version=\"2.1.0\" />\n<PackageReference Include=\"xunit\" Version=\"2.9.0\" />\n<PackageReference Include=\"xunit.runner.visualstudio\" Version=\"2.8.2\" />",
+    "MsTest": "<PackageReference Include=\"Reqnroll.MsTest\" Version=\"2.1.0\" />\n<PackageReference Include=\"MSTest.TestFramework\" Version=\"3.6.0\" />\n<PackageReference Include=\"MSTest.TestAdapter\" Version=\"3.6.0\" />"
+  },
+  "Addons": {
+    "API": "<PackageReference Include=\"RestSharp\" Version=\"111.0.0\" />\n<PackageReference Include=\"Newtonsoft.Json\" Version=\"13.0.3\" />",
+    "Database": "<PackageReference Include=\"Dapper\" Version=\"2.1.35\" />\n<PackageReference Include=\"Microsoft.Data.SqlClient\" Version=\"5.2.1\" />"
+  }
+}
