@@ -164,6 +164,7 @@ namespace Gheetah.Services
                 Directory.Delete(path, recursive: true);
             });
         }
+
         public async Task CloneProjectAsync(string repoUrl, RepoSettingsVm repoInfo, string language, string saveDirectory)
         {
             if (string.IsNullOrEmpty(repoUrl)) throw new ArgumentNullException(nameof(repoUrl));

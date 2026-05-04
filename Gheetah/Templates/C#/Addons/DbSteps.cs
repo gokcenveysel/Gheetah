@@ -8,7 +8,7 @@ namespace {{ProjectName}}.StepDefinitions
     [Binding]
     public class DbSteps
     {
-        private string _conn;
+        private string? _conn;
 
         [Given(@"I connect to SQL Server: ""(.*)""")]
         public void Connect(string c) => _conn = c;

@@ -1,0 +1,400 @@
+﻿@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Create Project Wizard";
+}
+
+<div class="page-header d-print-none">
+    <div class="container-xl">
+        <div class="row g-2 align-items-center">
+            <div class="col">
+                <h2 class="page-title text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-inline me-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
+                    New BDD Automation Project
+                </h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="page-body">
+    <div class="container-xl">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <!-- Wizard Progress -->
+                <div class="steps steps-blue mb-5">
+                    <span class="step-item active" id="idx-1">Language</span>
+                    <span class="step-item" id="idx-2">Adapter</span>
+                    <span class="step-item" id="idx-3">Project Type</span>
+                    <span class="step-item" id="idx-4">Addons</span>
+                    <span class="step-item" id="idx-5">Identity</span>
+                    <span class="step-item" id="idx-6">Summary</span>
+                </div>
+
+                <form id="projectWizard">
+                    <!-- Step 1: Language -->
+                    <div class="wizard-step" id="step-1">
+                        <h3 class="mb-3">Select Programming Language</h3>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="Language" value="C#" class="form-selectgroup-input" checked onchange="toggleAdapters('C#')">
+                                    <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                        <div class="me-3">
+                                            <span class="avatar bg-blue-lt">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#68217a"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm2.5 15.2h-5c-.3 0-.5-.2-.5-.5v-9.4c0-.3.2-.5.5-.5h5c.3 0 .5.2.5.5v1.2c0 .3-.2.5-.5.5h-3.3v2h3.3c.3 0 .5.2.5.5v1.2c0 .3-.2.5-.5.5h-3.3v2.1h3.3c.3 0 .5.2.5.5v1.1c0 .4-.2.6-.5.6z" /></svg>
+                                            </span>
+                                        </div>
+                                        <div class="text-start">
+                                            <div class="font-weight-medium">C# (.NET 8.0)</div>
+                                            <div class="text-secondary small">Microsoft based ecosystem</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="Language" value="Java" class="form-selectgroup-input" onchange="toggleAdapters('Java')">
+                                    <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                        <div class="me-3">
+                                            <span class="avatar bg-orange-lt">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="#e76f51"><path d="M6 20.17c0 1 1.79 1.83 4 1.83s4-.83 4-1.83V16h-8v4.17zM12 2c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm4.5 10h-9c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h9c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z" /></svg>
+                                            </span>
+                                        </div>
+                                        <div class="text-start">
+                                            <div class="font-weight-medium">Java (Maven)</div>
+                                            <div class="text-secondary small">Open source ecosystem</div>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Test Adapter -->
+                    <div class="wizard-step d-none" id="step-2">
+                        <h3 class="mb-3">Select Test Adapter</h3>
+                        <div id="csharp-adapters" class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="TestAdapter" value="xUnit" class="form-selectgroup-input" checked>
+                                    <div class="form-selectgroup-label p-3 text-start">xUnit</div>
+                                </label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="TestAdapter" value="MsTest" class="form-selectgroup-input">
+                                    <div class="form-selectgroup-label p-3 text-start">MsTest</div>
+                                </label>
+                            </div>
+                        </div>
+                        <div id="java-adapters" class="row g-3 d-none">
+                            <div class="col-md-6">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="TestAdapter" value="JUnit5" class="form-selectgroup-input">
+                                    <div class="form-selectgroup-label p-3 text-start">JUnit5</div>
+                                </label>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="TestAdapter" value="TestNG" class="form-selectgroup-input">
+                                    <div class="form-selectgroup-label p-3 text-start">TestNG</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Project Type -->
+                    <div class="wizard-step d-none" id="step-3">
+                        <h3 class="mb-3">Select Project Target</h3>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="ProjectType" value="Web" class="form-selectgroup-input" checked>
+                                    <div class="form-selectgroup-label p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler mb-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 5m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M3 10l18 0" /><path d="M7 15l.01 0" /><path d="M11 15l.01 0" /></svg>
+                                        <div>Web UI</div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="ProjectType" value="Mobile" class="form-selectgroup-input">
+                                    <div class="form-selectgroup-label p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler mb-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M6 5a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-14z" /><path d="M11 4h2" /><path d="M12 17v.01" /></svg>
+                                        <div>Mobile</div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-selectgroup-item w-100">
+                                    <input type="radio" name="ProjectType" value="Desktop" class="form-selectgroup-input">
+                                    <div class="form-selectgroup-label p-3">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler mb-1" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 5m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M7 19l10 0" /><path d="M9 15l0 4" /><path d="M15 15l0 4" /></svg>
+                                        <div>Desktop</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Addons -->
+                    <div class="wizard-step d-none" id="step-4">
+                        <h3 class="mb-3">Additional Capabilities (Optional)</h3>
+                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column">
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="checkbox" name="Addons" value="API" class="form-selectgroup-input">
+                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                    <div class="me-3"><span class="form-selectgroup-check"></span></div>
+                                    <div>API Testing Support (RestSharp/RestAssured)</div>
+                                </div>
+                            </label>
+                            <label class="form-selectgroup-item flex-fill">
+                                <input type="checkbox" name="Addons" value="DB" class="form-selectgroup-input">
+                                <div class="form-selectgroup-label d-flex align-items-center p-3">
+                                    <div class="me-3"><span class="form-selectgroup-check"></span></div>
+                                    <div>Database Testing Support (SQL/NoSQL)</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Identity -->
+                    <div class="wizard-step d-none" id="step-5">
+                        <h3 class="mb-3">Project Identity</h3>
+                        <div class="mb-3">
+                            <label class="form-label">Project Name</label>
+                            <input type="text" class="form-control" name="ProjectName" id="projectNameInput" placeholder="e.g. MyAutomationProject">
+                            <small class="text-muted">It must begin with a letter and contain no spaces or special characters.</small>
+                        </div>
+                        <!-- Advanced Package Settings -->
+                        <div class="mb-3">
+                            <div class="form-label">Advanced Package Settings</div>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></svg>
+                                </span>
+                                <input type="text" class="form-control" name="CustomSourceUrl" placeholder="Custom NuGet/Maven URL (Optional)">
+                            </div>
+                            <small class="text-secondary">Leave empty to use official public repositories (nuget.org / maven central). This will isolate your project from local system errors.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="CreateRemoteRepo">
+                                <span class="form-check-label">Create remote repository for this project</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Summary -->
+                    <div class="wizard-step d-none" id="step-6">
+                        <h3 class="mb-3 text-success">Project Summary</h3>
+                        <div id="summaryContent" class="bg-light p-3 rounded"></div>
+                    </div>
+
+                    <div class="mt-5 d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" id="prevBtn" onclick="moveStep(-1)" disabled>Back</button>
+                        <button type="button" class="btn btn-primary" id="nextBtn" onclick="moveStep(1)">Next Step</button>
+                        <button type="button" class="btn btn-success d-none" id="createBtn" onclick="submitProject()">🚀 Create Project</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Success Modal -->
+<div class="modal modal-blur fade" id="success-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-status bg-success"></div>
+            <div class="modal-body text-center py-4">
+                <!-- Tabler Check Icon -->
+                <div class="mb-3">
+                    <span class="avatar avatar-xl rounded-circle bg-success-lt">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-lg text-success" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 12l5 5l10 -10" /></svg>
+                    </span>
+                </div>
+                <h3>Project Created!</h3>
+                <div class="text-secondary">
+                    Your BDD project has been generated successfully with all selected templates and addons.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a href="/Projects/ProjectList" class="btn btn-success w-100">
+                                Show Projects
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Error Modal -->
+<div class="modal modal-blur fade" id="error-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M12 9v2m0 4v.01" /><path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" /></svg>
+                <h3>Configuration Error</h3>
+                <div class="text-secondary" id="error-modal-message"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col">
+                            <a href="/Dashboard/Index" class="btn btn-danger w-100">
+                                Go to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    let currentStep = 1;
+    const totalSteps = 6;
+
+    function toggleAdapters(lang) {
+        if (lang === 'C#') {
+            document.getElementById('csharp-adapters').classList.remove('d-none');
+            document.getElementById('java-adapters').classList.add('d-none');
+            document.querySelector('#csharp-adapters input').checked = true;
+        } else {
+            document.getElementById('csharp-adapters').classList.add('d-none');
+            document.getElementById('java-adapters').classList.remove('d-none');
+            document.querySelector('#java-adapters input').checked = true;
+        }
+    }
+
+    function validateStep() {
+        if (currentStep === 5) {
+            const name = document.getElementById('projectNameInput').value;
+            const regex = /^[a-zA-Z][a-zA-Z0-9]*$/;
+            if (!regex.test(name)) {
+                alert("Invalid project name! Please enter a name that is letter-first and without spaces.");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function moveStep(dir) {
+        if (dir === 1 && !validateStep()) return;
+
+        document.getElementById(`step-${currentStep}`).classList.add('d-none');
+        document.getElementById(`idx-${currentStep}`).classList.remove('active');
+
+        currentStep += dir;
+
+        document.getElementById(`step-${currentStep}`).classList.remove('d-none');
+        document.getElementById(`idx-${currentStep}`).classList.add('active');
+
+        document.getElementById('prevBtn').disabled = (currentStep === 1);
+
+        if (currentStep === totalSteps) {
+            document.getElementById('nextBtn').classList.add('d-none');
+            document.getElementById('createBtn').classList.remove('d-none');
+            generateSummary();
+        } else {
+            document.getElementById('nextBtn').classList.remove('d-none');
+            document.getElementById('createBtn').classList.add('d-none');
+        }
+    }
+
+    function generateSummary() {
+        const form = document.getElementById('projectWizard');
+        const fd = new FormData(form);
+        const addons = Array.from(document.querySelectorAll('input[name="Addons"]:checked')).map(x => x.value);
+
+        document.getElementById('summaryContent').innerHTML = `
+            <div class="row">
+                <div class="col-6"><strong>Project Name:</strong></div><div class="col-6">${fd.get('ProjectName')}</div>
+                <div class="col-6"><strong>Language:</strong></div><div class="col-6">${fd.get('Language')}</div>
+                <div class="col-6"><strong>Test Adapter:</strong></div><div class="col-6">${fd.get('TestAdapter')}</div>
+                <div class="col-6"><strong>Project Type:</strong></div><div class="col-6">${fd.get('ProjectType')}</div>
+                <div class="col-6"><strong>Addons:</strong></div><div class="col-6">${addons.length > 0 ? addons.join(', ') : 'None'}</div>
+                <div class="col-6"><strong>Remote Repo:</strong></div><div class="col-6">${fd.get('CreateRemoteRepo') === 'on' ? 'Yes' : 'No'}</div>
+            </div>
+        `;
+    }
+
+    async function submitProject() {
+        // 1. Loader'ı Başlat
+        if (typeof Loader !== "undefined" && Loader.show) {
+            Loader.show("Desired project creating...");
+        } else if (window.showGlobalLoader) {
+            window.showGlobalLoader("Desired project creating...");
+        }
+
+        const form = document.getElementById('projectWizard');
+        const fd = new FormData(form);
+        const addons = Array.from(document.querySelectorAll('input[name="Addons"]:checked')).map(x => x.value);
+
+        const payload = {
+            ProjectName: fd.get('ProjectName'),
+            Language: fd.get('Language'),
+            TestAdapter: fd.get('TestAdapter'),
+            ProjectType: fd.get('ProjectType'),
+            Addons: addons,
+            CreateRemoteRepo: fd.get('CreateRemoteRepo') === 'on',
+            CustomSourceUrl: fd.get('CustomSourceUrl')
+        };
+
+        try {
+            // Backend isteğini gönder
+            const response = await fetch('/Projects/GenerateProject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            // 2. İşlem bittiğinde Loader'ı Kapat
+            if (typeof Loader !== "undefined" && Loader.hide) {
+                Loader.hide();
+            } else if (window.hideGlobalLoader) {
+                window.hideGlobalLoader();
+            }
+
+            if (result.success) {
+                // 3. Başarılı ise Success Modalını Göster (Yönlendirme yapma, modal üzerindeki buton yapsın)
+                var successModal = new bootstrap.Modal(document.getElementById('success-modal'));
+                successModal.show();
+            } else {
+                // 4. Hata durumunda Error Modalını Göster
+                if (result.type === "config_error") {
+                    document.getElementById('error-modal-message').innerText = result.message;
+                    var errModal = new bootstrap.Modal(document.getElementById('error-modal'));
+                    errModal.show();
+                } else {
+                    // Kritik olmayan hatalar için Tabler Toast veya Alert (isteğe bağlı)
+                    alert("Generation Error: " + result.message);
+                }
+            }
+        } catch (error) {
+            // Hata durumunda Loader'ı her türlü kapat
+            if (typeof Loader !== "undefined" && Loader.hide) Loader.hide();
+            console.error("Fetch error:", error);
+            alert("A system error occurred while generating the project.");
+        }
+    }
+
+    // Helper: Loader text güncelleme (Eğer layout destekliyorsa)
+    function updateLoaderText(text) {
+        const loaderTextElement = document.querySelector('.loader-text'); // Layout'undaki class'a göre
+        if (loaderTextElement) loaderTextElement.innerText = text;
+    }
+
+    function hideLoader() {
+        if (typeof Loader !== "undefined") Loader.hide();
+        else if (window.hideGlobalLoader) window.hideGlobalLoader();
+    }
+</script>

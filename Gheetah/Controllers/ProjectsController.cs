@@ -4,6 +4,10 @@ using Gheetah.Models.RepoSettingsModel;
 using Gheetah.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Gheetah.Controllers
 {
@@ -16,6 +20,7 @@ namespace Gheetah.Controllers
         private readonly IFileService _fileService;
         private readonly IEnumerable<IGitRepoService> _repoServices;
         private readonly IWebHostEnvironment _env;
+        private readonly string _rootPath = Directory.GetCurrentDirectory();
 
         public ProjectsController(IProjectService projectService, IDynamicAuthService dynamicAuthService, ILogService logService, IFileService fileService, IEnumerable<IGitRepoService> repoServices, IWebHostEnvironment env)
         {
@@ -341,6 +346,265 @@ namespace Gheetah.Controllers
                 });
             }
         }
-        
+
+        //------------- Eklenen Özellik: Şablondan Proje Oluşturma -------------
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        [HttpGet]
+        public IActionResult CreateProject()
+        {
+            return View();
+        }
+
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        [HttpPost]
+        public async Task<IActionResult> GenerateProject([FromBody] ProjectCreateViewModel model)
+        {
+            try
+            {
+                string rootDir = _env.ContentRootPath;
+                string dataFolderPath = Path.Combine(rootDir, "Data");
+                string configFilePath = Path.Combine(dataFolderPath, "project-folder.json"); // Düzeltilmiş dosya adı
+
+                if (!System.IO.File.Exists(configFilePath))
+                {
+                    return Json(new
+                        { success = false, type = "config_error", message = "Configuration file not found." });
+                }
+
+                var configContent = (await System.IO.File.ReadAllTextAsync(configFilePath)).Trim();
+                string targetBaseDir = string.Empty;
+
+                // HATA ÇÖZÜMÜ: İçerik bir JSON objesi mi yoksa düz string mi kontrol et
+                if (configContent.StartsWith("{"))
+                {
+                    using var doc = JsonDocument.Parse(configContent);
+                    if (doc.RootElement.TryGetProperty("ProjectFolderPath", out var pathProp))
+                    {
+                        targetBaseDir = pathProp.GetString();
+                    }
+                }
+                else
+                {
+                    // Eğer dosya sadece "C:\\Yol" şeklindeyse tırnakları temizle
+                    targetBaseDir = configContent.Replace("\"", "");
+                }
+
+                if (string.IsNullOrEmpty(targetBaseDir) || !Directory.Exists(targetBaseDir))
+                {
+                    return Json(new
+                    {
+                        success = false, type = "config_error",
+                        message = $"Target directory invalid or not found: {targetBaseDir}"
+                    });
+                }
+
+                string projectFolderPath = Path.Combine(targetBaseDir, model.ProjectName);
+                if (Directory.Exists(projectFolderPath))
+                {
+                    return Json(new { success = false, message = "A folder with this name already exists!" });
+                }
+
+                // Şablon ve Yazma İşlemleri (Diğer kısımlar aynı)
+                string sourcePath = Path.Combine(rootDir, "Templates", model.Language, $"Base_{model.ProjectType}");
+                CopyAndProcessFiles(sourcePath, projectFolderPath, model);
+                ProcessAddons(model, projectFolderPath, rootDir);
+                HandlePackageManagement(projectFolderPath, model);
+                await UpdateProjectsJson(model, projectFolderPath, rootDir);
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                // "Target element has type 'String'" hatasını burada yakalayıp daha detaylı veriyoruz
+                return Json(new { success = false, message = "Backend Error: " + ex.Message });
+            }
+        }
+
+        private void CopyAndProcessFiles(string sourceDir, string targetDir, ProjectCreateViewModel model)
+        {
+            Directory.CreateDirectory(targetDir);
+
+            // 1. Dependency Map'i yükle
+            string rootDir = _env.ContentRootPath;
+            string mapPath = Path.Combine(rootDir, "Templates", model.Language, "dependency_map.json");
+            string adapterDeps = "";
+            string addonDeps = "";
+
+            if (System.IO.File.Exists(mapPath))
+            {
+                var mapJson = System.IO.File.ReadAllText(mapPath);
+                using var doc = JsonDocument.Parse(mapJson);
+                var root = doc.RootElement;
+
+                // Adapter Bağımlılıklarını Al
+                if (root.TryGetProperty("Adapters", out var adapters) && 
+                    adapters.TryGetProperty(model.TestAdapter, out var adapterValue))
+                {
+                    adapterDeps = adapterValue.GetString();
+                }
+
+                // Addon Bağımlılıklarını Al (Multiple Selection)
+                if (root.TryGetProperty("Addons", out var addons))
+                {
+                    foreach (var selectedAddon in model.Addons ?? new List<string>())
+                    {
+                        // UI'dan gelen "Database" veya "DB" isimlendirme farkını handle et
+                        string addonKey = selectedAddon == "DB" ? "Database" : selectedAddon;
+                        
+                        if (addons.TryGetProperty(addonKey, out var addonValue))
+                        {
+                            addonDeps += addonValue.GetString() + "\n";
+                        }
+                    }
+                }
+            }
+
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                string fileName = Path.GetFileName(file);
+                
+                // CSharp için proje dosyasını isimlendirme
+                if (model.Language == "C#" && fileName.EndsWith(".csproj"))
+                    fileName = $"{model.ProjectName}.csproj";
+
+                string destFile = Path.Combine(targetDir, fileName);
+                string content = System.IO.File.ReadAllText(file);
+
+                // 2. Placeholder Değişimleri (Dinamik Dependecy Enjeksiyonu)
+                content = content.Replace("{{ProjectName}}", model.ProjectName)
+                                 .Replace("{{TestAdapter}}", model.TestAdapter)
+                                 .Replace("{{AdapterDependencies}}", adapterDeps)
+                                 .Replace("{{AddonDependencies}}", addonDeps);
+
+                System.IO.File.WriteAllText(destFile, content);
+            }
+
+            // Klasörleri kopyalamaya devam et (Recursive)
+            foreach (var directory in Directory.GetDirectories(sourceDir))
+            {
+                string dirName = Path.GetFileName(directory);
+                if (dirName == "{{ProjectName}}") dirName = model.ProjectName;
+                CopyAndProcessFiles(directory, Path.Combine(targetDir, dirName), model);
+            }
+        }
+
+        private void ProcessAddons(ProjectCreateViewModel model, string projectPath, string rootDir)
+        {
+            if (model.Addons == null || !model.Addons.Any()) return;
+
+            string extension = model.Language == "C#" ? "cs" : "java";
+            string stepFolder = model.Language == "C#" 
+                ? Path.Combine(projectPath, "StepDefinitions") 
+                : Path.Combine(projectPath, "src", "test", "java", model.ProjectName, "stepdefinitions");
+
+            // Artik Directory.GetCurrentDirectory() yerine rootDir kullaniyoruz
+            string addonSourceBase = Path.Combine(rootDir, "Templates", model.Language, "Addons");
+
+            foreach (var addon in model.Addons)
+            {
+                string addonFileName = addon == "API" ? $"ApiSteps.{extension}" : $"DbSteps.{extension}";
+                string sourceFile = Path.Combine(addonSourceBase, addonFileName);
+
+                if (System.IO.File.Exists(sourceFile))
+                {
+                    if (!Directory.Exists(stepFolder)) Directory.CreateDirectory(stepFolder);
+            
+                    string content = System.IO.File.ReadAllText(sourceFile).Replace("{{ProjectName}}", model.ProjectName);
+                    System.IO.File.WriteAllText(Path.Combine(stepFolder, addonFileName), content);
+                }
+            }
+        }
+
+        private async Task UpdateProjectsJson(ProjectCreateViewModel model, string fullPath, string rootDir)
+        {
+            // JSON yolunu rootDir üzerinden garantiye aliyoruz
+            string jsonPath = Path.Combine(rootDir, "Data", "projects.json");
+            List<Project> projects = new List<Project>();
+
+            if (System.IO.File.Exists(jsonPath))
+            {
+                var existingJson = await System.IO.File.ReadAllTextAsync(jsonPath);
+                projects = JsonSerializer.Deserialize<List<Project>>(existingJson) ?? new List<Project>();
+            }
+
+            string buildFileName = model.Language == "C#" ? $"{model.ProjectName}.csproj" : "pom.xml";
+
+            var newProject = new Project
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = model.ProjectName,
+                RepoUrl = "Local Project",
+                LanguageType = model.Language,
+                UserId = User.Identity?.Name ?? "SYSTEM",
+                IsBuilt = false,
+                ClonedDate = DateTime.Now,
+                FeatureFileCount = 1,
+                ScenarioCount = 1,
+                ProjectInfos = new List<ProjectInfo>
+                {
+                    new ProjectInfo
+                    {
+                        ProjectName = model.ProjectName,
+                        BuildInfoFileName = buildFileName,
+                        BuildInfoFileFullPath = Path.Combine(fullPath, buildFileName),
+                        FeatureFilesPath = model.Language == "C#" 
+                            ? Path.Combine(fullPath, "Features") 
+                            : Path.Combine(fullPath, "src/test/resources/features"),
+                        BuildedTestFileName = "Not Built Yet",
+                        BuildedTestFileFullPath = "Pending",
+                        Scenarios = new List<FeatureScenarioInfo>() 
+                    }
+                }
+            };
+
+            projects.Add(newProject);
+    
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            await System.IO.File.WriteAllTextAsync(jsonPath, JsonSerializer.Serialize(projects, options));
+        }
+
+        private void HandlePackageManagement(string targetDir, ProjectCreateViewModel model)
+        {
+            if (model.Language == "C#")
+            {
+                // C# için nuget.config oluşturarak yerel sistemdeki 401 hatalarını clear ile engelliyoruz
+                string sourceUrl = string.IsNullOrWhiteSpace(model.CustomSourceUrl) 
+                    ? "https://api.nuget.org/v3/index.json" 
+                    : model.CustomSourceUrl;
+
+                string nugetConfig = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key=""GheetahSource"" value=""{sourceUrl}"" />
+  </packageSources>
+</configuration>";
+
+                System.IO.File.WriteAllText(Path.Combine(targetDir, "nuget.config"), nugetConfig);
+            }
+            else if (model.Language == "Java")
+            {
+                // Java için pom.xml dosyasını bulup içindeki {{CustomRepo}} alanını dolduruyoruz
+                string pomPath = Path.Combine(targetDir, "pom.xml");
+                if (System.IO.File.Exists(pomPath))
+                {
+                    string customRepoXml = "";
+                    if (!string.IsNullOrWhiteSpace(model.CustomSourceUrl))
+                    {
+                        customRepoXml = $@"
+    <repositories>
+        <repository>
+            <id>gheetah-custom-repo</id>
+            <url>{model.CustomSourceUrl}</url>
+        </repository>
+    </repositories>";
+                    }
+
+                    string content = System.IO.File.ReadAllText(pomPath);
+                    content = content.Replace("{{CustomRepo}}", customRepoXml);
+                    System.IO.File.WriteAllText(pomPath, content);
+                }
+            }
+        }
     }
 }

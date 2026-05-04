@@ -1,0 +1,468 @@
+﻿@{
+    ViewData["Title"] = "Gheetah IDE - " + ViewBag.ProjectName;
+}
+
+<style>
+    /* 1. Buton Hover/Focus Karmaşasını Engelleme */
+    .btn-ghost-secondary {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important; /* Mavi kareyi engeller */
+        color: #616876;
+        transition: all 0.2s ease;
+        padding: 4px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .btn-ghost-secondary:hover:not(:disabled) {
+            background: #f1f3f5 !important;
+            color: #0054a6 !important;
+            border-radius: 4px;
+        }
+
+        .btn-ghost-secondary:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+    /* JsTree Okları ve Görsel Düzeltmeler */
+    .jstree-default .jstree-ocl {
+        background: none !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        font-family: "tabler-icons" !important;
+        font-size: 1.1rem !important;
+        color: #adb5bd;
+    }
+
+    /* Okların durumuna göre ikon ataması */
+    .jstree-closed > .jstree-ocl:before {
+        content: "\ea5f";
+    }
+    /* ti-arrow-badge-right */
+    .jstree-opened > .jstree-ocl:before {
+        content: "\ea5e";
+    }
+    /* ti-arrow-badge-down */
+    .ti-folder, .ti-folder-open {
+        color: #0054a6 !important;
+    }
+
+    .ti-brand-c-sharp {
+        color: #6a1b9a !important;
+        font-weight: bold;
+    }
+
+    .ti-brand-cucumber {
+        color: #2e7d32 !important;
+    }
+
+    .ti-file-code {
+        color: #e67e22 !important;
+    }
+
+    .ti-json {
+        color: #f1c40f !important;
+    }
+
+    .jstree-default .jstree-themeicon {
+        background: none !important;
+        display: inline-flex !important;
+        align-items: center;
+        font-size: 1.3rem !important;
+    }
+
+    .file-dirty > a.jstree-anchor {
+        color: #e74c3c !important;
+    }
+
+        .file-dirty > a.jstree-anchor:after {
+            content: ' *';
+            color: #e74c3c;
+        }
+
+    /* Tab Paneli */
+    #editor-tabs {
+        gap: 5px;
+        overflow-x: auto;
+        white-space: nowrap;
+        height: 35px;
+        background: #f1f3f5;
+    }
+
+    .tab-item {
+        padding: 5px 12px;
+        background: #e9ecef;
+        border: 1px solid #dee2e6;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        font-size: 12px;
+        border-radius: 4px 4px 0 0;
+        border-bottom: none;
+        margin-top: 4px;
+    }
+
+        .tab-item.active {
+            background: #fff;
+            border-bottom: 2px solid #0054a6;
+            font-weight: bold;
+        }
+
+    .tab-close {
+        margin-left: 8px;
+        cursor: pointer;
+        color: #adb5bd;
+    }
+
+        .tab-close:hover {
+            color: #e74c3c;
+        }
+
+    /* Toolbar Svg Buton Renkleri */
+    .btn-toolbar-active {
+        color: #0054a6 !important;
+    }
+
+    .btn-toolbar-success {
+        color: #2fb344 !important;
+    }
+</style>
+
+<div class="page-wrapper">
+    <div class="container-fluid p-0">
+        <div class="row g-0" style="height: calc(100vh - 64px);">
+            <!-- Sidebar (Explorer) -->
+            <div class="col-md-3 col-lg-2 border-end bg-light d-flex flex-column">
+                <div class="p-2 border-bottom bg-white d-flex justify-content-between align-items-center" style="height: 45px;">
+                    <strong class="text-uppercase small">Explorer</strong>
+                    <div class="d-flex gap-0">
+                        <button id="btn-save" class="btn btn-ghost-secondary" disabled onclick="saveCurrentFile()" title="Save (Ctrl+S)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        </button>
+                        <button id="btn-save-all" class="btn btn-ghost-secondary" disabled onclick="saveAllFiles()" title="Save All">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M15.5 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5L15.5 2z"></path>
+                                <path d="M10 18v-5h4v5"></path>
+                                <path d="M7 2v4h7V2"></path>
+                                <path d="M21 7v12a2 2 0 0 1-2 2H7" opacity="0.5"></path>
+                            </svg>
+                        </button>
+                        <button id="btn-send-server" class="btn btn-ghost-secondary" disabled onclick="openBranchModal()" title="Send to Server">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="text-success" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1" /><path d="M9 15l3 -3l3 3" /><path d="M12 12l0 9" /></svg>
+                        </button>
+                        <div class="vr mx-1" style="height: 18px; margin-top: 5px;"></div>
+                        <button type="button" class="btn btn-ghost-secondary" onclick="refreshTree()" title="Refresh Explorer">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="editor-treeview" class="flex-grow-1 overflow-auto p-2" style="font-size: 13px;"></div>
+            </div>
+
+            <!-- Main Editor -->
+            <div class="col-md-9 col-lg-10 d-flex flex-column">
+                <div id="editor-tabs" class="d-flex align-items-center px-2">
+                    <span id="no-file-msg" class="text-muted small italic px-2">No file open</span>
+                </div>
+                <div id="monaco-container" class="flex-grow-1"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="modal-branch" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send to Server</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">New Branch Name</label>
+                    <input type="text" id="input-branch-name" class="form-control" placeholder="feature/user-update-test">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="commitAndPush()">Commit & Push</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+
+    <script>
+        var editor;
+        var projectId = "@ViewBag.ProjectId";
+        var openFiles = {}; // State Tracker: { path: { model: obj, hash: str, fileName: str, isDirty: bool } }
+        var activeFilePath = "";
+        var hasServerChanges = false;
+
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+
+        $(document).ready(function () {
+            initializeTree();
+
+            require(['vs/editor/editor.main'], function () {
+                if (!monaco.languages.getLanguages().some(lang => lang.id === 'gherkin')) {
+                    monaco.languages.register({ id: 'gherkin' });
+                    monaco.languages.setMonarchTokensProvider('gherkin', {
+                        keywords: ['Feature', 'Scenario', 'Scenario Outline', 'Given', 'When', 'Then', 'And', 'But', 'Background', 'Examples'],
+                        tokenizer: {
+                            root: [
+                                [/[a-zA-Z][\w$]*/, {
+                                    cases: {
+                                    ['\x40' + 'keywords']: 'keyword',
+                                    ['\x40' + 'default']: 'identifier'
+                                    }
+                                }],
+                                [/\x40\w+/, 'type.identifier'],
+                                [/"[^"]*"/, 'string'],
+                                [/\b\d+\b/, 'number'],
+                                [/^\s*#.*/, 'comment'],
+                            ]
+                        }
+                    });
+                }
+
+                editor = monaco.editor.create(document.getElementById('monaco-container'), {
+                    theme: 'vs-light',
+                    automaticLayout: true,
+                    fontSize: 14,
+                    minimap: { enabled: false },
+                    readOnly: true
+                });
+            });
+
+            $(window).bind('keydown', function(event) {
+                if ((event.ctrlKey || event.metaKey) && String.fromCharCode(event.which).toLowerCase() == 's') {
+                    event.preventDefault(); saveCurrentFile();
+                }
+            });
+        });
+
+        window.refreshTree = function() {
+            $('#editor-treeview').jstree(true).refresh();
+        };
+
+        function initializeTree() {
+            $('#editor-treeview').jstree({
+                'core': {
+                    'check_callback': true,
+                    'themes': { 'name': 'default', 'dots': false, 'icons': true },
+                    'data': {
+                        'url': '/Editor/GetProjectTree?projectId=' + projectId,
+                        'dataType': 'json'
+                    }
+                },
+                'types': {
+                    'default': { 'icon': 'ti ti-file' },
+                    'folder': { 'icon': 'ti ti-folder' }
+                },
+                'plugins': ['wholerow', 'types']
+            })
+            .on('select_node.jstree', function (e, data) {
+                if (data.node.original.type !== "folder") {
+                    openFileInTab(data.node.id, data.node.text);
+                }
+            })
+            .on('open_node.jstree', function (e, data) {
+                var anchor = document.getElementById(data.node.id + "_anchor");
+                if(anchor) {
+                    $(anchor).prev('.jstree-ocl').removeClass('ti-arrow-badge-right').addClass('ti-arrow-badge-down');
+
+                    $(anchor).find('i.jstree-themeicon').removeClass('ti-folder').addClass('ti-folder-open');
+                }
+            })
+            .on('close_node.jstree', function (e, data) {
+                var anchor = document.getElementById(data.node.id + "_anchor");
+                if(anchor) {
+                    $(anchor).prev('.jstree-ocl').removeClass('ti-arrow-badge-down').addClass('ti-arrow-badge-right');
+
+                    $(anchor).find('i.jstree-themeicon').removeClass('ti-folder-open').addClass('ti-folder');
+                }
+            })
+            .on('ready.jstree', function () {
+                $('.jstree-closed > .jstree-ocl').addClass('ti ti-arrow-badge-right');
+                $('.jstree-opened > .jstree-ocl').addClass('ti ti-arrow-badge-down');
+            });
+        }
+
+        function openFileInTab(path, fileName) {
+            if (openFiles[path]) { switchToTab(path); return; }
+
+            $.get('/Editor/GetFileContent', { filePath: path }, function (response) {
+                var lang = getLanguageByExtension(fileName);
+                var model = monaco.editor.createModel(response.content, lang);
+
+                var backup = localStorage.getItem("backup_" + path);
+                if(backup && backup !== response.content) {
+                    if(confirm(fileName + " için kaydedilmemiş yerel değişiklikler bulundu. Yüklensin mi?")) {
+                        model.setValue(backup);
+                    }
+                }
+
+                model.onDidChangeContent(() => {
+                    openFiles[path].isDirty = true;
+                    updateUIStates(path, true);
+                    localStorage.setItem("backup_" + path, model.getValue());
+                });
+
+                openFiles[path] = { model: model, hash: response.hash, fileName: fileName, isDirty: false };
+                addTabUI(path, fileName);
+                switchToTab(path);
+            });
+        }
+
+        function addTabUI(path, fileName) {
+            $('#no-file-msg').hide();
+
+            var safePath = encodeURIComponent(path);
+            var safeId = btoa(path).replace(/=/g, "");
+
+            var tabHtml = `
+                <div class="tab-item" id="tab-${safeId}" onclick="switchToTab(decodeURIComponent('${safePath}'))">
+                    <span class="tab-title">${fileName}</span>
+                    <i class="ti ti-x tab-close" onclick="closeTab(event, decodeURIComponent('${safePath}'))"></i>
+                </div>`;
+            $('#editor-tabs').append(tabHtml);
+        }
+
+        function switchToTab(path) {
+            activeFilePath = path;
+            var file = openFiles[path];
+            editor.setModel(file.model);
+            editor.updateOptions({ readOnly: false });
+
+            $('.tab-item').removeClass('active');
+            var safeId = btoa(path).replace(/=/g, "");
+            $(`#tab-${safeId}`).addClass('active');
+
+            updateUIStates(path, file.isDirty);
+        }
+
+        function closeTab(event, path) {
+            event.stopPropagation();
+            if (openFiles[path].isDirty && !confirm("Unsaved changes! Close anyway?")) return;
+
+            var safeId = btoa(path).replace(/=/g, "");
+            $(`#tab-${safeId}`).remove();
+
+            openFiles[path].model.dispose();
+            delete openFiles[path];
+
+            var keys = Object.keys(openFiles);
+            if (keys.length > 0) {
+                switchToTab(keys[keys.length - 1]);
+            } else {
+                editor.setModel(null);
+                editor.updateOptions({ readOnly: true });
+                activeFilePath = "";
+                $('#no-file-msg').show();
+                updateUIStates(null, false);
+            }
+        }
+
+        function updateUIStates(path, isDirty) {
+                var anyFileDirty = Object.values(openFiles).some(f => f.isDirty);
+
+                $('#btn-save').prop('disabled', !isDirty).toggleClass('btn-toolbar-active', isDirty);
+                $('#btn-save-all').prop('disabled', !anyFileDirty).toggleClass('btn-toolbar-active', anyFileDirty);
+
+                var canPush = anyFileDirty || hasServerChanges;
+                $('#btn-send-server').prop('disabled', !canPush);
+
+                window.onbeforeunload = anyFileDirty ? function() { return "You have unsaved changes!"; } : null;
+
+                if (path) {
+                    var tree = $('#editor-treeview').jstree(true);
+                    var nodeElement = tree.get_node(path, true);
+                    if (nodeElement) {
+                        isDirty ? nodeElement.addClass('file-dirty') : nodeElement.removeClass('file-dirty');
+                    }
+                }
+        }
+
+        function saveCurrentFile() {
+                if (!activeFilePath || !openFiles[activeFilePath].isDirty) return;
+                var file = openFiles[activeFilePath];
+
+                $.ajax({
+                    url: '/Editor/SaveFileContent',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ FilePath: activeFilePath, Content: file.model.getValue(), ClientHash: file.hash }),
+                    success: function(response) {
+                        file.hash = response.newHash;
+                        file.isDirty = false;
+                        hasServerChanges = true; 
+                        updateUIStates(activeFilePath, false);
+
+                        localStorage.removeItem("backup_" + activeFilePath);
+                    }
+                });
+        }
+
+        function saveAllFiles() {
+            Object.keys(openFiles).forEach(path => {
+                if (openFiles[path].isDirty) {
+                    activeFilePath = path;
+                    saveCurrentFile();
+                }
+            });
+        }
+
+        function getLanguageByExtension(fileName) {
+            var ext = fileName.split('.').pop().toLowerCase();
+            var map = { 'cs': 'csharp', 'java': 'java', 'feature': 'gherkin', 'json': 'json', 'csproj': 'xml', 'xml': 'xml', 'config': 'xml' };
+            return map[ext] || 'plaintext';
+        }
+
+        window.openBranchModal = function() {
+            var myModal = new bootstrap.Modal(document.getElementById('modal-branch'));
+            myModal.show();
+        };
+
+        window.commitAndPush = function() {
+            var branchName = $('#input-branch-name').val();
+
+            if (!branchName) {
+                alert("Lütfen bir branch adı giriniz!");
+                return;
+            }
+
+            // Gheetah IDE'nin sunucu tarafına (Controller) gönderim yapalım
+            // Not: Bu noktada hasServerChanges flag'ini sıfırlayacağız
+            $.ajax({
+                url: '/Editor/CommitAndPush', // Backend'de bu action'ın olduğunu varsayıyoruz
+                type: 'POST',
+                data: {
+                    projectId: projectId,
+                    branchName: branchName
+                },
+                success: function(response) {
+                    alert("The changes have been successfully sent to the server!");
+                    $('#modal-branch').modal('hide');
+
+                    // Başarılı gönderimden sonra "Send to Server" butonunu artık disable edebiliriz
+                    hasServerChanges = false;
+                    updateUIStates(activeFilePath, false);
+
+                    // Explorer'ı yenilemek iyi bir fikir olabilir
+                    refreshTree();
+                },
+                error: function(err) {
+                    alert("An error occurred during submission: " + err.responseText);
+                }
+            });
+        };
+    </script>
+}

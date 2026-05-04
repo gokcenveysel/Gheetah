@@ -10,7 +10,7 @@ namespace {{ProjectName}}.StepDefinitions
     [Binding]
     public class MobileSteps
     {
-        private readonly AppiumDriver _driver = (AppiumDriver)Hooks.Hooks.Driver;
+        private readonly AppiumDriver? _driver = (AppiumDriver)Hooks.Hooks.Driver;
 		
 		[Given(@"I launch (Android|iOS) application ""(.*)"" on device ""(.*)""")]
 		public void LaunchMobileApp(string platform, string appIdentifier, string device)
@@ -21,7 +21,6 @@ namespace {{ProjectName}}.StepDefinitions
 			}
 		}
 
-        // --- Element Etkileşimi (Dinamik Seçicili) ---
         [When(@"I tap on mobile element with (ID|AccessibilityId|XPath|Text) ""(.*)""")]
         public void TapMobile(string type, string val) => GetMobileElement(type, val).Click();
 
@@ -33,7 +32,6 @@ namespace {{ProjectName}}.StepDefinitions
             el.SendKeys(text);
         }
 
-        // --- Jestler & Hareketler (Gestures) ---
         [When(@"I swipe (up|down|left|right)")]
         public void Swipe(string direction)
         {
@@ -46,7 +44,6 @@ namespace {{ProjectName}}.StepDefinitions
                 case "left": startX = (int)(size.Width * 0.8); endX = (int)(size.Width * 0.2); break;
                 case "right": startX = (int)(size.Width * 0.2); endX = (int)(size.Width * 0.8); break;
             }
-            // Appium W3C Actions
             var finger = new PointerInputDevice(PointerKind.Touch);
             var sequence = new ActionSequence(finger);
             sequence.AddAction(finger.CreatePointerMove(CoordinateOrigin.Viewport, startX, startY, TimeSpan.Zero));
@@ -56,14 +53,12 @@ namespace {{ProjectName}}.StepDefinitions
             _driver.PerformActions(new List<ActionSequence> { sequence });
         }
 
-        // --- Cihaz Fonksiyonları ---
         [When(@"I hide keyboard")]
         public void HideKey() => _driver.HideKeyboard();
 
         [When(@"I rotate device to (LANDSCAPE|PORTRAIT)")]
         public void Rotate(string mode) => _driver.Orientation = mode == "LANDSCAPE" ? ScreenOrientation.Landscape : ScreenOrientation.Portrait;
 
-        // --- Doğrulamalar ---
         [Then(@"Mobile element (ID|AccessibilityId) ""(.*)"" should (be visible|be enabled)")]
         public void AssertMobileState(string type, string val, string state)
         {
