@@ -13,46 +13,68 @@ namespace {{ProjectName}}.StepDefinitions
         private RestResponse? _response;
 
         [Given(@"I set API Base URL to ""(.*)""")]
-        public void SetBase(string url) => _client = new RestClient(url);
+        public void SetBaseUrl(string url) => _client = new RestClient(url);
 
         [Given(@"I add header ""(.*)"" with value ""(.*)""")]
-        public void AddHeader(string k, string v) => (_request ??= new RestRequest()).AddHeader(k, v);
+        public void AddHeader(string key, string value) => (_request ??= new RestRequest()).AddHeader(key, value);
 
         [Given(@"I set Bearer Token to ""(.*)""")]
-        public void SetToken(string t) => AddHeader("Authorization", $"Bearer {t}");
+        public void SetBearerToken(string token) => AddHeader("Authorization", $"Bearer {token}");
 
-        [When(@"I send a (GET|POST|PUT|DELETE) request to ""(.*)"" with body:")]
-        public async Task Send(string m, string end, string body) 
+        [Given(@"I add query parameter ""(.*)"" with value ""(.*)""")]
+        public void AddQueryParameter(string key, string value) => (_request ??= new RestRequest()).AddQueryParameter(key, value);
+
+        [When(@"I send a (GET|POST|PUT|DELETE|PATCH) request to ""(.*)""")]
+        public async Task SendRequest(string method, string endpoint)
+        {
+            if (_client == null) throw new Exception("Base URL not set!");
+            
+            _request = new RestRequest(endpoint, Enum.Parse<Method>(method));
+            _response = await _client.ExecuteAsync(_request);
+        }
+
+        [When(@"I send a (POST|PUT|PATCH) request to ""(.*)"" with body:")]
+        public async Task SendRequestWithBody(string method, string endpoint, string body)
         {
             if (_client == null) throw new Exception("Base URL not set!");
 
-            _request ??= new RestRequest(end);
-            _request.Method = Enum.Parse<Method>(m);
-            _request.Resource = end;
+            _request = new RestRequest(endpoint, Enum.Parse<Method>(method));
+            _request.AddJsonBody(body);
+            _response = await _client.ExecuteAsync(_request);
+        }
 
-            if (!string.IsNullOrWhiteSpace(body)) 
-                _request.AddJsonBody(body);
-            
-            _response = await _client.ExecuteAsync(_request); 
+        [When(@"I upload file ""(.*)"" to ""(.*)"" with key ""(.*)""")]
+        public async Task UploadFile(string filePath, string endpoint, string key)
+        {
+            _request = new RestRequest(endpoint, Method.Post);
+            _request.AddFile(key, filePath);
+            _response = await _client!.ExecuteAsync(_request);
         }
 
         [Then(@"Response status code should be (.*)")]
-        public void AssertStatus(int c) 
+        public void AssertStatusCode(int expectedCode)
         {
-            _response.Should().NotBeNull("Response must not be null. Did you send the request?");
-            ((int)_response!.StatusCode).Should().Be(c);
+            _response.Should().NotBeNull("No response received. Did you send the request?");
+            ((int)_response!.StatusCode).Should().Be(expectedCode);
         }
 
         [Then(@"Response JSON path ""(.*)"" should (equal|contain) ""(.*)""")]
-        public void AssertJson(string path, string opt, string val)
+        public void AssertJsonPath(string path, string option, string expected)
         {
             var content = _response?.Content ?? throw new Exception("Response content is empty!");
             var token = JObject.Parse(content).SelectToken(path);
             
-            token.Should().NotBeNull($"Path '{path}' not found in JSON response.");
+            token.Should().NotBeNull($"JSON path '{path}' not found.");
             
-            if (opt == "equal") token!.ToString().Should().Be(val); 
-            else token!.ToString().Should().Contain(val);
+            string actual = token!.ToString();
+            if (option == "equal") actual.Should().Be(expected);
+            else actual.Should().Contain(expected);
+        }
+
+        [Then(@"Response should contain header ""(.*)"" with value ""(.*)""")]
+        public void AssertResponseHeader(string header, string value)
+        {
+            _response!.Headers.Should().Contain(h => h.Name == header && h.Value.ToString() == value);
         }
     }
 }

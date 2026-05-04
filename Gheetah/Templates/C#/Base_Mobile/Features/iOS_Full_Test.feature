@@ -1,18 +1,21 @@
 @Mobile @iOS
-Feature: iOS Safari and System App Test
+Feature: iOS Application and Safari Automation
 
-  Scenario: Safari Browser Automation
-    # BundleId kullanarak sistem uygulamasını başlat
+  Scenario: Safari Browser and System Interactions
     Given I launch iOS application "com.apple.mobilesafari" on device "iPhone 15 Pro"
     
-    # iOS özel seçicilerle URL girişi
     When I enter "https://gheetah.io" into mobile field AccessibilityId "URL"
     And I tap on mobile element with XPath "//XCUIElementTypeButton[@name='Go']"
     
-    # Görünürlük kontrolü
-    Then Mobile element AccessibilityId "Gheetah_Logo" should be visible
+    Then Mobile element with AccessibilityId "Gheetah_Logo" should be visible
+    And Mobile element with Text "Gheetah" should be enabled
     
-    # Sistem etkileşimi
     When I rotate device to LANDSCAPE
     And I swipe down
-    Then Mobile element AccessibilityId "Footer_Contact" should be enabled
+    And I swipe left
+    
+    Then Mobile element with AccessibilityId "Footer_Contact" should be enabled
+    
+    # Extra iOS interactions
+    When I hide keyboard
+    And I tap on mobile element with Text "Share"

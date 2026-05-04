@@ -1,6 +1,5 @@
 ﻿using Gheetah.Interfaces;
 using Gheetah.Models.EditorModel;
-using Gheetah.Models.ProjectModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
@@ -165,6 +164,7 @@ public class EditorController : Controller
                 children = item.Children != null ? ConvertToJsTreeFormat(item.Children, language, bddFramework) : null
             }).Cast<object>().ToList();
         }
+
         private string GetBestIcon(FileSystemItem item, string language, string bddFramework)
         {
             if (item.Type == "folder") return "ti ti-folder";

@@ -1,22 +1,37 @@
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Edge;
+using OpenQA.Selenium.Firefox;
 
 namespace {{ProjectName}}.Drivers
 {
-    public class DriverFactory
+    public static class DriverFactory
     {
-        public static IWebDriver CreateDriver()
+        public static IWebDriver CreateDriver(string browser = "chrome")
         {
-            // İleride burayı config dosyasından okuyacak şekilde geliştirebilirsin
-            var chromeOptions = new ChromeOptions();
-            chromeOptions.AddArgument("--start-maximized");
-            
-            // CI/CD süreçlerinde hata almamak için headless opsiyonu eklenebilir
-            // chromeOptions.AddArgument("--headless"); 
+            IWebDriver driver = browser.ToLower() switch
+            {
+                "chrome" => new ChromeDriver(GetChromeOptions()),
+                "firefox" => new FirefoxDriver(),
+                "edge" => new EdgeDriver(),
+                _ => throw new ArgumentException($"Unsupported browser: {browser}")
+            };
 
-            return new ChromeDriver(chromeOptions);
+            driver.Manage().Window.Maximize();
+            driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(10);
+            driver.Manage().Timeouts().PageLoad = TimeSpan.FromSeconds(30);
+
+            return driver;
+        }
+
+        private static ChromeOptions GetChromeOptions()
+        {
+            var options = new ChromeOptions();
+            options.AddArgument("--start-maximized");
+            options.AddArgument("--disable-notifications");
+            options.AddArgument("--disable-infobars");
+            options.AddArgument("--disable-extensions");
+            return options;
         }
     }
 }

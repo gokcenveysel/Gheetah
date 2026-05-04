@@ -1,22 +1,69 @@
+using OpenQA.Selenium.Appium.Windows;
 using Reqnroll;
-using OpenQA.Selenium.Appium;
+using {{ProjectName}}.Drivers;
 
 namespace {{ProjectName}}.Hooks
 {
     [Binding]
     public class Hooks
     {
-        // Driver'ı statik tutup StepDefinition'dan doldurulmasını bekliyoruz
-        public static AppiumDriver Driver { get; set; }
+        private readonly ScenarioContext _scenarioContext;
+        public static WindowsDriver? Driver { get; set; }
 
-        [AfterScenario("@Mobile", "@Desktop")]
-        public void Cleanup()
+        public Hooks(ScenarioContext scenarioContext)
         {
-            if (Driver != null)
+            _scenarioContext = scenarioContext;
+        }
+
+        [BeforeScenario]
+        public void BeforeScenario()
+        {
+            Console.WriteLine($"[Desktop] Scenario Started: {_scenarioContext.ScenarioInfo.Title}");
+        }
+
+        [AfterScenario]
+        public void AfterScenario()
+        {
+            if (_scenarioContext.TestError != null)
             {
-                Driver.Quit();
-                Driver.Dispose();
+                TakeScreenshot(_scenarioContext.ScenarioInfo.Title);
+            }
+
+            QuitDriver();
+        }
+
+        private void TakeScreenshot(string scenarioName)
+        {
+            try
+            {
+                if (Driver is ITakesScreenshot ts)
+                {
+                    var screenshot = ts.GetScreenshot();
+                    var fileName = $"Desktop_{scenarioName}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
+                    var path = Path.Combine("Screenshots", fileName);
+
+                    Directory.CreateDirectory("Screenshots");
+                    screenshot.SaveAsFile(path);
+                    Console.WriteLine($"Screenshot saved: {path}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Screenshot error: {ex.Message}");
+            }
+        }
+
+        private void QuitDriver()
+        {
+            try
+            {
+                Driver?.Quit();
+                Driver?.Dispose();
                 Driver = null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Driver quit error: {ex.Message}");
             }
         }
     }
