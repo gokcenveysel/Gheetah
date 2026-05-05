@@ -72,7 +72,44 @@
         </div>
     </div>
 </div>
+<div class="modal modal-blur fade" id="modal-confirm" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-warning"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-triangle fs-1 text-warning mb-2"></i>
+                <h3 id="confirm-title">Are you sure?</h3>
+                <div id="confirm-text" class="text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Decline</a></div>
+                        <div class="col"><a href="#" id="confirm-yes-btn" class="btn btn-warning w-100" data-bs-dismiss="modal">YES</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="modal modal-blur fade" id="modal-alert" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <i id="alert-icon" class="ti ti-info-circle fs-1 text-info mb-2"></i>
+                <h3 id="alert-title">Bilgi</h3>
+                <div id="alert-text" class="text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <a href="#" class="btn btn-primary w-100" data-bs-dismiss="modal">OK</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
     <script>
@@ -153,11 +190,50 @@
         }
 
         function completePR() {
-            if(!confirm("Bu işlem dalları birleştirecek ve kaynak dalı silecektir. Onaylıyor musunuz?")) return;
-            $.post('/Editor/CompletePR', { prId: prId }, function (res) {
-                alert(res.message);
-                window.location.href = '/Editor/Index/' + projectId;
+            // MODAL GÜNCELLEMESİ: confirm yerine showConfirm
+            showConfirm(
+                "Merge Operation",
+                "This operation will merge the branches and delete the source branch. Do you approve?", 
+                function() {
+                    const btn = $('#btn-complete-pr');
+                    const originalHtml = btn.html();
+                    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
+
+                    $.post('/Editor/CompletePR', { prId: prId }, function (res) {
+                        showAlert("Transaction Successful", res.message, "success", function() {
+                            window.location.href = '/Editor/Index/' + projectId;
+                        });
+                    }).fail(function(err) {
+                        showAlert("Error", "Merge operation failed: " + err.responseText, "danger");
+                        btn.prop('disabled', false).html(originalHtml);
+                    });
+                }
+            );
+        }
+
+        function showConfirm(title, message, onConfirm) {
+            $('#confirm-title').text(title);
+            $('#confirm-text').text(message);
+            $('#confirm-yes-btn').off('click').one('click', function () {
+                onConfirm();
             });
+            new bootstrap.Modal(document.getElementById('modal-confirm')).show();
+        }
+
+        function showAlert(title, message, type = 'info', onClose = null) {
+            $('#alert-title').text(title);
+            $('#alert-text').text(message);
+            const iconMap = { 'success': 'ti-check', 'danger': 'ti-x', 'warning': 'ti-alert-triangle', 'info': 'ti-info-circle' };
+            $('#alert-icon').attr('class', `ti ${iconMap[type] || 'ti-info-circle'} fs-1 text-${type} mb-2`);
+    
+            var alertElement = document.getElementById('modal-alert');
+            var alertModal = new bootstrap.Modal(alertElement);
+    
+            if (onClose) {
+                $(alertElement).off('hidden.bs.modal').one('hidden.bs.modal', onClose);
+            }
+    
+            alertModal.show();
         }
     </script>
 }
