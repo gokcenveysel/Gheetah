@@ -3,116 +3,134 @@
 }
 
 <style>
-    .btn-ghost-secondary {
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        color: #616876;
-        transition: all 0.2s ease;
-        padding: 4px !important;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
+    /* 1. LAYOUT & SCROLL MANAGEMENT */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden; /* Tarayıcı scroll'unu tamamen engelle */
     }
 
-        .btn-ghost-secondary:hover:not(:disabled) {
-            background: #f1f3f5 !important;
-            color: #0054a6 !important;
-            border-radius: 4px;
-        }
-
-        .btn-ghost-secondary:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-
-    .jstree-default .jstree-ocl {
-        background: none !important;
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        font-family: "tabler-icons" !important;
-        font-size: 1.1rem !important;
-        color: #adb5bd;
+    .page-wrapper {
+        height: calc(100vh - 64px); /* Navbar sonrası kalan tam alan */
+        display: flex;
+        flex-direction: row;
+        width: 100%;
+        overflow: hidden;
+        background: #ffffff;
     }
 
-    /* Change arrows */
-    .jstree-closed > .jstree-ocl:before {
-        content: "\ea5f";
-    }
-    /* ti-arrow-badge-right */
-    .jstree-opened > .jstree-ocl:before {
-        content: "\ea5e";
-    }
-    /* ti-arrow-badge-down */
-    .ti-folder, .ti-folder-open {
-        color: #0054a6 !important;
-    }
-
-    .ti-brand-c-sharp {
-        color: #6a1b9a !important;
-        font-weight: bold;
+    /* 2. SIDEBAR (EXPLORER & GIT) STYLING */
+    .sidebar-container {
+        width: 300px;
+        min-width: 300px;
+        max-width: 400px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        flex-shrink: 0;
     }
 
-    .ti-brand-cucumber {
-        color: #2e7d32 !important;
-    }
-
-    .ti-file-code {
-        color: #e67e22 !important;
-    }
-
-    .ti-json {
-        color: #f1c40f !important;
-    }
-
-    .jstree-default .jstree-themeicon {
-        background: none !important;
-        display: inline-flex !important;
-        align-items: center;
-        font-size: 1.3rem !important;
-    }
-
-    .file-dirty > a.jstree-anchor {
-        color: #e74c3c !important;
-    }
-
-        .file-dirty > a.jstree-anchor:after {
-            content: ' *';
-            color: #e74c3c;
-        }
-
-    /* Tabs */
-    #editor-tabs {
-        gap: 5px;
-        overflow-x: auto;
-        white-space: nowrap;
-        height: 35px;
+    .explorer-tabs {
+        height: 38px;
         background: #f1f3f5;
+        display: flex;
+        border-bottom: 1px solid #dee2e6;
+        flex-shrink: 0;
+    }
+
+    .explorer-tab-item {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        color: #6c757d;
+        border-right: 1px solid #dee2e6;
+        text-transform: uppercase;
+        transition: all 0.2s ease;
+    }
+
+        .explorer-tab-item.active {
+            background: #ffffff;
+            color: #0054a6;
+            border-bottom: 2px solid #0054a6;
+        }
+
+    /* Panellerin İçeriği */
+    .panel-content {
+        flex-grow: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* 3. PUSH HISTORY PANEL (Sidebar Alt Kısmı) */
+    .push-history-panel {
+        height: 220px;
+        border-top: 1px solid #dee2e6;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+
+    #push-history-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 8px;
+    }
+
+    /* 4. MAIN EDITOR AREA STYLING */
+    .editor-main-area {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        background: #ffffff;
+    }
+
+    /* Editor Tabs (Monaco Üstü) */
+    #editor-tabs {
+        height: 38px;
+        background: #f1f3f5;
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        gap: 4px;
+        border-bottom: 1px solid #dee2e6;
+        overflow-x: auto;
+        flex-shrink: 0;
     }
 
     .tab-item {
-        padding: 5px 12px;
+        padding: 6px 12px;
         background: #e9ecef;
-        border: 1px solid #dee2e6;
+        border: 1px solid #ced4da;
+        border-bottom: none;
         cursor: pointer;
         display: inline-flex;
         align-items: center;
         font-size: 12px;
         border-radius: 4px 4px 0 0;
-        border-bottom: none;
-        margin-top: 4px;
+        margin-top: 6px;
+        white-space: nowrap;
     }
 
         .tab-item.active {
-            background: #fff;
+            background: #ffffff;
             border-bottom: 2px solid #0054a6;
             font-weight: bold;
         }
 
     .tab-close {
         margin-left: 8px;
-        cursor: pointer;
+        font-size: 14px;
         color: #adb5bd;
     }
 
@@ -120,74 +138,263 @@
             color: #e74c3c;
         }
 
-    /* Toolbar Svg Button Colors */
-    .btn-toolbar-active {
+    /* Monaco Container */
+    #monaco-container {
+        flex-grow: 1;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* 5. JSTREE & ICON CUSTOMIZATION */
+    .jstree-default .jstree-anchor {
+        font-size: 13px !important;
+    }
+
+    .jstree-default .jstree-themeicon {
+        font-size: 1.2rem !important;
+    }
+
+    .ti-folder, .ti-folder-open {
         color: #0054a6 !important;
     }
 
-    .btn-toolbar-success {
-        color: #2fb344 !important;
+    .ti-brand-c-sharp {
+        color: #6a1b9a !important;
+    }
+
+    .ti-brand-cucumber {
+        color: #2e7d32 !important;
+    }
+
+    /* Dirty (Kaydedilmemiş) Dosya Belirteci */
+    .file-dirty > a.jstree-anchor {
+        color: #e74c3c !important;
+        font-weight: 600;
+    }
+
+        .file-dirty > a.jstree-anchor:after {
+            content: ' ●';
+            font-size: 9px;
+            vertical-align: middle;
+        }
+
+    /* Ghost Buttons */
+    .btn-ghost-secondary {
+        border: none;
+        background: transparent;
+        color: #616876;
+        padding: 4px 8px;
+        border-radius: 4px;
+    }
+
+        .btn-ghost-secondary:hover {
+            background: #f1f3f5;
+            color: #0054a6;
+        }
+
+    .btn-toolbar-active {
+        color: #0054a6 !important;
     }
 </style>
 
 <div class="page-wrapper">
-    <div class="container-fluid p-0">
-        <div class="row g-0" style="height: calc(100vh - 64px);">
-            <!-- Sidebar (Explorer) -->
-            <div class="col-md-3 col-lg-2 border-end bg-light d-flex flex-column">
-                <div class="p-2 border-bottom bg-white d-flex justify-content-between align-items-center" style="height: 45px;">
-                    <strong class="text-uppercase small">Explorer</strong>
-                    <div class="d-flex gap-0">
-                        <button id="btn-save" class="btn btn-ghost-secondary" disabled onclick="saveCurrentFile()" title="Save (Ctrl+S)">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                        </button>
-                        <button id="btn-save-all" class="btn btn-ghost-secondary" disabled onclick="saveAllFiles()" title="Save All">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M15.5 2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6.5L15.5 2z"></path>
-                                <path d="M10 18v-5h4v5"></path>
-                                <path d="M7 2v4h7V2"></path>
-                                <path d="M21 7v12a2 2 0 0 1-2 2H7" opacity="0.5"></path>
-                            </svg>
-                        </button>
-                        <button id="btn-send-server" class="btn btn-ghost-secondary" disabled onclick="openBranchModal()" title="Send to Server">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="text-success" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1" /><path d="M9 15l3 -3l3 3" /><path d="M12 12l0 9" /></svg>
-                        </button>
-                        <div class="vr mx-1" style="height: 18px; margin-top: 5px;"></div>
-                        <button type="button" class="btn btn-ghost-secondary" onclick="refreshTree()" title="Refresh Explorer">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                        </button>
-                    </div>
-                </div>
-                <div id="editor-treeview" class="flex-grow-1 overflow-auto p-2" style="font-size: 13px;"></div>
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar-container">
+        <div class="explorer-tabs">
+            <div id="tab-solution" class="explorer-tab-item active" onclick="switchSidebar('solution')">
+                <i class="ti ti-files me-1"></i> Solution
             </div>
+            <div id="tab-git" class="explorer-tab-item" onclick="switchSidebar('git')">
+                <i class="ti ti-git-pull-request me-1"></i> Git
+            </div>
+        </div>
 
-            <!-- Main Editor -->
-            <div class="col-md-9 col-lg-10 d-flex flex-column">
-                <div id="editor-tabs" class="d-flex align-items-center px-2">
-                    <span id="no-file-msg" class="text-muted small italic px-2">No file open</span>
+        <div id="panel-solution" class="panel-content">
+            <div class="p-2 border-bottom bg-white d-flex justify-content-between align-items-center">
+                <strong class="small text-muted">FILES</strong>
+                <div class="d-flex gap-1">
+                    <button id="btn-save" class="btn-ghost-secondary" onclick="saveCurrentFile()" disabled title="Save (Ctrl+S)">
+                        <i class="ti ti-device-floppy fs-3"></i>
+                    </button>
+                    <button id="btn-save-all" class="btn-ghost-secondary" onclick="saveAllFiles()" disabled title="Save All">
+                        <i class="ti ti-files fs-3"></i>
+                    </button>
+                    <div class="vr mx-1"></div>
+                    <button class="btn-ghost-secondary" onclick="refreshTree()" title="Refresh">
+                        <i class="ti ti-refresh fs-3"></i>
+                    </button>
                 </div>
-                <div id="monaco-container" class="flex-grow-1"></div>
+            </div>
+            <div id="editor-treeview" class="p-1"></div>
+        </div>
+
+        <div id="panel-git" class="panel-content d-none">
+            <div class="p-2 bg-light border-bottom">
+                <select id="branch-dropdown" class="form-select form-select-sm mb-2" onchange="handleBranchChange(this.value)"></select>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-primary w-50" onclick="window.pullLatest()"><i class="ti ti-download me-1"></i> Pull</button>
+                    <button id="btn-git-push" class="btn btn-sm btn-success w-50" onclick="handlePushAction()"><i class="ti ti-upload me-1"></i> Push</button>
+                </div>
+            </div>
+            <div class="p-2 small fw-bold text-muted border-bottom bg-white">CHANGES</div>
+            <div id="git-changes-treeview" class="p-1"></div>
+        </div>
+
+        <div class="push-history-panel">
+            <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+                <strong class="small text-muted">PUSH HISTORY</strong>
+                <button class="btn-ghost-secondary" onclick="openHistoryModal()">
+                    <i class="ti ti-maximize fs-3"></i>
+                </button>
+            </div>
+            <div id="push-history-list"></div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="editor-main-area">
+        <div id="editor-tabs">
+            <span id="no-file-msg" class="text-muted small italic px-2">No file open</span>
+        </div>
+        <div id="monaco-container"></div>
+    </main>
+</div>
+
+<!-- MODALS -->
+<div class="modal modal-blur fade" id="modal-history-large" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Push & Deployment History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body overflow-auto" style="max-height: 75vh;">
+                <table class="table table-vcenter">
+                    <thead>
+                        <tr>
+                            <th>Branch</th>
+                            <th>Base</th>
+                            <th>Pushed By</th>
+                            <th>Date</th>
+                            <th>Commit</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="full-history-table-body"></tbody>
+                </table>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal modal-blur fade" id="modal-branch" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
+<div class="modal modal-blur fade" id="modal-branch" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Send to Server</h5>
+                <h5 class="modal-title">Commit to New Branch</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Branch Name</label>
+                <input type="text" id="input-branch-name" class="form-control" placeholder="feature/new-test">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="commitAndPush()">Commit & Push</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE PR DETAIL MODAL -->
+<div class="modal modal-blur fade" id="modal-create-pr-detail" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Pull Request</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="mb-3">
+                            <label class="form-label">Source Branch</label>
+                            <input type="text" id="pr-source-branch" class="form-control" readonly>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="mb-3">
+                            <label class="form-label">Target Branch</label>
+                            <select id="pr-target-branch" class="form-select" onchange="validatePRForm()">
+                                <option value="">Select Target...</option>
+                                <option value="main">main</option>
+                                <option value="develop">develop</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
                 <div class="mb-3">
-                    <label class="form-label">New Branch Name</label>
-                    <input type="text" id="input-branch-name" class="form-control" placeholder="feature/user-update-test">
+                    <label class="form-label">Reviewers (Admin/Lead)</label>
+                    <select id="pr-reviewers" class="form-select" multiple>
+                        <option value="admin_1">Senior Architect (Admin)</option>
+                        <option value="lead_1">Team Lead (Lead)</option>
+                    </select>
+                    <small class="text-muted">Hold Ctrl to select multiple.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description / Comments</label>
+                    <textarea id="pr-comment" class="form-control" rows="3" placeholder="What changed in this PR?" oninput="validatePRForm()"></textarea>
+                </div>
+
+                <div class="p-2 bg-light border rounded">
+                    <strong class="small d-block mb-2 text-uppercase">Changed Files</strong>
+                    <div id="pr-file-diff-list" class="small overflow-auto" style="max-height: 150px;">
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="commitAndPush()">Commit & Push</button>
+                <button type="button" id="btn-submit-pr" class="btn btn-primary" onclick="finalizePRCreation()" disabled>
+                    <i class="ti ti-git-pull-request me-1"></i> Create Pull Request
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal modal-blur fade" id="modal-confirm" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-warning"></div>
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-triangle fs-1 text-warning mb-2"></i>
+                <h3 id="confirm-title">Are you sure?</h3>
+                <div id="confirm-text" class="text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <div class="row">
+                        <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Decline</a></div>
+                        <div class="col"><a href="#" id="confirm-yes-btn" class="btn btn-warning w-100" data-bs-dismiss="modal">YES</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="modal-alert" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <i id="alert-icon" class="ti ti-info-circle fs-1 text-info mb-2"></i>
+                <h3 id="alert-title">Bilgi</h3>
+                <div id="alert-text" class="text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <div class="w-100">
+                    <a href="#" class="btn btn-primary w-100" data-bs-dismiss="modal">OK</a>
+                </div>
             </div>
         </div>
     </div>
@@ -198,16 +405,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
 
     <script>
-        var editor;
+        var editor = null;
+        var diffEditor = null;
+        var isDiffMode = false;
         var projectId = "@ViewBag.ProjectId";
-        var openFiles = {}; // State Tracker: { path: { model: obj, hash: str, fileName: str, isDirty: bool } }
+        var openFiles = {}; // { path: { model: obj, hash: str, fileName: str, isDirty: bool } }
         var activeFilePath = "";
         var hasServerChanges = false;
+        var currentPRContext = {};
 
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
 
         $(document).ready(function () {
             initializeTree();
+            refreshBranchList();
+            refreshPushHistory();
 
             require(['vs/editor/editor.main'], function () {
                 if (!monaco.languages.getLanguages().some(lang => lang.id === 'gherkin')) {
@@ -230,14 +442,8 @@
                         }
                     });
                 }
-
-                editor = monaco.editor.create(document.getElementById('monaco-container'), {
-                    theme: 'vs-light',
-                    automaticLayout: true,
-                    fontSize: 14,
-                    minimap: { enabled: false },
-                    readOnly: true
-                });
+                
+                createNormalEditor();
             });
 
             $(window).bind('keydown', function(event) {
@@ -247,9 +453,110 @@
             });
         });
 
-        window.refreshTree = function() {
-            $('#editor-treeview').jstree(true).refresh();
-        };
+        // --- Editor Management ---
+
+        function createNormalEditor() {
+            const container = document.getElementById('monaco-container');
+            // Eğer halihazırda bir editor varsa, onu güvenli bir şekilde yok et (dispose)
+            if (editor) {
+                editor.dispose();
+                editor = null;
+            }
+            if (diffEditor) {
+                diffEditor.dispose();
+                diffEditor = null;
+            }
+            container.innerHTML = ''; // DOM temizliği
+
+            editor = monaco.editor.create(container, {
+                theme: 'vs-light',
+                automaticLayout: true,
+                fontSize: 14,
+                minimap: { enabled: false },
+                readOnly: true
+            });
+            isDiffMode = false;
+        }
+
+        function openFileInTab(path, fileName) {
+            if (isDiffMode) {
+                createNormalEditor();
+            }
+
+            if (openFiles[path]) { 
+                switchToTab(path); 
+                return; 
+            }
+
+            $.get('/Editor/GetFileContent', { filePath: path }, function (response) {
+                var lang = getLanguageByExtension(fileName);
+                var model = monaco.editor.createModel(response.content, lang);
+
+                var backup = localStorage.getItem("backup_" + path);
+                if(backup && backup !== response.content) {
+                    showConfirm(
+                        "Backup Found", 
+                        "Unsaved local changes were found for " + fileName + ". Should I load it?", 
+                        function() {
+                            model.setValue(backup);
+                        }
+                    );
+                }
+
+                model.onDidChangeContent(() => {
+                    openFiles[path].isDirty = true;
+                    updateUIStates(path, true);
+                    localStorage.setItem("backup_" + path, model.getValue());
+                });
+
+                openFiles[path] = { model: model, hash: response.hash, fileName: fileName, isDirty: false };
+                addTabUI(path, fileName);
+                switchToTab(path);
+            });
+        }
+
+        function switchToTab(path) {
+            if (isDiffMode) createNormalEditor();
+
+            activeFilePath = path;
+            var file = openFiles[path];
+            editor.setModel(file.model);
+            editor.updateOptions({ readOnly: false });
+
+            $('.tab-item').removeClass('active');
+            var safeId = btoa(path).replace(/=/g, "");
+            $(`#tab-${safeId}`).addClass('active');
+
+            updateUIStates(path, file.isDirty);
+        }
+
+        function openDiffView(path, fileName) {
+            $.get('/Editor/GetFileDiff', { filePath: path }, function (response) {
+                isDiffMode = true;
+                const container = document.getElementById('monaco-container');
+                container.innerHTML = ''; 
+
+                diffEditor = monaco.editor.createDiffEditor(container, {
+                    theme: 'vs-light',
+                    automaticLayout: true,
+                    readOnly: true,
+                    fontSize: 14
+                });
+
+                const originalModel = monaco.editor.createModel(response.originalContent, getLanguageByExtension(fileName));
+                const modifiedModel = monaco.editor.createModel(response.modifiedContent, getLanguageByExtension(fileName));
+
+                diffEditor.setModel({
+                    original: originalModel,
+                    modified: modifiedModel
+                });
+
+                $('.tab-item').removeClass('active');
+                activeFilePath = ""; 
+            });
+        }
+
+        // --- Git & Tree Management ---
 
         function initializeTree() {
             $('#editor-treeview').jstree({
@@ -258,7 +565,15 @@
                     'themes': { 'name': 'default', 'dots': false, 'icons': true },
                     'data': {
                         'url': '/Editor/GetProjectTree?projectId=' + projectId,
-                        'dataType': 'json'
+                        'dataType': 'json',
+                        'dataFilter': function(data) {
+                            var json = JSON.parse(data);
+                            return JSON.stringify(json.filter(node =>
+                                !node.text.includes('bin') &&
+                                !node.text.includes('obj') &&
+                                !node.text.includes('.vs')
+                            ));
+                        }
                     }
                 },
                 'types': {
@@ -294,38 +609,50 @@
             });
         }
 
-        function openFileInTab(path, fileName) {
-            if (openFiles[path]) { switchToTab(path); return; }
+        function refreshGitChanges() {
+            $.get('/Editor/GetModifiedFiles', { projectId: projectId }, function (data) {
+                var filteredData = data.filter(item =>
+                    !item.id.includes('\\bin\\') &&
+                    !item.id.includes('\\obj\\') &&
+                    !item.id.includes('.vs\\')
+                );
 
-            $.get('/Editor/GetFileContent', { filePath: path }, function (response) {
-                var lang = getLanguageByExtension(fileName);
-                var model = monaco.editor.createModel(response.content, lang);
-
-                var backup = localStorage.getItem("backup_" + path);
-                if(backup && backup !== response.content) {
-                    if(confirm(fileName + " için kaydedilmemiş yerel değişiklikler bulundu. Yüklensin mi?")) {
-                        model.setValue(backup);
-                    }
+                var tree = $('#git-changes-treeview').jstree(true);
+                if (tree) {
+                    tree.settings.core.data = filteredData;
+                    tree.refresh();
+                } else {
+                    $('#git-changes-treeview').jstree({
+                        'core': { 'data': filteredData },
+                        'plugins': ['types']
+                    }).on('select_node.jstree', function (e, data) {
+                        openDiffView(data.node.id, data.node.text);
+                    });
                 }
-
-                model.onDidChangeContent(() => {
-                    openFiles[path].isDirty = true;
-                    updateUIStates(path, true);
-                    localStorage.setItem("backup_" + path, model.getValue());
-                });
-
-                openFiles[path] = { model: model, hash: response.hash, fileName: fileName, isDirty: false };
-                addTabUI(path, fileName);
-                switchToTab(path);
             });
         }
 
+        function switchSidebar(type) {
+                    $('.explorer-tab-item').removeClass('active');
+                    $(`#tab-${type}`).addClass('active');
+
+                    if (type === 'solution') {
+                        $('#panel-solution').removeClass('d-none');
+                        $('#panel-git').addClass('d-none');
+                    } else {
+                        $('#panel-solution').addClass('d-none');
+                        $('#panel-git').removeClass('d-none');
+                        refreshGitChanges();
+                    }
+                    setTimeout(() => { if(editor) editor.layout(); }, 50);
+        }
+
+        // --- UI & Helper Methods ---
+
         function addTabUI(path, fileName) {
             $('#no-file-msg').hide();
-
             var safePath = encodeURIComponent(path);
             var safeId = btoa(path).replace(/=/g, "");
-
             var tabHtml = `
                 <div class="tab-item" id="tab-${safeId}" onclick="switchToTab(decodeURIComponent('${safePath}'))">
                     <span class="tab-title">${fileName}</span>
@@ -334,94 +661,270 @@
             $('#editor-tabs').append(tabHtml);
         }
 
-        function switchToTab(path) {
-            activeFilePath = path;
-            var file = openFiles[path];
-            editor.setModel(file.model);
-            editor.updateOptions({ readOnly: false });
-
-            $('.tab-item').removeClass('active');
-            var safeId = btoa(path).replace(/=/g, "");
-            $(`#tab-${safeId}`).addClass('active');
-
-            updateUIStates(path, file.isDirty);
-        }
-
         function closeTab(event, path) {
             event.stopPropagation();
-            if (openFiles[path].isDirty && !confirm("Unsaved changes! Close anyway?")) return;
+            const safeId = btoa(path).replace(/=/g, "");
 
-            var safeId = btoa(path).replace(/=/g, "");
+            if (openFiles[path].isDirty) {
+                showConfirm("Unsaved Changes", "There are unsaved changes in this file. Are you sure you want to close it?", function() {
+                    executeTabClosure(path, safeId);
+                });
+            } else {
+                executeTabClosure(path, safeId);
+            }
+        }
+
+        function executeTabClosure(path, safeId) {
             $(`#tab-${safeId}`).remove();
-
-            openFiles[path].model.dispose();
+            $(`#pane-${safeId}`).remove();
             delete openFiles[path];
 
-            var keys = Object.keys(openFiles);
-            if (keys.length > 0) {
-                switchToTab(keys[keys.length - 1]);
+            if ($('#editor-tabs .nav-link').length > 0) {
+                $('#editor-tabs .nav-link').last().tab('show');
             } else {
-                editor.setModel(null);
-                editor.updateOptions({ readOnly: true });
-                activeFilePath = "";
-                $('#no-file-msg').show();
-                updateUIStates(null, false);
+                $('#editor-placeholder').show();
             }
         }
 
         function updateUIStates(path, isDirty) {
-                var anyFileDirty = Object.values(openFiles).some(f => f.isDirty);
-
+            if (activeFilePath === path) {
                 $('#btn-save').prop('disabled', !isDirty).toggleClass('btn-toolbar-active', isDirty);
-                $('#btn-save-all').prop('disabled', !anyFileDirty).toggleClass('btn-toolbar-active', anyFileDirty);
+            }
 
-                var canPush = anyFileDirty || hasServerChanges;
-                $('#btn-send-server').prop('disabled', !canPush);
+            var anyFileDirty = Object.values(openFiles).some(f => f.isDirty);
+            $('#btn-save-all').prop('disabled', !anyFileDirty).toggleClass('btn-toolbar-active', anyFileDirty);
 
-                window.onbeforeunload = anyFileDirty ? function() { return "You have unsaved changes!"; } : null;
+            var currentBranch = $('#branch-dropdown').val();
+            var isForbiddenBranch = (currentBranch === "main" || currentBranch === "master");
+    
+            var canPush = (anyFileDirty || hasServerChanges) && !isForbiddenBranch;
+    
+            $('#btn-git-push')
+                .prop('disabled', !canPush)
+                .toggleClass('btn-success', !isForbiddenBranch)
+                .toggleClass('btn-secondary', isForbiddenBranch);
+            $('#btn-send-server').prop('disabled', !canPush).toggleClass('ti-cloud-upload btn-toolbar-success', hasServerChanges);
 
-                if (path) {
-                    var tree = $('#editor-treeview').jstree(true);
-                    var nodeElement = tree.get_node(path, true);
-                    if (nodeElement) {
-                        isDirty ? nodeElement.addClass('file-dirty') : nodeElement.removeClass('file-dirty');
-                    }
+            window.onbeforeunload = anyFileDirty ? function() { return "You have unsaved changes!"; } : null;
+
+            if (path) {
+                var safePath = path.replace(/\\/g, "\\\\");
+                var nodeAnchor = $(`#${safeId(path)}_anchor`); 
+ 
+                if (isDirty) {
+                    nodeAnchor.addClass('file-dirty');
+                } else {
+                    nodeAnchor.removeClass('file-dirty');
                 }
-        }
-
-        function saveCurrentFile() {
-                if (!activeFilePath || !openFiles[activeFilePath].isDirty) return;
-                var file = openFiles[activeFilePath];
-
-                $.ajax({
-                    url: '/Editor/SaveFileContent',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ FilePath: activeFilePath, Content: file.model.getValue(), ClientHash: file.hash }),
-                    success: function(response) {
-                        file.hash = response.newHash;
-                        file.isDirty = false;
-                        hasServerChanges = true; 
-                        updateUIStates(activeFilePath, false);
-
-                        localStorage.removeItem("backup_" + activeFilePath);
-                    }
-                });
-        }
-
-        function saveAllFiles() {
-            Object.keys(openFiles).forEach(path => {
-                if (openFiles[path].isDirty) {
-                    activeFilePath = path;
-                    saveCurrentFile();
-                }
-            });
+            }
         }
 
         function getLanguageByExtension(fileName) {
             var ext = fileName.split('.').pop().toLowerCase();
-            var map = { 'cs': 'csharp', 'java': 'java', 'feature': 'gherkin', 'json': 'json', 'csproj': 'xml', 'xml': 'xml', 'config': 'xml' };
+            var map = { 'cs': 'csharp', 'java': 'java', 'feature': 'gherkin', 'json': 'json', 'csproj': 'xml', 'xml': 'xml' };
             return map[ext] || 'plaintext';
+        }
+
+        function saveCurrentFile() {
+            if (!activeFilePath || !openFiles[activeFilePath].isDirty) return;
+
+            var file = openFiles[activeFilePath];
+
+            $.ajax({
+                url: '/Editor/SaveFileContent',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    FilePath: activeFilePath,
+                    Content: file.model.getValue(),
+                    ClientHash: file.hash
+                }),
+                success: function(response) {
+                    file.hash = response.newHash;
+                    file.isDirty = false;
+                    hasServerChanges = true;
+
+                    updateUIStates(activeFilePath, false);
+                    localStorage.removeItem("backup_" + activeFilePath);
+
+                    showCustomToast('success', "File saved successfully: " + file.fileName);
+                },
+                error: function(err) {
+                    showCustomToast('danger', "Save failed: " + err.responseText);
+
+                }
+            });
+        }
+
+        function saveAllFiles() {
+            const dirtyPaths = Object.keys(openFiles).filter(path => openFiles[path].isDirty);
+
+            if (dirtyPaths.length === 0) return;
+
+            const savePromises = dirtyPaths.map(path => {
+                var file = openFiles[path];
+                return $.ajax({
+                    url: '/Editor/SaveFileContent',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        FilePath: path,
+                        Content: file.model.getValue(),
+                        ClientHash: file.hash
+                    }),
+                    success: function(response) {
+                        file.hash = response.newHash;
+                        file.isDirty = false;
+                        hasServerChanges = true;
+                        updateUIStates(path, false);
+                        localStorage.removeItem("backup_" + path);
+                    }
+                });
+            });
+
+            $.when.apply($, savePromises).then(function() {
+                showCustomToast('success', "All files saved successfully.");
+            });
+        }
+
+        function safeId(path) {
+            return path.replace(/(:|\.|\/|\\|\[|\]|,|=|\x40)/g, "\\$1");
+        }
+
+        function refreshTree() {
+            $('#editor-treeview').jstree(true).refresh();
+            showCustomToast('success', "Solution Explorer refreshed.");
+        }
+
+        function refreshBranchList(selectedBranch = null) {
+            $.get('/Editor/GetProjectBranches', { projectId: projectId }, function (data) {
+                let html = '<optgroup label="Local Branches">';
+                data.branches.forEach(b => {
+                    let selected = (selectedBranch || data.current) === b ? 'selected' : '';
+                    html += `<option value="${b}" ${selected}>${b}</option>`;
+                });
+                html += '</optgroup><optgroup label="Actions"><option value="CREATE_NEW">+ New Branch...</option></optgroup>';
+
+                $('#branch-dropdown').html(html);
+            });
+        }
+
+        function handleBranchChange(value) {
+            if (value === "CREATE_NEW") {
+                if (typeof window.openBranchModal === "function") {
+                    window.openBranchModal();
+                }
+            }
+    
+            var currentFileDirty = activeFilePath ? (openFiles[activeFilePath]?.isDirty || false) : false;
+            updateUIStates(activeFilePath, currentFileDirty);
+        }
+
+        window.handlePushAction = function() {
+            var selectedBranch = $('#branch-dropdown').val();
+
+            if (selectedBranch === "main" || selectedBranch === "master") {
+                showCustomToast('warning', "You can not push changes to the main branch! Before push change, create a branch, please!");
+                return;
+            }
+
+            if (selectedBranch === "CREATE_NEW") {
+                window.openBranchModal();
+            } else {
+                executePush(selectedBranch);
+            }
+        };
+
+        function executePush(branchName) {
+            const btn = $('#btn-git-push');
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Pushing...');
+
+            $.ajax({
+                url: '/Editor/CommitAndPush',
+                type: 'POST',
+                data: { projectId: projectId, branchName: branchName },
+                success: function(response) {
+                    showCustomToast('success', "Pushed to " + branchName);
+                    setTimeout(() => {
+                        refreshBranchList(response.currentBranch);
+                        refreshPushHistory();
+                        refreshGitChanges();
+                    }, 500);
+                },
+                error: function(err) {  
+                    showAlert("Push Failed", err.responseText, "danger"); 
+                },
+                complete: function() { 
+                    btn.prop('disabled', false).html('<i class="ti ti-upload me-1"></i> Push');
+                }
+            });
+        }
+
+        function finalizePRCreation() {
+            const prData = {
+                ProjectId: currentPRContext.projectId,
+                SourceBranch: currentPRContext.source,
+                TargetBranch: $('#pr-target-branch').val(),
+                LastCommitHash: currentPRContext.hash,
+                Reviewers: $('#pr-reviewers').val() || [],
+                Description: $('#pr-comment').val() 
+            };
+
+            $.ajax({
+                url: '/Editor/CreatePRWithDetails',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(prData),
+                success: function(response) {
+                    showCustomToast('success', "Pull Request created successfully!");
+                    $('#modal-create-pr-detail').modal('hide');
+                    refreshPushHistory();
+                },
+                error: function(err) {
+                    console.error("PR Error Details:", err.responseText);
+                    showCustomToast('danger', "Error: " + err.responseText);
+                }
+            });
+        }
+
+        function refreshPushHistory() {
+            $.get('/Editor/GetPushHistory', { projectId: projectId }, function (data) {
+                let fullHtml = '';
+                let sideHtml = '';
+
+                data.forEach(item => {
+                    let actionBtn = "";
+
+                    if (!item.hasPR) {
+                        actionBtn = `<button class="btn btn-sm btn-outline-primary" onclick="openPRCreateDetail('${item.projectId}', '${item.branchName}', '${item.commitHash}')">PR</button>`;
+                    } else {
+                        actionBtn = `<a href="/Editor/PRDetails/${item.prId}" class="modal-link btn btn-sm btn-info">Check</a>`;
+                    }
+
+                    fullHtml += `
+                        <tr>
+                            <td><span class="badge bg-blue-lt">${item.branchName}</span></td>
+                            <td>${item.pushedBy}</td>
+                            <td>${item.pushedAt}</td>
+                            <td>${actionBtn}</td>
+                        </tr>`;
+
+                    sideHtml += `
+                        <div class="p-2 border-bottom small">
+                            <div class="d-flex justify-content-between">
+                                <span class="badge bg-blue-lt">${item.branchName}</span>
+                                <span class="text-muted" style="font-size:10px;">${item.pushedAt}</span>
+                            </div>
+                            <div class="mt-1 d-flex justify-content-between align-items-center">
+                                <span class="text-truncate" style="max-width: 100px;">${item.pushedBy}</span>
+                                ${actionBtn}
+                            </div>
+                        </div>`;
+                });
+
+                $('#full-history-table-body').html(fullHtml);
+                $('#push-history-list').html(sideHtml);
+            });
         }
 
         window.openBranchModal = function() {
@@ -429,38 +932,145 @@
             myModal.show();
         };
 
-        window.commitAndPush = function() {
-            var branchName = $('#input-branch-name').val();
+        window.pullLatest = function() {
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Pulling...';
 
-            if (!branchName) {
-                alert("Lütfen bir branch adı giriniz!");
-                return;
-            }
-
-            // Gheetah IDE'nin sunucu tarafına (Controller) gönderim yapalım
-            // Not: Bu noktada hasServerChanges flag'ini sıfırlayacağız
             $.ajax({
-                url: '/Editor/CommitAndPush', // Backend'de bu action'ın olduğunu varsayıyoruz
+                url: '/Editor/PullLatest',
                 type: 'POST',
-                data: {
-                    projectId: projectId,
-                    branchName: branchName
-                },
+                data: { projectId: projectId },
                 success: function(response) {
-                    alert("The changes have been successfully sent to the server!");
-                    $('#modal-branch').modal('hide');
-
-                    // Başarılı gönderimden sonra "Send to Server" butonunu artık disable edebiliriz
-                    hasServerChanges = false;
-                    updateUIStates(activeFilePath, false);
-
-                    // Explorer'ı yenilemek iyi bir fikir olabilir
+                    showCustomToast('success', response.message);
                     refreshTree();
+                    if ($('#tab-git').hasClass('active')) refreshGitChanges();
                 },
                 error: function(err) {
-                    alert("An error occurred during submission: " + err.responseText);
+                    showCustomToast('danger', "Pull failed: " + err.responseText);
+                },
+                complete: function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
                 }
             });
         };
+
+        window.commitAndPush = function() {
+            var newBranchName = $('#input-branch-name').val();
+    
+            // MODAL GÜNCELLEMESİ: showAlert
+            if (!newBranchName) { 
+                showAlert("Missed Information", "Please enter a branch name!", "warning"); 
+                return; 
+            }
+
+            executePush(newBranchName);
+            $('#modal-branch').modal('hide');
+            $('#input-branch-name').val('');
+        };
+
+        function openHistoryModal() {
+            $.get('/Editor/GetPushHistory', { projectId: projectId }, function (data) {
+                let html = '';
+                data.forEach(item => {
+                    const originBranch = item.originBranch || "main";
+
+                    let actionContent = !item.hasPR
+                        ? `<button class="btn btn-sm btn-primary" onclick="openPRCreateDetail('${item.projectId}', '${item.branchName}', '${item.commitHash}')">Create PR</button>`
+                        : `<a href="/Editor/PRDetails/${item.prId}" class="btn btn-sm btn-info">View PR</a>`;
+
+                    html += `
+                        <tr>
+                            <td><span class="badge bg-blue-lt">${item.branchName}</span></td>
+                            <td class="text-muted">${originBranch}</td>
+                            <td>${item.pushedBy}</td>
+                            <td>${item.pushedAt}</td>
+                            <td><code class="text-reset">${item.commitHash.substring(0, 7)}</code></td>
+                            <td>${actionContent}</td>
+                        </tr>`;
+                });
+                $('#full-history-table-body').html(html);
+                new bootstrap.Modal(document.getElementById('modal-history-large')).show();
+            });
+        }
+
+        function openPRCreateDetail(pId, source, hash) {
+            currentPRContext = { projectId: pId, source: source, hash: hash };
+
+            $('#pr-source-branch').val(source);
+            $('#pr-target-branch').val('');
+            $('#pr-comment').val('');
+            $('#btn-submit-pr').prop('disabled', true);
+
+            $.get('/Editor/GetProjectBranches', { projectId: pId }, function (data) {
+                let branchHtml = '<option value="">Select Target...</option>';
+                data.branches.forEach(b => {
+                    if (b !== source) {
+                        branchHtml += `<option value="${b}">${b}</option>`;
+                    }
+                });
+                $('#pr-target-branch').html(branchHtml);
+            });
+
+            let targetBranch = $('#pr-target-branch').val() || "main";
+            $.get('/Editor/GetFilesBetweenBranches', {
+                projectId: pId,
+                source: source,
+                target: targetBranch
+            }, function (files) {
+                let fileHtml = '<ul class="list-unstyled mb-0">';
+                if (!files || files.length === 0) fileHtml += '<li>No changes relative to target branch.</li>';
+                else {
+                    files.forEach(f => {
+                        fileHtml += `<li><i class="ti ti-file-diff text-warning me-1"></i> ${f}</li>`;
+                    });
+                }
+                fileHtml += '</ul>';
+                $('#pr-file-diff-list').html(fileHtml);
+            });
+
+            $.get('/Editor/GetReviewers', function (users) {
+                let userHtml = '';
+                users.forEach(u => {
+                    userHtml += `<option value="${u.val}">${u.text}</option>`;
+                });
+                $('#pr-reviewers').html(userHtml);
+
+                window.hasOtherReviewers = users.length > 0;
+                validatePRForm();
+            });
+
+            $('#modal-create-pr-detail').modal('show');
+        }
+
+        // Form doğrulama (Target Branch ve Comment zorunlu)
+        function validatePRForm() {
+            const target = $('#pr-target-branch').val();
+            const comment = $('#pr-comment').val().trim();
+            const selectedReviewers = $('#pr-reviewers').val() || [];
+
+            const isReviewerValid = window.hasOtherReviewers ? selectedReviewers.length > 0 : true;
+
+            $('#btn-submit-pr').prop('disabled', !(target && comment && isReviewerValid));
+        }
+
+        function showConfirm(title, message, onConfirm) {
+            $('#confirm-title').text(title);
+            $('#confirm-text').text(message);
+            $('#confirm-yes-btn').off('click').one('click', function() {
+                onConfirm();
+            });
+            new bootstrap.Modal(document.getElementById('modal-confirm')).show();
+        }
+
+        function showAlert(title, message, type = 'info') {
+            $('#alert-title').text(title);
+            $('#alert-text').text(message);
+            const iconMap = { 'success': 'ti-check', 'danger': 'ti-x', 'warning': 'ti-alert-triangle', 'info': 'ti-info-circle' };
+            $('#alert-icon').attr('class', `ti ${iconMap[type] || 'ti-info-circle'} fs-1 text-${type} mb-2`);
+            new bootstrap.Modal(document.getElementById('modal-alert')).show();
+        }
     </script>
 }

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using LibGit2Sharp;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Gheetah.Controllers
@@ -268,39 +269,41 @@ namespace Gheetah.Controllers
         [Produces("application/json")]
         public async Task<IActionResult> UploadProject(IFormFile archiveFile, string language)
         {
-            object ErrorResponse(string message) => new {
-                success = false,
-                message = message,
-                redirectUrl = Url.Action("ManageProjects")
-            };
+            if (archiveFile == null || archiveFile.Length == 0)
+                return Json(new { success = false, message = "Please select a file to upload" });
+
+            if (archiveFile.Length > 50 * 1024 * 1024)
+                return Json(new { success = false, message = "File size exceeds 50MB" });
+
+            var extension = Path.GetExtension(archiveFile.FileName).ToLower();
+            if (!new[] { ".zip", ".rar", ".7z" }.Contains(extension))
+                return Json(new { success = false, message = "Only .zip, .rar and .7z files are accepted" });
 
             try
             {
-                if (archiveFile == null || archiveFile.Length == 0)
-                    return Json(ErrorResponse("Please select a file to upload"));
-
-                if (archiveFile.Length > 50 * 1024 * 1024)
-                    return Json(ErrorResponse("File size exceeds 50MB"));
-
-                var extension = Path.GetExtension(archiveFile.FileName).ToLower();
-                if (!new[] { ".zip", ".rar", ".7z" }.Contains(extension))
-                    return Json(ErrorResponse("Only .zip, .rar and .7z files are accepted"));
-
                 var projectFolder = await _fileService.LoadConfigAsync<string>("project-folder.json")
                                     ?? Path.Combine(_env.ContentRootPath, "ClonedProjects");
 
                 await _projectService.UploadLocalProjectAsync(archiveFile, language, projectFolder);
 
+                string folderName = Path.GetFileNameWithoutExtension(archiveFile.FileName);
+                string uploadedPath = Path.Combine(projectFolder, folderName);
+
+                if (Directory.Exists(uploadedPath) && !LibGit2Sharp.Repository.IsValid(uploadedPath))
+                {
+                    InitializeGitRepository(uploadedPath, folderName);
+                }
+
                 return Json(new {
                     success = true,
-                    message = "Project uploaded successfully!",
+                    message = "Project uploaded and Git initialized successfully!",
                     redirectUrl = Url.Action("ProjectList")
                 });
             }
             catch (Exception ex)
             {
                 var cleanError = ex.Message.Replace(Environment.NewLine, " ");
-                return Json(ErrorResponse($"Installation error: {cleanError}"));
+                return Json(new { success = false, message = $"Installation error: {cleanError}" });
             }
         }
 
@@ -363,18 +366,16 @@ namespace Gheetah.Controllers
             {
                 string rootDir = _env.ContentRootPath;
                 string dataFolderPath = Path.Combine(rootDir, "Data");
-                string configFilePath = Path.Combine(dataFolderPath, "project-folder.json"); // Düzeltilmiş dosya adı
+                string configFilePath = Path.Combine(dataFolderPath, "project-folder.json");
 
                 if (!System.IO.File.Exists(configFilePath))
                 {
-                    return Json(new
-                        { success = false, type = "config_error", message = "Configuration file not found." });
+                    return Json(new { success = false, type = "config_error", message = "Configuration file not found." });
                 }
 
                 var configContent = (await System.IO.File.ReadAllTextAsync(configFilePath)).Trim();
                 string targetBaseDir = string.Empty;
 
-                // HATA ÇÖZÜMÜ: İçerik bir JSON objesi mi yoksa düz string mi kontrol et
                 if (configContent.StartsWith("{"))
                 {
                     using var doc = JsonDocument.Parse(configContent);
@@ -385,17 +386,12 @@ namespace Gheetah.Controllers
                 }
                 else
                 {
-                    // Eğer dosya sadece "C:\\Yol" şeklindeyse tırnakları temizle
                     targetBaseDir = configContent.Replace("\"", "");
                 }
 
                 if (string.IsNullOrEmpty(targetBaseDir) || !Directory.Exists(targetBaseDir))
                 {
-                    return Json(new
-                    {
-                        success = false, type = "config_error",
-                        message = $"Target directory invalid or not found: {targetBaseDir}"
-                    });
+                    return Json(new { success = false, type = "config_error", message = $"Target directory invalid or not found: {targetBaseDir}" });
                 }
 
                 string projectFolderPath = Path.Combine(targetBaseDir, model.ProjectName);
@@ -404,18 +400,19 @@ namespace Gheetah.Controllers
                     return Json(new { success = false, message = "A folder with this name already exists!" });
                 }
 
-                // Şablon ve Yazma İşlemleri (Diğer kısımlar aynı)
                 string sourcePath = Path.Combine(rootDir, "Templates", model.Language, $"Base_{model.ProjectType}");
                 CopyAndProcessFiles(sourcePath, projectFolderPath, model);
                 ProcessAddons(model, projectFolderPath, rootDir);
                 HandlePackageManagement(projectFolderPath, model);
+                
                 await UpdateProjectsJson(model, projectFolderPath, rootDir);
+
+                InitializeGitRepository(projectFolderPath, model.ProjectName);
 
                 return Json(new { success = true });
             }
             catch (Exception ex)
             {
-                // "Target element has type 'String'" hatasını burada yakalayıp daha detaylı veriyoruz
                 return Json(new { success = false, message = "Backend Error: " + ex.Message });
             }
         }
@@ -517,7 +514,6 @@ namespace Gheetah.Controllers
 
         private async Task UpdateProjectsJson(ProjectCreateViewModel model, string fullPath, string rootDir)
         {
-            // JSON yolunu rootDir üzerinden garantiye aliyoruz
             string jsonPath = Path.Combine(rootDir, "Data", "projects.json");
             List<Project> projects = new List<Project>();
 
@@ -567,7 +563,6 @@ namespace Gheetah.Controllers
         {
             if (model.Language == "C#")
             {
-                // C# için nuget.config oluşturarak yerel sistemdeki 401 hatalarını clear ile engelliyoruz
                 string sourceUrl = string.IsNullOrWhiteSpace(model.CustomSourceUrl) 
                     ? "https://api.nuget.org/v3/index.json" 
                     : model.CustomSourceUrl;
@@ -584,7 +579,6 @@ namespace Gheetah.Controllers
             }
             else if (model.Language == "Java")
             {
-                // Java için pom.xml dosyasını bulup içindeki {{CustomRepo}} alanını dolduruyoruz
                 string pomPath = Path.Combine(targetDir, "pom.xml");
                 if (System.IO.File.Exists(pomPath))
                 {
@@ -604,6 +598,41 @@ namespace Gheetah.Controllers
                     content = content.Replace("{{CustomRepo}}", customRepoXml);
                     System.IO.File.WriteAllText(pomPath, content);
                 }
+            }
+        }
+        
+        private void InitializeGitRepository(string path, string projectName)
+        {
+            var user = User.Identity?.Name ?? "system@gheetah.com";
+            try
+            {
+                string gitIgnorePath = Path.Combine(path, ".gitignore");
+                if (!System.IO.File.Exists(gitIgnorePath))
+                {
+                    string ignoreContent = @"
+bin/
+obj/
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store";
+                    System.IO.File.WriteAllText(gitIgnorePath, ignoreContent);
+                }
+
+                LibGit2Sharp.Repository.Init(path);
+
+                using (var repo = new LibGit2Sharp.Repository(path))
+                {
+                    LibGit2Sharp.Commands.Stage(repo, "*");
+
+                    var author = new Signature(user, user, DateTimeOffset.Now);
+                    repo.Commit($"Gheetah IDE: Initial repository setup for {projectName}", author, author);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logService.LogAsync(User.Identity?.Name ?? "SYSTEM", "Git Init Error", $"Project: {projectName}, Error: {ex.Message}");
             }
         }
     }

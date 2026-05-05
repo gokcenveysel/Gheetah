@@ -1,0 +1,163 @@
+﻿@model Gheetah.Models.EditorModel.InternalPR
+@{
+    ViewData["Title"] = "PR Review #" + Model.PR_Id;
+    var userEmail = User.Identity?.Name;
+}
+
+<div class="page-wrapper">
+    <div class="container-fluid page-content">
+        <div class="card" style="height: calc(100vh - 100px);">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="card-title">
+                        <span class="badge bg-blue-lt me-2">#@Model.PR_Id</span>
+                        @Model.Description
+                    </h3>
+                    <p class="text-muted small mb-0">
+                        Merge request from branch <strong>@Model.SourceBranch</strong> to branch <strong>@Model.TargetBranch</strong>.
+                        <br />Creator: @Model.CreatedBy (@Model.CreatedAt)
+                    </p>
+                </div>
+                <div id="pr-action-zone">
+                    @if (Model.Status == "Open" || Model.Status == "Approved")
+                    {
+                        @if (ViewBag.IsReviewer && Model.Status == "Open")
+                        {
+                            <button class="btn btn-outline-success me-2" onclick="updatePRStatus('Approved')">
+                                <i class="ti ti-check me-1"></i> Approve
+                            </button>
+                            <button class="btn btn-outline-danger me-2" onclick="updatePRStatus('Rejected')">
+                                <i class="ti ti-x me-1"></i> Reject
+                            </button>
+                        }
+
+                        @if (Model.CreatedByEmail == userEmail || ViewBag.IsReviewer)
+                        {
+                            bool hasReviewers = Model.Reviewers != null && Model.Reviewers.Any();
+            
+                            bool isCompleteActive = hasReviewers ? Model.Status == "Approved" : Model.Status == "Open";
+
+                            <button id="btn-complete-pr" class="btn btn-success" 
+                                    @(isCompleteActive ? "" : "disabled")
+                                    onclick="completePR()">
+                                <i class="ti ti-git-merge me-1"></i> Complete Merge
+                            </button>
+            
+                            <button class="btn btn-outline-secondary ms-2" onclick="updatePRStatus('Canceled')">
+                                Cancel PR
+                            </button>
+                        }
+                    }
+                    else if (Model.Status == "Merged")
+                    {
+                        <span class="badge bg-purple-lt fs-3"><i class="ti ti-git-check me-1"></i> Merged</span>
+                    }
+                    else if (Model.Status == "Rejected")
+                    {
+                        <span class="badge bg-danger-lt fs-3"><i class="ti ti-x me-1"></i> Rejected</span>
+                    }
+                </div>
+            </div>
+
+            <div class="row g-0 flex-grow-1" style="overflow: hidden;">
+                <div class="col-3 border-end bg-light overflow-auto">
+                    <div class="list-group list-group-flush" id="pr-file-list">
+                        <div class="p-3 text-center"><span class="spinner-border spinner-border-sm"></span> Files loading...</div>
+                    </div>
+                </div>
+                <div class="col-9 d-flex flex-column">
+                    <div id="diff-editor-container" class="flex-grow-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+    <script>
+        var diffEditor = null;
+        var projectId = "@Model.ProjectId";
+        var sourceBranch = "@Model.SourceBranch";
+        var targetBranch = "@Model.TargetBranch";
+        var prId = "@Model.PR_Id";
+
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+
+        $(document).ready(function () {
+            var prStatus = "@Model.Status"; 
+
+            require(['vs/editor/editor.main'], function () {
+                diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-editor-container'), {
+                    theme: 'vs-light',
+                    automaticLayout: true,
+                    readOnly: true,
+                    renderSideBySide: true
+                });
+
+                if (prStatus === "Merged") {
+                    $('#pr-file-list').html('<div class="p-3 text-info"><i class="ti ti-info-circle me-1"></i> This PR is merged. Source branch is deleted.</div>');
+                    const emptyModel = monaco.editor.createModel("Source branch deleted after merge.", 'text/plain');
+                    diffEditor.setModel({ original: emptyModel, modified: emptyModel });
+                } else {
+                    loadChangedFiles();
+                }
+            });
+        });
+
+        function loadChangedFiles() {
+            $.get('/Editor/GetFilesBetweenBranches', {
+                projectId: projectId,
+                source: sourceBranch,
+                target: targetBranch
+            }, function (files) {
+                let html = '';
+                if (files.length === 0) {
+                    html = '<div class="p-3 text-muted">No changes detected.</div>';
+                } else {
+                    files.forEach((file) => {
+                        let safeFilePath = file.replace(/\\/g, "/");
+                        html += `
+                            <a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="loadDiff('${safeFilePath}')">
+                                <i class="ti ti-file-diff text-warning me-2"></i> ${safeFilePath.split('/').pop()}
+                                <div class="small text-muted text-truncate">${safeFilePath}</div>
+                            </a>`;
+                    });
+                }
+                $('#pr-file-list').html(html);
+                if(files.length > 0) loadDiff(files[0].replace(/\\/g, "/"));
+            });
+        }
+
+        function loadDiff(filePath) {
+            if("@Model.Status" === "Merged") return; 
+
+            $.get('/Editor/GetFileDiffBetweenBranches', {
+                projectId: projectId,
+                filePath: filePath,
+                source: sourceBranch,
+                target: targetBranch
+            }, function (res) {
+                const originalModel = monaco.editor.createModel(res.originalContent, 'csharp');
+                const modifiedModel = monaco.editor.createModel(res.modifiedContent, 'csharp');
+                diffEditor.setModel({ original: originalModel, modified: modifiedModel });
+            }).fail(function() {
+                console.error("Could not load diff. Branch may have been deleted.");
+            });
+        }
+
+        function updatePRStatus(newStatus) {
+            $.post('/Editor/UpdatePRStatus', { prId: prId, status: newStatus }, function () {
+                location.reload();
+            });
+        }
+
+        function completePR() {
+            if(!confirm("Bu işlem dalları birleştirecek ve kaynak dalı silecektir. Onaylıyor musunuz?")) return;
+            $.post('/Editor/CompletePR', { prId: prId }, function (res) {
+                alert(res.message);
+                window.location.href = '/Editor/Index/' + projectId;
+            });
+        }
+    </script>
+}
