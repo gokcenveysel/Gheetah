@@ -509,7 +509,6 @@
         </footer>
     </div>
 
-    <!-- Tabler Core JS -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@1.1.1/dist/js/tabler.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -520,7 +519,11 @@
     <script src="~/js/loader.js"></script>
     <script src="~/js/toast-utils.js"></script>
     <script>
-    // Smooth dropdown behavior
+    $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
+        if (jqXHR.status === 403) {
+            showCustomToast('danger', "Security Alert: Access denied. Your account lacks the necessary permissions for this action.");
+        }
+    });
     document.addEventListener("DOMContentLoaded", function() {
         // Dropdown hover effect
         $('.dropdown-toggle').on('mouseenter', function() {

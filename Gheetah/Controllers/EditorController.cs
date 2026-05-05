@@ -204,48 +204,56 @@ public class EditorController : Controller
                 
             var currentUser = await _userService.GetUserByEmail(userEmail);
             if (currentUser == null) return NotFound("The user was not found in the database.");
+
             try
             {
-                var projects = await _projectService.GetProjectsAsync(); //
-                var project = projects.FirstOrDefault(p => p.Id == projectId); //
-        
-                var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json"); //
-                var projectPath = Path.Combine(clonesRoot, project.Name); //
+                var projects = await _projectService.GetProjectsAsync();
+                var project = projects.FirstOrDefault(p => p.Id == projectId);
 
-                using (var repo = new Repository(projectPath)) //
-                {
-                    string logMessage = "";
-                    var remote = repo.Network.Remotes["origin"]; //
-            
-                    if (remote != null)
-                    {
-                        Commands.Fetch(repo, remote.Name, new string[0], null, null); //
-                        logMessage = "Fetched from remote. ";
-                    }
-
-                    var upstreamBranch = repo.Head.TrackedBranch; //
-                    if (upstreamBranch != null)
-                    {
-                        var result = repo.Merge(upstreamBranch, new Signature(currentUser.FullName, currentUser.Email, DateTimeOffset.Now)); //
+                var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
                 
-                        if (result.Status == MergeStatus.Conflicts) //
-                        {
-                            return Conflict("Merge conflicts detected! Please resolve them manually.");
-                        }
-                        logMessage += $"Merge status: {result.Status}";
-                    }
-                    else
-                    {
-                        logMessage += "No tracked upstream branch found. Local branch is up to date.";
-                    }
+                if (project != null)
+                {
+                    var projectPath = Path.Combine(clonesRoot, project.Name);
 
-                    return Ok(new { success = true, message = logMessage });
+                    using (var repo = new Repository(projectPath))
+                    {
+                        string logMessage = "";
+                        var remote = repo.Network.Remotes["origin"];
+            
+                        if (remote != null)
+                        {
+                            Commands.Fetch(repo, remote.Name, new string[0], null, null);
+                            logMessage = "Fetched from remote. ";
+                        }
+
+                        var upstreamBranch = repo.Head.TrackedBranch;
+                        if (upstreamBranch != null)
+                        {
+                            var result = repo.Merge(upstreamBranch, new Signature(currentUser.FullName, currentUser.Email, DateTimeOffset.Now));
+                
+                            if (result.Status == MergeStatus.Conflicts)
+                            {
+                                return Conflict("Merge conflicts detected! Please resolve them manually.");
+                            }
+                            logMessage += $"Merge status: {result.Status}";
+                        }
+                        else
+                        {
+                            logMessage += "No tracked upstream branch found. Local branch is up to date.";
+                        }
+
+                        return Ok(new { success = true, message = logMessage });
+                    }
                 }
+
+                return NotFound("Project could not be found.");
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Pull failed: {ex.Message}");
             }
+            return BadRequest("An unexpected error occurred during the pull process.");
         }
 
         [HttpGet]
@@ -523,9 +531,38 @@ public class EditorController : Controller
             if (pr == null) return NotFound();
 
             var userEmail = User.Identity?.Name;
+
+            var commentsPath = "internal-pr-comments.json";
+            var allComments = await _fileService.LoadConfigAsync<List<PRComment>>(commentsPath) ?? new List<PRComment>();
+            pr.HasActiveComments = allComments.Any(c => c.PR_Id == id && c.Status == CommentStatus.Active);
+
             ViewBag.IsReviewer = pr.Reviewers.Any(r => r.Equals(userEmail, StringComparison.OrdinalIgnoreCase));
-            
+            ViewBag.IsCreator = pr.CreatedByEmail.Equals(userEmail, StringComparison.OrdinalIgnoreCase);
+    
             return View(pr);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ReactivateComment(string commentId)
+        {
+            var path = "internal-pr-comments.json";
+            var allComments = await _fileService.LoadConfigAsync<List<PRComment>>(path);
+            if (allComments == null) return NotFound();
+
+            var mainComment = allComments.FirstOrDefault(c => c.Id == commentId);
+            if (mainComment != null) {
+                mainComment.Status = CommentStatus.Active;
+
+                var replies = allComments.Where(c => c.ParentId == commentId).ToList();
+                foreach (var reply in replies)
+                {
+                    reply.Status = CommentStatus.Active;
+                }
+
+                await _fileService.SaveConfigAsync(path, allComments);
+                return Ok(new { success = true });
+            }
+            return NotFound();
         }
 
         [HttpPost]
@@ -557,6 +594,14 @@ public class EditorController : Controller
             bool hasReviewers = pr.Reviewers != null && pr.Reviewers.Any();
             bool isApproved = pr.Status == "Approved";
             bool isOpen = pr.Status == "Open";
+
+            var comments = await _fileService.LoadConfigAsync<List<PRComment>>("internal-pr-comments.json");
+            bool hasActiveComments = comments?.Any(c => c.PR_Id == prId && c.Status == CommentStatus.Active) ?? false;
+
+            if (hasActiveComments)
+            {
+                return BadRequest("All comments must be 'Resolved' before merging.");
+            }
 
             if (hasReviewers && !isApproved) 
             {
@@ -603,6 +648,55 @@ public class EditorController : Controller
             {
                 return StatusCode(500, $"Git Merge Error: {ex.Message}");
             }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddPRComment([FromBody] PRComment comment)
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
+
+            var commentsPath = "internal-pr-comments.json";
+            var allComments = await _fileService.LoadConfigAsync<List<PRComment>>(commentsPath) ?? new List<PRComment>();
+    
+            comment.Author = userEmail;
+            allComments.Add(comment);
+    
+            await _fileService.SaveConfigAsync(commentsPath, allComments);
+            return Ok(new { success = true });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPRComments(string prId, string filePath)
+        {
+            var commentsPath = "internal-pr-comments.json";
+            var allComments = await _fileService.LoadConfigAsync<List<PRComment>>(commentsPath) ?? new List<PRComment>();
+    
+            var filtered = allComments.Where(c => c.PR_Id == prId && c.FilePath == filePath).ToList();
+            return Json(filtered);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ResolveComment(string commentId)
+        {
+            var path = "internal-pr-comments.json";
+            var allComments = await _fileService.LoadConfigAsync<List<PRComment>>(path);
+            if (allComments == null) return NotFound();
+
+            var mainComment = allComments.FirstOrDefault(c => c.Id == commentId);
+            if (mainComment != null) 
+            {
+                mainComment.Status = CommentStatus.Resolved;
+
+                var replies = allComments.Where(c => c.ParentId == commentId).ToList();
+                foreach (var reply in replies)
+                {
+                    reply.Status = CommentStatus.Resolved;
+                }
+
+                await _fileService.SaveConfigAsync(path, allComments);
+            }
+            return Ok();
         }
 
         private string FindGitRoot(string filePath)

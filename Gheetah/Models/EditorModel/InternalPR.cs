@@ -15,5 +15,6 @@ public class InternalPR
     public string Description { get; set; }
     public string LastCommitHash { get; set; }
     public string Comment { get; set; }
+    public bool HasActiveComments { get; set; }
 
 }

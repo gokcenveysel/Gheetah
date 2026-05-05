@@ -2,7 +2,69 @@
 @{
     ViewData["Title"] = "PR Review #" + Model.PR_Id;
     var userEmail = User.Identity?.Name;
+    
+    bool isCreator = Model.CreatedByEmail == userEmail; 
 }
+<style>
+    .bg-light-blue { background-color: #f0f7ff; }
+    .border-blue { border-color: #206bc4 !important; }
+    
+    /* Monaco ViewZone Tasarımı - Taşma Sorunları İçin Kesin Çözüm */
+    .comment-zone-container { 
+        background: #ffffff; 
+        border: 1px solid #e6e7e9; 
+        border-radius: 8px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        margin: 5px 10px 5px 45px; /* Satır numaralarından uzaklaştırıldı */
+        z-index: 100;
+        overflow: visible !important;
+        max-width: 600px; /* Sağa doğru sonsuza gitmesini engeller */
+        position: relative;
+    }
+    
+    .comment-input-box {
+        border: 1px solid #dce1e7;
+        border-radius: 4px;
+        padding: 10px;
+        width: 100%;
+        min-height: 80px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        font-size: 13px;
+        resize: none;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .comment-input-box:focus { border-color: #206bc4; }
+
+    .comment-action-bar {
+        padding: 10px 15px;
+        background: #fcfdfe;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+        border-top: 1px solid #f1f3f5;
+    }
+    
+    .comment-header {
+        border-bottom: 1px solid #f1f3f5;
+        padding: 8px 15px;
+        background: #f8f9fa;
+    }
+
+    .resolved-comment { 
+        opacity: 0.8; 
+        background-color: #f8f9fa !important; 
+        border-left: 4px solid #6c757d;
+    }
+
+    /* Butonların kesilmemesi için buton stilleri */
+    .btn-comment-action {
+        font-weight: 500;
+        padding: 4px 12px;
+        font-size: 12px;
+    }
+</style>
 
 <div class="page-wrapper">
     <div class="container-fluid page-content">
@@ -21,40 +83,31 @@
                 <div id="pr-action-zone">
                     @if (Model.Status == "Open" || Model.Status == "Approved")
                     {
-                        @if (ViewBag.IsReviewer && Model.Status == "Open")
+                        @if (isCreator)
+                        {
+                            bool isStatusValid = (Model.Reviewers.Count == 0 || Model.Status == "Approved");
+
+                            <button id="btn-complete-pr" 
+                                    class="btn btn-success @(isStatusValid ? "" : "disabled")" 
+                                    @(isStatusValid ? "" : "disabled") 
+                                    onclick="completePR()">
+                                <i class="ti ti-git-merge me-1"></i> Complete Merge
+                            </button>
+                        }
+
+                        @if (ViewBag.IsReviewer == true && Model.Status == "Open")
                         {
                             <button class="btn btn-outline-success me-2" onclick="updatePRStatus('Approved')">
                                 <i class="ti ti-check me-1"></i> Approve
                             </button>
-                            <button class="btn btn-outline-danger me-2" onclick="updatePRStatus('Rejected')">
+                            <button class="btn btn-outline-danger" onclick="updatePRStatus('Rejected')">
                                 <i class="ti ti-x me-1"></i> Reject
-                            </button>
-                        }
-
-                        @if (Model.CreatedByEmail == userEmail || ViewBag.IsReviewer)
-                        {
-                            bool hasReviewers = Model.Reviewers != null && Model.Reviewers.Any();
-            
-                            bool isCompleteActive = hasReviewers ? Model.Status == "Approved" : Model.Status == "Open";
-
-                            <button id="btn-complete-pr" class="btn btn-success" 
-                                    @(isCompleteActive ? "" : "disabled")
-                                    onclick="completePR()">
-                                <i class="ti ti-git-merge me-1"></i> Complete Merge
-                            </button>
-            
-                            <button class="btn btn-outline-secondary ms-2" onclick="updatePRStatus('Canceled')">
-                                Cancel PR
                             </button>
                         }
                     }
                     else if (Model.Status == "Merged")
                     {
                         <span class="badge bg-purple-lt fs-3"><i class="ti ti-git-check me-1"></i> Merged</span>
-                    }
-                    else if (Model.Status == "Rejected")
-                    {
-                        <span class="badge bg-danger-lt fs-3"><i class="ti ti-x me-1"></i> Rejected</span>
                     }
                 </div>
             </div>
@@ -118,122 +171,260 @@
         var sourceBranch = "@Model.SourceBranch";
         var targetBranch = "@Model.TargetBranch";
         var prId = "@Model.PR_Id";
+        var userEmail = "@userEmail";
+        var currentFilePath = ""; 
+        var currentZoneIds = [];
 
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
 
         $(document).ready(function () {
-            var prStatus = "@Model.Status"; 
-
             require(['vs/editor/editor.main'], function () {
                 diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-editor-container'), {
                     theme: 'vs-light',
                     automaticLayout: true,
-                    readOnly: true,
-                    renderSideBySide: true
+                    readOnly: true, 
+                    renderSideBySide: true,
+                    scrollBeyondLastLine: false,
+                    wordWrap: "on"
                 });
 
-                if (prStatus === "Merged") {
-                    $('#pr-file-list').html('<div class="p-3 text-info"><i class="ti ti-info-circle me-1"></i> This PR is merged. Source branch is deleted.</div>');
-                    const emptyModel = monaco.editor.createModel("Source branch deleted after merge.", 'text/plain');
-                    diffEditor.setModel({ original: emptyModel, modified: emptyModel });
-                } else {
-                    loadChangedFiles();
-                }
+                const modifiedEditor = diffEditor.getModifiedEditor();
+                modifiedEditor.onMouseDown(function (e) {
+                    if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS) {
+                        const lineNumber = e.target.position.lineNumber;
+                        showInlineCommentInput(lineNumber);
+                    }
+                });
+
+                loadChangedFiles();
             });
         });
 
         function loadChangedFiles() {
-            $.get('/Editor/GetFilesBetweenBranches', {
-                projectId: projectId,
-                source: sourceBranch,
-                target: targetBranch
-            }, function (files) {
+            $.get('/Editor/GetFilesBetweenBranches', { projectId: projectId, source: sourceBranch, target: targetBranch }, function (files) {
                 let html = '';
-                if (files.length === 0) {
-                    html = '<div class="p-3 text-muted">No changes detected.</div>';
-                } else {
-                    files.forEach((file) => {
-                        let safeFilePath = file.replace(/\\/g, "/");
-                        html += `
-                            <a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="loadDiff('${safeFilePath}')">
-                                <i class="ti ti-file-diff text-warning me-2"></i> ${safeFilePath.split('/').pop()}
-                                <div class="small text-muted text-truncate">${safeFilePath}</div>
-                            </a>`;
-                    });
-                }
+                files.forEach(file => {
+                    let safePath = file.replace(/\\/g, "/");
+                    html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="loadDiff('${safePath}')">
+                                <i class="ti ti-file-diff text-warning me-2"></i> ${safePath.split('/').pop()}
+                             </a>`;
+                });
                 $('#pr-file-list').html(html);
                 if(files.length > 0) loadDiff(files[0].replace(/\\/g, "/"));
             });
         }
 
         function loadDiff(filePath) {
-            if("@Model.Status" === "Merged") return; 
-
-            $.get('/Editor/GetFileDiffBetweenBranches', {
-                projectId: projectId,
-                filePath: filePath,
-                source: sourceBranch,
-                target: targetBranch
-            }, function (res) {
+            currentFilePath = filePath;
+            $.get('/Editor/GetFileDiffBetweenBranches', { projectId: projectId, filePath: filePath, source: sourceBranch, target: targetBranch }, function (res) {
                 const originalModel = monaco.editor.createModel(res.originalContent, 'csharp');
                 const modifiedModel = monaco.editor.createModel(res.modifiedContent, 'csharp');
                 diffEditor.setModel({ original: originalModel, modified: modifiedModel });
-            }).fail(function() {
-                console.error("Could not load diff. Branch may have been deleted.");
+                renderComments(filePath);
             });
         }
 
-        function updatePRStatus(newStatus) {
-            $.post('/Editor/UpdatePRStatus', { prId: prId, status: newStatus }, function () {
-                location.reload();
+        function showInlineCommentInput(line) {
+            const modifiedEditor = diffEditor.getModifiedEditor();
+            if (currentZoneIds.some(z => z.line === line && z.isInput)) return;
+
+            const domNode = document.createElement('div');
+            domNode.className = "comment-zone-container";
+            domNode.innerHTML = `
+                <div class="comment-header fw-bold small text-primary">New Comment for Line ${line}</div>
+                <div class="p-3">
+                    <textarea id="inline-text-${line}" class="comment-input-box" placeholder="Write your review..."></textarea>
+                </div>
+                <div class="comment-action-bar">
+                    <button class="btn btn-sm btn-link text-muted" onclick="removeZoneByLine(${line})">Cancel</button>
+                    <button class="btn btn-sm btn-primary btn-comment-action" onclick="submitInlineComment(${line})">Send Comment</button>
+                </div>`;
+
+            modifiedEditor.changeViewZones(accessor => {
+                const zoneId = accessor.addZone({
+                    afterLineNumber: line,
+                    heightInLines: 10,
+                    domNode: domNode
+                });
+                currentZoneIds.push({ id: zoneId, line: line, isInput: true });
             });
+            $(`#inline-text-${line}`).focus();
+        }
+
+        function submitInlineComment(line) {
+            const text = $(`#inline-text-${line}`).val();
+            if (text) saveComment(currentFilePath, line, text);
+        }
+
+        function removeZoneByLine(line) {
+            const modifiedEditor = diffEditor.getModifiedEditor();
+            const zones = currentZoneIds.filter(z => z.line === line);
+            modifiedEditor.changeViewZones(accessor => {
+                zones.forEach(z => accessor.removeZone(z.id));
+            });
+            currentZoneIds = currentZoneIds.filter(z => z.line !== line);
+        }
+
+        function renderComments(filePath) {
+            const modifiedEditor = diffEditor.getModifiedEditor();
+    
+            modifiedEditor.changeViewZones(accessor => {
+                currentZoneIds.forEach(z => { try { accessor.removeZone(z.id); } catch(e) {} });
+                currentZoneIds = [];
+            });
+
+            $.get('/Editor/GetPRComments', { prId: prId, filePath: filePath }, function (comments) {
+                if (!comments) return;
+
+                const mainComments = comments.filter(c => !c.parentId);
+        
+                modifiedEditor.changeViewZones(accessor => {
+                    mainComments.forEach(main => {
+                        const replies = comments.filter(r => r.parentId === main.id);
+                        const isResolved = main.status === 1;
+
+                        const domNode = document.createElement('div');
+                        domNode.className = `comment-zone-container ${isResolved ? 'resolved-comment' : ''}`;
+                        domNode.style.width = "550px";
+                
+                        // Buton Mantığı: Resolved ise sadece Reactivate, değilse Resolve + Reply
+                        let actionButtons = '';
+                        if (isResolved) {
+                            actionButtons = `<button class="btn btn-sm btn-outline-secondary" onclick="reactivateComment('${main.id}')">Reactivate</button>`;
+                        } else {
+                            actionButtons = `
+                                <button class="btn btn-sm btn-outline-success" onclick="resolveComment('${main.id}')">Resolve</button>
+                                <button class="btn btn-sm btn-outline-primary" onclick="toggleReply('${main.id}', ${main.lineNumber}, true)">Reply</button>
+                            `;
+                        }
+
+                        domNode.innerHTML = `
+                            <div class="comment-header d-flex justify-content-between align-items-center">
+                                <span class="fw-bold small text-dark">${main.author}</span>
+                                ${isResolved ? '<span class="text-muted small italic"><i class="ti ti-check"></i> Resolved</span>' : ''}
+                            </div>
+                            <div class="p-3">
+                                <div class="small text-dark mb-2" style="white-space: pre-wrap;">${main.content}</div>
+                                <div id="replies-list-${main.id}">
+                                    ${replies.map(r => `
+                                        <div class="ms-3 border-start ps-3 mb-2 small text-muted">
+                                            <div class="fw-bold" style="font-size:11px;">${r.author}</div>
+                                            <div>${r.content}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <div id="reply-area-${main.id}" style="display:none;" class="mt-2">
+                                    <textarea id="reply-text-${main.id}" class="comment-input-box mb-2" style="min-height:60px;"></textarea>
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="btn btn-xs btn-link" onclick="toggleReply('${main.id}', ${main.lineNumber}, false)">Cancel</button>
+                                        <button class="btn btn-xs btn-primary" onclick="submitReply('${main.id}', ${main.lineNumber})">Send</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="comment-action-bar">
+                                ${actionButtons}
+                            </div>`;
+
+                        let baseLines = 7 + (replies.length * 2.5);
+                        const zoneId = accessor.addZone({
+                            afterLineNumber: main.lineNumber,
+                            heightInLines: baseLines,
+                            domNode: domNode
+                        });
+
+                        currentZoneIds.push({ id: zoneId, line: main.lineNumber, domNode: domNode, baseLines: baseLines, parentId: main.id });
+                    });
+                });
+
+                // KRİTİK: Butonun durumunu her render'da kontrol et
+                checkPRCompletionStatus(comments);
+            });
+        }
+
+        function reactivateComment(id) {
+            $.post('/Editor/ReactivateComment', { commentId: id }, function() { 
+                renderComments(currentFilePath); 
+            });
+        }
+
+        function toggleReply(parentId, line, show) {
+            const modifiedEditor = diffEditor.getModifiedEditor();
+            const zoneObj = currentZoneIds.find(z => z.parentId === parentId);
+    
+            if (!zoneObj) return;
+
+            // Önce DOM değişikliğini yap
+            const replyArea = zoneObj.domNode.querySelector(`#reply-area-${parentId}`);
+            if (replyArea) replyArea.style.display = show ? 'block' : 'none';
+
+            // Monaco Zone yüksekliğini güncelle (Hata almamak için güvenli yöntem)
+            modifiedEditor.changeViewZones(accessor => {
+                accessor.removeZone(zoneObj.id);
+                const newHeight = show ? zoneObj.baseLines + 7 : zoneObj.baseLines;
+        
+                const newId = accessor.addZone({
+                    afterLineNumber: line,
+                    heightInLines: newHeight,
+                    domNode: zoneObj.domNode
+                });
+                zoneObj.id = newId;
+            });
+
+            if (show) {
+                setTimeout(() => {
+                    const txt = document.getElementById(`reply-text-${parentId}`);
+                    if (txt) txt.focus();
+                }, 50);
+            }
+        }
+
+        function saveComment(path, line, text) {
+            $.ajax({
+                url: '/Editor/AddPRComment', type: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ PR_Id: prId, FilePath: path, LineNumber: parseInt(line), Content: text }),
+                success: function() { renderComments(path); }
+            });
+        }
+
+        function submitReply(parentId, line) {
+            const text = $(`#reply-text-${parentId}`).val();
+            if (text) {
+                $.ajax({
+                    url: '/Editor/AddPRComment', type: 'POST', contentType: 'application/json',
+                    data: JSON.stringify({ PR_Id: prId, FilePath: currentFilePath, LineNumber: parseInt(line), Content: text, ParentId: parentId }),
+                    success: function() { renderComments(currentFilePath); }
+                });
+            }
+        }
+
+        function resolveComment(id) {
+            $.post('/Editor/ResolveComment', { commentId: id }, function() { renderComments(currentFilePath); });
+        }
+
+        function updatePRStatus(s) { $.post('/Editor/UpdatePRStatus', { prId: prId, status: s }, () => location.reload()); }
+        
+        function checkPRCompletionStatus(comments) {
+            const btn = $('#btn-complete-pr');
+            if (btn.length === 0) return;
+
+            const isApproved = "@Model.Status" === "Approved";
+            const hasReviewers = @(Model.Reviewers.Count > 0 ? "true" : "false");
+    
+            const hasActive = comments.some(c => c.status === 0);
+
+            const shouldEnable = !hasActive && (!hasReviewers || isApproved);
+
+            if (shouldEnable) {
+                btn.prop('disabled', false).removeAttr('disabled').removeClass('disabled');
+            } else {
+                btn.prop('disabled', true).attr('disabled', 'disabled').addClass('disabled');
+            }
         }
 
         function completePR() {
-            // MODAL GÜNCELLEMESİ: confirm yerine showConfirm
-            showConfirm(
-                "Merge Operation",
-                "This operation will merge the branches and delete the source branch. Do you approve?", 
-                function() {
-                    const btn = $('#btn-complete-pr');
-                    const originalHtml = btn.html();
-                    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Processing...');
-
-                    $.post('/Editor/CompletePR', { prId: prId }, function (res) {
-                        showAlert("Transaction Successful", res.message, "success", function() {
-                            window.location.href = '/Editor/Index/' + projectId;
-                        });
-                    }).fail(function(err) {
-                        showAlert("Error", "Merge operation failed: " + err.responseText, "danger");
-                        btn.prop('disabled', false).html(originalHtml);
-                    });
-                }
-            );
-        }
-
-        function showConfirm(title, message, onConfirm) {
-            $('#confirm-title').text(title);
-            $('#confirm-text').text(message);
-            $('#confirm-yes-btn').off('click').one('click', function () {
-                onConfirm();
+            $.post('/Editor/CompletePR', { prId: prId }, function (res) {
+                window.location.href = '/Editor/Index/' + projectId;
             });
-            new bootstrap.Modal(document.getElementById('modal-confirm')).show();
-        }
-
-        function showAlert(title, message, type = 'info', onClose = null) {
-            $('#alert-title').text(title);
-            $('#alert-text').text(message);
-            const iconMap = { 'success': 'ti-check', 'danger': 'ti-x', 'warning': 'ti-alert-triangle', 'info': 'ti-info-circle' };
-            $('#alert-icon').attr('class', `ti ${iconMap[type] || 'ti-info-circle'} fs-1 text-${type} mb-2`);
-    
-            var alertElement = document.getElementById('modal-alert');
-            var alertModal = new bootstrap.Modal(alertElement);
-    
-            if (onClose) {
-                $(alertElement).off('hidden.bs.modal').one('hidden.bs.modal', onClose);
-            }
-    
-            alertModal.show();
         }
     </script>
 }
