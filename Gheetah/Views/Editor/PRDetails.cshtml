@@ -2,197 +2,230 @@
 @{
     ViewData["Title"] = "PR Review #" + Model.PR_Id;
     var userEmail = User.Identity?.Name;
-    
-    bool isCreator = Model.CreatedByEmail == userEmail; 
+    bool isCreator = Model.CreatedByEmail == userEmail;
+    bool isReviewer = ViewBag.IsReviewer == true && Model.Status == "Open";
 }
+
 <style>
-    .bg-light-blue { background-color: #f0f7ff; }
-    .border-blue { border-color: #206bc4 !important; }
-    
-    /* Monaco ViewZone Tasarımı - Taşma Sorunları İçin Kesin Çözüm */
-    .comment-zone-container { 
-        background: #ffffff; 
-        border: 1px solid #e6e7e9; 
-        border-radius: 8px; 
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        margin: 5px 10px 5px 45px; /* Satır numaralarından uzaklaştırıldı */
-        z-index: 100;
-        overflow: visible !important;
-        max-width: 600px; /* Sağa doğru sonsuza gitmesini engeller */
+    /* Azure Tarzı Sekme Tasarımı */
+    .pr-tabs .nav-link {
+        border: none;
+        color: #616e7e;
+        font-weight: 500;
+        padding: 12px 20px;
         position: relative;
     }
-    
-    .comment-input-box {
+
+        .pr-tabs .nav-link.active {
+            color: #206bc4;
+            background: transparent;
+            font-weight: 600;
+        }
+
+            .pr-tabs .nav-link.active::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: #206bc4;
+            }
+
+    .comment-hint-glyph {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23206bc4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        cursor: pointer;
+    }
+
+    .comment-zone-container {
+        background: #ffffff;
         border: 1px solid #dce1e7;
-        border-radius: 4px;
-        padding: 10px;
-        width: 100%;
-        min-height: 80px;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin: 5px 15px 5px 0px;
+        z-index: 2000 !important;
+        pointer-events: all !important;
+        overflow: hidden;
+        height: 130px !important;
+    }
+
+    #draft-text {
+        height: 75px !important;
         font-size: 13px;
         resize: none;
-        outline: none;
-        transition: border-color 0.2s;
     }
-    .comment-input-box:focus { border-color: #206bc4; }
 
-    .comment-action-bar {
-        padding: 10px 15px;
-        background: #fcfdfe;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 12px;
-        border-top: 1px solid #f1f3f5;
+    .comment-zone-container textarea {
+        background: white !important;
+        color: black !important;
+        cursor: text !important;
     }
-    
+
     .comment-header {
-        border-bottom: 1px solid #f1f3f5;
-        padding: 8px 15px;
-        background: #f8f9fa;
+        background: #f6f8fa;
+        padding: 8px 12px;
+        border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
 
-    .resolved-comment { 
-        opacity: 0.8; 
-        background-color: #f8f9fa !important; 
-        border-left: 4px solid #6c757d;
+    .list-group-item-action.active {
+        background-color: #e7f0fb !important;
+        color: #206bc4 !important;
+        border-right: 4px solid #206bc4 !important;
+        font-weight: 600;
     }
 
-    /* Butonların kesilmemesi için buton stilleri */
-    .btn-comment-action {
-        font-weight: 500;
-        padding: 4px 12px;
-        font-size: 12px;
-    }
 </style>
 
 <div class="page-wrapper">
-    <div class="container-fluid page-content">
-        <div class="card" style="height: calc(100vh - 100px);">
-            <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center my-3 p-2 bg-white border rounded shadow-sm">
+            <div class="d-flex align-items-center">
+                <span class="avatar avatar-md me-3" style="background-image: url(https://ui-avatars.com/api/?name=@Model.CreatedByEmail&background=random)"></span>
                 <div>
-                    <h3 class="card-title">
-                        <span class="badge bg-blue-lt me-2">#@Model.PR_Id</span>
-                        @Model.Description
-                    </h3>
-                    <p class="text-muted small mb-0">
-                        Merge request from branch <strong>@Model.SourceBranch</strong> to branch <strong>@Model.TargetBranch</strong>.
-                        <br />Creator: @Model.CreatedBy (@Model.CreatedAt)
-                    </p>
-                </div>
-                <div id="pr-action-zone">
-                    @if (Model.Status == "Open" || Model.Status == "Approved")
-                    {
-                        @if (isCreator)
-                        {
-                            bool isStatusValid = (Model.Reviewers.Count == 0 || Model.Status == "Approved");
-
-                            <button id="btn-complete-pr" 
-                                    class="btn btn-success @(isStatusValid ? "" : "disabled")" 
-                                    @(isStatusValid ? "" : "disabled") 
-                                    onclick="completePR()">
-                                <i class="ti ti-git-merge me-1"></i> Complete Merge
-                            </button>
-                        }
-
-                        @if (ViewBag.IsReviewer == true && Model.Status == "Open")
-                        {
-                            <button class="btn btn-outline-success me-2" onclick="updatePRStatus('Approved')">
-                                <i class="ti ti-check me-1"></i> Approve
-                            </button>
-                            <button class="btn btn-outline-danger" onclick="updatePRStatus('Rejected')">
-                                <i class="ti ti-x me-1"></i> Reject
-                            </button>
-                        }
-                    }
-                    else if (Model.Status == "Merged")
-                    {
-                        <span class="badge bg-purple-lt fs-3"><i class="ti ti-git-check me-1"></i> Merged</span>
-                    }
-                </div>
-            </div>
-
-            <div class="row g-0 flex-grow-1" style="overflow: hidden;">
-                <div class="col-3 border-end bg-light overflow-auto">
-                    <div class="list-group list-group-flush" id="pr-file-list">
-                        <div class="p-3 text-center"><span class="spinner-border spinner-border-sm"></span> Files loading...</div>
+                    <h2 class="h2 mb-0">@Model.Title</h2>
+                    <div class="text-muted small">
+                        <span class="badge bg-blue-lt me-1">#@Model.PR_Id</span>
+                        <strong>@Model.CreatedBy</strong> wants to merge <code>@Model.SourceBranch</code> into <code>@Model.TargetBranch</code>
                     </div>
                 </div>
-                <div class="col-9 d-flex flex-column">
-                    <div id="diff-editor-container" class="flex-grow-1"></div>
+            </div>
+            <div id="pr-action-zone" class="d-flex gap-2">
+                @if (isReviewer)
+                {
+                    <button class="btn btn-outline-success" onclick="updatePRStatus('Approved')">
+                        <i class="ti ti-check me-1"></i> Approve
+                    </button>
+                    <button class="btn btn-outline-danger" onclick="updatePRStatus('Rejected')">
+                        <i class="ti ti-x me-1"></i> Reject
+                    </button>
+                }
+
+                @if (isCreator)
+                {
+                    <button id="btn-complete-pr" class="btn btn-success" onclick="completePR()" disabled>
+                        <i class="ti ti-git-merge me-1"></i> Complete Merge
+                    </button>
+                }
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs pr-tabs border-bottom mb-0">
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#overview">Overview</a></li>
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#files">Files</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#updates">Updates</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#conflicts">Conflicts</a></li>
+        </ul>
+
+        <div class="tab-content border border-top-0 bg-white" style="height: calc(100vh - 210px);">
+            <div class="tab-pane fade show active h-100" id="files">
+                <div class="row g-0 h-100">
+                    <div class="col-3 border-end overflow-auto h-100 bg-light">
+                        <div class="p-2 fw-bold text-muted small border-bottom bg-white d-flex justify-content-between">
+                            <span>CHANGED FILES</span>
+                            <span class="badge bg-blue-lt" id="file-count">0</span>
+                        </div>
+                        <div id="pr-file-list" class="list-group list-group-flush"></div>
+                    </div>
+                    <div class="col-9 h-100 position-relative">
+                        <div id="diff-container" style="height: 100%;"></div>
+                    </div>
                 </div>
             </div>
+            <div class="tab-pane fade h-100 overflow-auto" id="overview"><div class="p-4">Overview (Sprint 4)</div></div>
+            <div class="tab-pane fade h-100 overflow-auto" id="updates"><div class="p-4">Updates</div></div>
+            <div class="tab-pane fade h-100 overflow-auto" id="conflicts"><div class="p-4">Conflicts</div></div>
         </div>
     </div>
 </div>
-<div class="modal modal-blur fade" id="modal-confirm" tabindex="-1" role="dialog" aria-hidden="true">
+
+<div class="modal modal-blur fade" id="modal-confirm" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
         <div class="modal-content">
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            <div class="modal-status bg-warning"></div>
             <div class="modal-body text-center py-4">
                 <i class="ti ti-alert-triangle fs-1 text-warning mb-2"></i>
                 <h3 id="confirm-title">Are you sure?</h3>
                 <div id="confirm-text" class="text-muted"></div>
             </div>
             <div class="modal-footer">
-                <div class="w-100">
-                    <div class="row">
-                        <div class="col"><a href="#" class="btn w-100" data-bs-dismiss="modal">Decline</a></div>
-                        <div class="col"><a href="#" id="confirm-yes-btn" class="btn btn-warning w-100" data-bs-dismiss="modal">YES</a></div>
-                    </div>
-                </div>
+                <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-yes-btn">Yes, proceed</button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal modal-blur fade" id="modal-alert" tabindex="-1" role="dialog" aria-hidden="true">
+<div class="modal modal-blur fade" id="modal-alert" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-body text-center py-4">
-                <i id="alert-icon" class="ti ti-info-circle fs-1 text-info mb-2"></i>
-                <h3 id="alert-title">Bilgi</h3>
+                <i id="alert-icon" class="ti ti-info-circle fs-1 mb-2"></i>
+                <h3 id="alert-title">Notification</h3>
                 <div id="alert-text" class="text-muted"></div>
             </div>
             <div class="modal-footer">
-                <div class="w-100">
-                    <a href="#" class="btn btn-primary w-100" data-bs-dismiss="modal">OK</a>
-                </div>
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">OK</button>
             </div>
         </div>
     </div>
 </div>
+
 @section Scripts {
+    <script>
+        var existingDefine = window.define;
+        window.define = null;
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
     <script>
-        var diffEditor = null;
+        var monacoRequire = window.require;
+        if (existingDefine) window.define = existingDefine;
+
+        monacoRequire.config({
+            paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' },
+            'vs/nls': { availableLanguages: { '*': '' } }
+        });
+    </script>
+
+    <script>
         var projectId = "@Model.ProjectId";
         var sourceBranch = "@Model.SourceBranch";
         var targetBranch = "@Model.TargetBranch";
         var prId = "@Model.PR_Id";
-        var userEmail = "@userEmail";
-        var currentFilePath = ""; 
+        var diffEditor = null;
+        var currentFilePath = "";
         var currentZoneIds = [];
-
-        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
+        var hoverDecorations = [];
 
         $(document).ready(function () {
-            require(['vs/editor/editor.main'], function () {
-                diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-editor-container'), {
-                    theme: 'vs-light',
+            monacoRequire(['vs/editor/editor.main'], function () {
+                diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-container'), {
+                    theme: 'vs',
                     automaticLayout: true,
-                    readOnly: true, 
-                    renderSideBySide: true,
-                    scrollBeyondLastLine: false,
-                    wordWrap: "on"
+                    readOnly: true,
+                    glyphMargin: true,
+                    renderSideBySide: true
                 });
 
                 const modifiedEditor = diffEditor.getModifiedEditor();
+
+                modifiedEditor.onMouseMove(function (e) {
+                    if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS || e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+                        const line = e.target.position.lineNumber;
+                        const newDecorations = [{
+                            range: new monaco.Range(line, 1, line, 1),
+                            options: { glyphMarginClassName: 'comment-hint-glyph' }
+                        }];
+                        hoverDecorations = modifiedEditor.deltaDecorations(hoverDecorations, newDecorations);
+                    }
+                });
+
                 modifiedEditor.onMouseDown(function (e) {
-                    if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS) {
-                        const lineNumber = e.target.position.lineNumber;
-                        showInlineCommentInput(lineNumber);
+                    if (e.target.element && e.target.element.className.includes('comment-hint-glyph')) {
+                        showCommentInput(e.target.position.lineNumber);
                     }
                 });
 
@@ -202,229 +235,161 @@
 
         function loadChangedFiles() {
             $.get('/Editor/GetFilesBetweenBranches', { projectId: projectId, source: sourceBranch, target: targetBranch }, function (files) {
+                $('#file-count').text(files.length);
                 let html = '';
                 files.forEach(file => {
                     let safePath = file.replace(/\\/g, "/");
-                    html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="loadDiff('${safePath}')">
+                    html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="loadDiff('${safePath}', this)">
                                 <i class="ti ti-file-diff text-warning me-2"></i> ${safePath.split('/').pop()}
                              </a>`;
                 });
                 $('#pr-file-list').html(html);
-                if(files.length > 0) loadDiff(files[0].replace(/\\/g, "/"));
+                if(files.length > 0) loadDiff(files[0].replace(/\\/g, "/"), $('#pr-file-list a').first());
             });
         }
 
-        function loadDiff(filePath) {
+        function loadDiff(filePath, element) {
+            $('.list-group-item').removeClass('active');
+            $(element).addClass('active');
             currentFilePath = filePath;
             $.get('/Editor/GetFileDiffBetweenBranches', { projectId: projectId, filePath: filePath, source: sourceBranch, target: targetBranch }, function (res) {
-                const originalModel = monaco.editor.createModel(res.originalContent, 'csharp');
-                const modifiedModel = monaco.editor.createModel(res.modifiedContent, 'csharp');
-                diffEditor.setModel({ original: originalModel, modified: modifiedModel });
+                diffEditor.setModel({
+                    original: monaco.editor.createModel(res.originalContent, 'csharp'),
+                    modified: monaco.editor.createModel(res.modifiedContent, 'csharp')
+                });
                 renderComments(filePath);
             });
         }
 
-        function showInlineCommentInput(line) {
-            const modifiedEditor = diffEditor.getModifiedEditor();
-            if (currentZoneIds.some(z => z.line === line && z.isInput)) return;
-
-            const domNode = document.createElement('div');
-            domNode.className = "comment-zone-container";
-            domNode.innerHTML = `
-                <div class="comment-header fw-bold small text-primary">New Comment for Line ${line}</div>
-                <div class="p-3">
-                    <textarea id="inline-text-${line}" class="comment-input-box" placeholder="Write your review..."></textarea>
-                </div>
-                <div class="comment-action-bar">
-                    <button class="btn btn-sm btn-link text-muted" onclick="removeZoneByLine(${line})">Cancel</button>
-                    <button class="btn btn-sm btn-primary btn-comment-action" onclick="submitInlineComment(${line})">Send Comment</button>
-                </div>`;
-
-            modifiedEditor.changeViewZones(accessor => {
-                const zoneId = accessor.addZone({
-                    afterLineNumber: line,
-                    heightInLines: 10,
-                    domNode: domNode
-                });
-                currentZoneIds.push({ id: zoneId, line: line, isInput: true });
-            });
-            $(`#inline-text-${line}`).focus();
-        }
-
-        function submitInlineComment(line) {
-            const text = $(`#inline-text-${line}`).val();
-            if (text) saveComment(currentFilePath, line, text);
-        }
-
-        function removeZoneByLine(line) {
-            const modifiedEditor = diffEditor.getModifiedEditor();
-            const zones = currentZoneIds.filter(z => z.line === line);
-            modifiedEditor.changeViewZones(accessor => {
-                zones.forEach(z => accessor.removeZone(z.id));
-            });
-            currentZoneIds = currentZoneIds.filter(z => z.line !== line);
-        }
-
         function renderComments(filePath) {
-            const modifiedEditor = diffEditor.getModifiedEditor();
-    
-            modifiedEditor.changeViewZones(accessor => {
-                currentZoneIds.forEach(z => { try { accessor.removeZone(z.id); } catch(e) {} });
+            const editor = diffEditor.getModifiedEditor();
+            editor.changeViewZones(accessor => {
+                currentZoneIds.forEach(z => accessor.removeZone(z.id));
                 currentZoneIds = [];
             });
 
             $.get('/Editor/GetPRComments', { prId: prId, filePath: filePath }, function (comments) {
-                if (!comments) return;
-
-                const mainComments = comments.filter(c => !c.parentId);
-        
-                modifiedEditor.changeViewZones(accessor => {
-                    mainComments.forEach(main => {
-                        const replies = comments.filter(r => r.parentId === main.id);
-                        const isResolved = main.status === 1;
-
-                        const domNode = document.createElement('div');
-                        domNode.className = `comment-zone-container ${isResolved ? 'resolved-comment' : ''}`;
-                        domNode.style.width = "550px";
-                
-                        // Buton Mantığı: Resolved ise sadece Reactivate, değilse Resolve + Reply
-                        let actionButtons = '';
-                        if (isResolved) {
-                            actionButtons = `<button class="btn btn-sm btn-outline-secondary" onclick="reactivateComment('${main.id}')">Reactivate</button>`;
-                        } else {
-                            actionButtons = `
-                                <button class="btn btn-sm btn-outline-success" onclick="resolveComment('${main.id}')">Resolve</button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="toggleReply('${main.id}', ${main.lineNumber}, true)">Reply</button>
-                            `;
-                        }
-
-                        domNode.innerHTML = `
-                            <div class="comment-header d-flex justify-content-between align-items-center">
-                                <span class="fw-bold small text-dark">${main.author}</span>
-                                ${isResolved ? '<span class="text-muted small italic"><i class="ti ti-check"></i> Resolved</span>' : ''}
+                editor.changeViewZones(accessor => {
+                    comments.filter(c => !c.parentId).forEach(c => {
+                        const node = document.createElement('div');
+                        node.className = "comment-zone-container";
+                        node.innerHTML = `
+                            <div class="comment-header">
+                                <div><strong>${c.author}</strong></div>
+                                <select class="form-select form-select-sm w-auto py-0" onchange="resolveComment('${c.id}')">
+                                    <option value="0" ${c.status === 0 ? 'selected' : ''}>Active</option>
+                                    <option value="1" ${c.status === 1 ? 'selected' : ''}>Resolved</option>
+                                </select>
                             </div>
-                            <div class="p-3">
-                                <div class="small text-dark mb-2" style="white-space: pre-wrap;">${main.content}</div>
-                                <div id="replies-list-${main.id}">
-                                    ${replies.map(r => `
-                                        <div class="ms-3 border-start ps-3 mb-2 small text-muted">
-                                            <div class="fw-bold" style="font-size:11px;">${r.author}</div>
-                                            <div>${r.content}</div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                                <div id="reply-area-${main.id}" style="display:none;" class="mt-2">
-                                    <textarea id="reply-text-${main.id}" class="comment-input-box mb-2" style="min-height:60px;"></textarea>
-                                    <div class="d-flex justify-content-end gap-2">
-                                        <button class="btn btn-xs btn-link" onclick="toggleReply('${main.id}', ${main.lineNumber}, false)">Cancel</button>
-                                        <button class="btn btn-xs btn-primary" onclick="submitReply('${main.id}', ${main.lineNumber})">Send</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="comment-action-bar">
-                                ${actionButtons}
-                            </div>`;
-
-                        let baseLines = 7 + (replies.length * 2.5);
-                        const zoneId = accessor.addZone({
-                            afterLineNumber: main.lineNumber,
-                            heightInLines: baseLines,
-                            domNode: domNode
-                        });
-
-                        currentZoneIds.push({ id: zoneId, line: main.lineNumber, domNode: domNode, baseLines: baseLines, parentId: main.id });
+                            <div class="p-3">${c.content}</div>`;
+                        const zoneId = accessor.addZone({ afterLineNumber: c.lineNumber, heightInLines: 6, domNode: node });
+                        currentZoneIds.push({ id: zoneId });
                     });
                 });
-
-                // KRİTİK: Butonun durumunu her render'da kontrol et
                 checkPRCompletionStatus(comments);
             });
         }
 
-        function reactivateComment(id) {
-            $.post('/Editor/ReactivateComment', { commentId: id }, function() { 
-                renderComments(currentFilePath); 
-            });
-        }
+        function showCommentInput(line) {
+            removeDraftZones();
+            const node = document.createElement('div');
+            node.className = "comment-zone-container p-2"; // Padding'i p-3'ten p-2'ye çektik
 
-        function toggleReply(parentId, line, show) {
-            const modifiedEditor = diffEditor.getModifiedEditor();
-            const zoneObj = currentZoneIds.find(z => z.parentId === parentId);
-    
-            if (!zoneObj) return;
+            node.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <span class="avatar avatar-sm me-2" style="background-image: url(https://ui-avatars.com/api/?name=@userEmail)"></span>
+                    <div class="flex-grow-1">
+                        <textarea id="draft-text" class="form-control mb-2" placeholder="Write a comment..."></textarea>
+                        <div class="d-flex justify-content-end gap-2 pb-1">
+                            <button class="btn btn-sm btn-link py-0" onclick="removeDraftZones()">Cancel</button>
+                            <button class="btn btn-sm btn-primary py-1" id="btn-submit-comment">Comment</button>
+                        </div>
+                    </div>
+                </div>`;
 
-            // Önce DOM değişikliğini yap
-            const replyArea = zoneObj.domNode.querySelector(`#reply-area-${parentId}`);
-            if (replyArea) replyArea.style.display = show ? 'block' : 'none';
+            const textarea = node.querySelector('textarea');
+            textarea.addEventListener('mousedown', (e) => e.stopPropagation());
+            textarea.addEventListener('keydown', (e) => e.stopPropagation());
 
-            // Monaco Zone yüksekliğini güncelle (Hata almamak için güvenli yöntem)
-            modifiedEditor.changeViewZones(accessor => {
-                accessor.removeZone(zoneObj.id);
-                const newHeight = show ? zoneObj.baseLines + 7 : zoneObj.baseLines;
-        
-                const newId = accessor.addZone({
+            const submitBtn = node.querySelector('#btn-submit-comment');
+            submitBtn.onclick = function() { addComment(line); };
+
+            diffEditor.getModifiedEditor().changeViewZones(accessor => {
+                const zoneId = accessor.addZone({
                     afterLineNumber: line,
-                    heightInLines: newHeight,
-                    domNode: zoneObj.domNode
+                    heightInLines: 12,
+                    domNode: node,
+                    suppressMouseDown: false
                 });
-                zoneObj.id = newId;
+                currentZoneIds.push({ id: zoneId, isDraft: true });
             });
 
-            if (show) {
-                setTimeout(() => {
-                    const txt = document.getElementById(`reply-text-${parentId}`);
-                    if (txt) txt.focus();
-                }, 50);
-            }
+            setTimeout(() => {
+                const viewZoneElement = node.closest('.view-zones');
+                if (viewZoneElement) {
+                    viewZoneElement.removeAttribute('aria-hidden');
+                }
+                textarea.focus();
+            }, 50);
         }
 
-        function saveComment(path, line, text) {
+        function addComment(line) {
+            const text = $('#draft-text').val();
+            if(!text) return;
             $.ajax({
                 url: '/Editor/AddPRComment', type: 'POST', contentType: 'application/json',
-                data: JSON.stringify({ PR_Id: prId, FilePath: path, LineNumber: parseInt(line), Content: text }),
-                success: function() { renderComments(path); }
+                data: JSON.stringify({ PR_Id: prId, FilePath: currentFilePath, LineNumber: parseInt(line), Content: text }),
+                success: function() { renderComments(currentFilePath); }
             });
         }
 
-        function submitReply(parentId, line) {
-            const text = $(`#reply-text-${parentId}`).val();
-            if (text) {
-                $.ajax({
-                    url: '/Editor/AddPRComment', type: 'POST', contentType: 'application/json',
-                    data: JSON.stringify({ PR_Id: prId, FilePath: currentFilePath, LineNumber: parseInt(line), Content: text, ParentId: parentId }),
-                    success: function() { renderComments(currentFilePath); }
-                });
-            }
+        function removeDraftZones() {
+            diffEditor.getModifiedEditor().changeViewZones(accessor => {
+                currentZoneIds.filter(z => z.isDraft).forEach(z => accessor.removeZone(z.id));
+            });
+            currentZoneIds = currentZoneIds.filter(z => !z.isDraft);
         }
 
         function resolveComment(id) {
             $.post('/Editor/ResolveComment', { commentId: id }, function() { renderComments(currentFilePath); });
         }
 
-        function updatePRStatus(s) { $.post('/Editor/UpdatePRStatus', { prId: prId, status: s }, () => location.reload()); }
-        
+        function updatePRStatus(s) {
+            $.post('/Editor/UpdatePRStatus', { prId: prId, status: s }, () => location.reload());
+        }
+
         function checkPRCompletionStatus(comments) {
             const btn = $('#btn-complete-pr');
             if (btn.length === 0) return;
-
             const isApproved = "@Model.Status" === "Approved";
             const hasReviewers = @(Model.Reviewers.Count > 0 ? "true" : "false");
-    
             const hasActive = comments.some(c => c.status === 0);
-
             const shouldEnable = !hasActive && (!hasReviewers || isApproved);
-
-            if (shouldEnable) {
-                btn.prop('disabled', false).removeAttr('disabled').removeClass('disabled');
-            } else {
-                btn.prop('disabled', true).attr('disabled', 'disabled').addClass('disabled');
-            }
+            btn.prop('disabled', !shouldEnable);
         }
 
         function completePR() {
-            $.post('/Editor/CompletePR', { prId: prId }, function (res) {
-                window.location.href = '/Editor/Index/' + projectId;
+            showConfirm("Complete Merge", "Confirm to merge branches and close this PR.", function() {
+                $.post('/Editor/CompletePR', { prId: prId }, function() {
+                    showAlert("Success", "Merged successfully!", "success", () => window.location.href='/Editor/Index/@Model.ProjectId');
+                });
             });
+        }
+
+        function showConfirm(title, message, onConfirm) {
+            $('#confirm-title').text(title); $('#confirm-text').text(message);
+            const modal = new bootstrap.Modal(document.getElementById('modal-confirm'));
+            $('#confirm-yes-btn').off('click').one('click', function() { modal.hide(); onConfirm(); });
+            modal.show();
+        }
+
+        function showAlert(title, message, type, onClose) {
+            $('#alert-title').text(title); $('#alert-text').text(message);
+            $('#alert-icon').attr('class', type === 'success' ? 'ti ti-check fs-1 text-success' : 'ti ti-alert-circle fs-1 text-danger');
+            const modalEl = document.getElementById('modal-alert');
+            const modal = new bootstrap.Modal(modalEl);
+            if(onClose) $(modalEl).off('hidden.bs.modal').one('hidden.bs.modal', onClose);
+            modal.show();
         }
     </script>
 }
