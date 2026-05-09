@@ -407,24 +407,23 @@ public class EditorController : Controller
 
             try
             {
-                prRequest.PR_Id = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper(); 
+                prRequest.PR_Id = Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper();
                 prRequest.CreatedBy = currentUser.FullName;
                 prRequest.CreatedByEmail = currentUser.Email;
                 prRequest.CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 prRequest.Status = "Open";
+                prRequest.Title = $"{prRequest.SourceBranch} → {prRequest.TargetBranch}";
 
                 await CreateInternalPullRequest(prRequest);
 
                 var historyPath = "internal-push-history.json";
                 var history = await _fileService.LoadConfigAsync<List<PushHistory>>(historyPath);
-                
                 if (history != null)
                 {
-                    var targetPush = history.FirstOrDefault(h => 
-                        h.ProjectId == prRequest.ProjectId && 
-                        h.BranchName == prRequest.SourceBranch && 
+                    var targetPush = history.FirstOrDefault(h =>
+                        h.ProjectId == prRequest.ProjectId &&
+                        h.BranchName == prRequest.SourceBranch &&
                         h.CommitHash == prRequest.LastCommitHash);
-
                     if (targetPush != null)
                     {
                         targetPush.HasPR = true;
@@ -432,9 +431,69 @@ public class EditorController : Controller
                     }
                 }
 
-                return Ok(new { 
-                    success = true, 
-                    message = $"Pull Request #{prRequest.PR_Id} has been successfully created." 
+                try
+                {
+                    var projects = await _projectService.GetProjectsAsync();
+                    var project = projects.FirstOrDefault(p => p.Id == prRequest.ProjectId);
+                    if (project != null)
+                    {
+                        var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+                        var projectPath = Path.Combine(clonesRoot, project.Name);
+                        if (Repository.IsValid(projectPath))
+                        {
+                            using (var repo = new Repository(projectPath))
+                            {
+                                var sourceBranch = repo.Branches[prRequest.SourceBranch];
+                                var targetBranch = repo.Branches[prRequest.TargetBranch] ?? repo.Branches["main"];
+                                if (sourceBranch != null && targetBranch != null)
+                                {
+                                    var changes = repo.Diff.Compare<TreeChanges>(targetBranch.Tip.Tree, sourceBranch.Tip.Tree);
+                                    var changedFiles = new List<ChangedFileSnapshot>();
+                                    foreach (var change in changes)
+                                    {
+                                        string originalContent = "", modifiedContent = "";
+                                        var oldBlob = targetBranch.Tip.Tree[change.Path]?.Target as Blob;
+                                        if (oldBlob != null)
+                                            originalContent = oldBlob.GetContentText();
+                                        var newBlob = sourceBranch.Tip.Tree[change.Path]?.Target as Blob;
+                                        if (newBlob != null)
+                                            modifiedContent = newBlob.GetContentText();
+
+                                        changedFiles.Add(new ChangedFileSnapshot
+                                        {
+                                            FilePath = change.Path,
+                                            OriginalContent = originalContent,
+                                            ModifiedContent = modifiedContent
+                                        });
+                                    }
+
+                                    var snapshot = new PRSnapshot
+                                    {
+                                        PR_Id = prRequest.PR_Id,
+                                        ProjectId = prRequest.ProjectId,
+                                        SourceBranch = prRequest.SourceBranch,
+                                        TargetBranch = prRequest.TargetBranch,
+                                        LastCommitHash = prRequest.LastCommitHash,
+                                        ChangedFiles = changedFiles,
+                                        CapturedAt = DateTime.UtcNow
+                                    };
+                                    await SavePRSnapshot(snapshot);
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (Exception snapshotEx)
+                {
+                    Console.WriteLine($"Snapshot not taken: {snapshotEx.Message}");
+                }
+
+                await AddActivity(prRequest.PR_Id, "Created", currentUser.Email, $"Pull Request created from '{prRequest.SourceBranch}' to '{prRequest.TargetBranch}'");
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Pull Request #{prRequest.PR_Id} has been successfully created."
                 });
             }
             catch (Exception ex)
@@ -461,18 +520,30 @@ public class EditorController : Controller
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFilesBetweenBranches(string projectId, string source, string target)
+        public async Task<IActionResult> GetFilesBetweenBranches(string projectId, string source, string target, string prId = null)
         {
             try
             {
-                var prPath = "internal-pull-requests.json";
-                var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>(prPath);
-                var isMerged = allPrs?.Any(p => p.ProjectId == projectId && p.SourceBranch == source && p.Status == "Merged") ?? false;
+                // Eğer prId verilmişse, PR'ın durumunu kontrol et
+                if (!string.IsNullOrEmpty(prId))
+                {
+                    var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new List<InternalPR>();
+                    var pr = allPrs.FirstOrDefault(p => p.PR_Id == prId);
+                    if (pr != null && pr.Status != "Open")
+                    {
+                        var snapshot = await GetPRSnapshot(prId);
+                        if (snapshot != null)
+                        {
+                            return Json(snapshot.ChangedFiles.Select(c => c.FilePath).ToList());
+                        }
+                    }
+                }
 
-                if (isMerged) return Json(new List<string>());
-
+                // Normal akış (açık PR veya prId yoksa)
                 var projects = await _projectService.GetProjectsAsync();
                 var project = projects.FirstOrDefault(p => p.Id == projectId);
+                if (project == null) return NotFound("Project not found");
+
                 var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
                 var projectPath = Path.Combine(clonesRoot, project.Name);
 
@@ -480,25 +551,47 @@ public class EditorController : Controller
                 {
                     var sourceBranch = repo.Branches[source];
                     var targetBranch = repo.Branches[target] ?? repo.Branches["main"];
-
                     if (sourceBranch == null) return NotFound("Source branch not found");
 
                     var changes = repo.Diff.Compare<TreeChanges>(targetBranch.Tip.Tree, sourceBranch.Tip.Tree);
                     var changedFiles = changes.Select(c => c.Path).ToList();
-            
                     return Json(changedFiles);
                 }
             }
-            catch (Exception ex) { return StatusCode(500, ex.Message); }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetFileDiffBetweenBranches(string projectId, string filePath, string source, string target)
+        public async Task<IActionResult> GetFileDiffBetweenBranches(string projectId, string filePath, string source, string target, string prId = null)
         {
             try
             {
+                if (!string.IsNullOrEmpty(prId))
+                {
+                    var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new List<InternalPR>();
+                    var pr = allPrs.FirstOrDefault(p => p.PR_Id == prId);
+                    if (pr != null && pr.Status != "Open")
+                    {
+                        var snapshot = await GetPRSnapshot(prId);
+                        if (snapshot != null)
+                        {
+                            var normalizedPath = filePath.Replace("\\", "/");
+                            var fileSnapshot = snapshot.ChangedFiles.FirstOrDefault(f => f.FilePath.Replace("\\", "/") == normalizedPath);
+                            if (fileSnapshot != null)
+                            {
+                                return Json(new { originalContent = fileSnapshot.OriginalContent, modifiedContent = fileSnapshot.ModifiedContent });
+                            }
+                        }
+                    }
+                }
+
                 var projects = await _projectService.GetProjectsAsync();
                 var project = projects.FirstOrDefault(p => p.Id == projectId);
+                if (project == null) return NotFound();
+
                 var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
                 var projectPath = Path.Combine(clonesRoot, project.Name);
 
@@ -508,17 +601,18 @@ public class EditorController : Controller
                     var targetBranch = repo.Branches[target] ?? repo.Branches["main"];
 
                     string gitPath = filePath.Replace("\\", "/");
-
                     var oldBlob = targetBranch.Tip.Tree[gitPath]?.Target as Blob;
                     var originalContent = oldBlob != null ? oldBlob.GetContentText() : "";
-
                     var newBlob = sourceBranch.Tip.Tree[gitPath]?.Target as Blob;
                     var modifiedContent = newBlob != null ? newBlob.GetContentText() : "";
 
                     return Json(new { originalContent, modifiedContent });
                 }
             }
-            catch (Exception ex) { return StatusCode(500, ex.Message); }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet]
@@ -577,6 +671,9 @@ public class EditorController : Controller
 
             pr.Status = status;
             await _fileService.SaveConfigAsync(prPath, allPrs);
+
+            var userEmail = User.Identity?.Name;
+            await AddActivity(prId, status, userEmail, $"PR status changed to '{status}'");
 
             return Ok(new { success = true, newStatus = status });
         }
@@ -639,6 +736,9 @@ public class EditorController : Controller
                     pr.Status = "Merged";
                     await _fileService.SaveConfigAsync(prPath, allPrs);
 
+                    var userEmail = User.Identity?.Name;
+                    await AddActivity(prId, "Merged", userEmail, $"PR merged into '{pr.TargetBranch}' and branch '{pr.SourceBranch}' deleted.");
+
                     repo.Branches.Remove(sourceBranch);
 
                     return Ok(new { success = true, message = $"PR #{pr.PR_Id} merged successfully and branch {pr.SourceBranch} deleted." });
@@ -663,6 +763,7 @@ public class EditorController : Controller
             allComments.Add(comment);
     
             await _fileService.SaveConfigAsync(commentsPath, allComments);
+            await AddActivity(comment.PR_Id, "Commented", userEmail, $"Commented on {comment.FilePath} line {comment.LineNumber}");
             return Ok(new { success = true });
         }
 
@@ -697,6 +798,54 @@ public class EditorController : Controller
                 await _fileService.SaveConfigAsync(path, allComments);
             }
             return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPRUpdates(string prId)
+        {
+            var snapshot = await GetPRSnapshot(prId);
+            if (snapshot == null) return NotFound();
+    
+            return Json(snapshot.ChangedFiles.Select(f => new { f.FilePath }));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPRActivities(string prId)
+        {
+            var activities = await _fileService.LoadConfigAsync<List<PRActivity>>("internal-pr-activities.json");
+            var filtered = activities?.Where(a => a.PR_Id == prId).OrderBy(a => a.Timestamp).ToList() ?? new List<PRActivity>();
+            return Json(filtered);
+        }
+
+        private async Task AddActivity(string prId, string actionType, string actorEmail, string details)
+        {
+            var path = "internal-pr-activities.json";
+            var activities = await _fileService.LoadConfigAsync<List<PRActivity>>(path) ?? new List<PRActivity>();
+            activities.Add(new PRActivity
+            {
+                PR_Id = prId,
+                ActionType = actionType,
+                Actor = actorEmail,
+                Details = details,
+                Timestamp = DateTime.UtcNow
+            });
+            await _fileService.SaveConfigAsync(path, activities);
+        }
+
+        private async Task<PRSnapshot?> GetPRSnapshot(string prId)
+        {
+            var snapshots = await _fileService.LoadConfigAsync<List<PRSnapshot>>("internal-pr-snapshots.json") 
+                            ?? new List<PRSnapshot>();
+            return snapshots.FirstOrDefault(s => s.PR_Id == prId);
+        }
+
+        private async Task SavePRSnapshot(PRSnapshot snapshot)
+        {
+            var snapshots = await _fileService.LoadConfigAsync<List<PRSnapshot>>("internal-pr-snapshots.json") 
+                            ?? new List<PRSnapshot>();
+            snapshots.RemoveAll(s => s.PR_Id == snapshot.PR_Id);
+            snapshots.Add(snapshot);
+            await _fileService.SaveConfigAsync("internal-pr-snapshots.json", snapshots);
         }
 
         private string FindGitRoot(string filePath)

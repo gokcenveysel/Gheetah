@@ -7,7 +7,29 @@
 }
 
 <style>
-    /* Azure Tarzı Sekme Tasarımı */
+    .steps-vertical .step-item {
+        margin-bottom: 1.75rem;
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 40px;
+        flex-shrink: 0;
+    }
+
+    .timeline-content {
+        border-left: 2px solid #e9ecef;
+        padding-left: 1rem;
+    }
+
+    .step-title {
+        font-size: 0.9rem;
+    }
+
     .pr-tabs .nav-link {
         border: none;
         color: #616e7e;
@@ -137,7 +159,13 @@
                 </div>
             </div>
             <div class="tab-pane fade h-100 overflow-auto" id="overview"><div class="p-4">Overview (Sprint 4)</div></div>
-            <div class="tab-pane fade h-100 overflow-auto" id="updates"><div class="p-4">Updates</div></div>
+            <div class="tab-pane fade h-100 overflow-auto" id="updates">
+                <div class="justify-content-between p-5">
+                    <div id="activity-steps" class="steps-vertical">
+                        <div class="text-muted text-center py-5">Loading activities...</div>
+                    </div>
+                </div>
+            </div>
             <div class="tab-pane fade h-100 overflow-auto" id="conflicts"><div class="p-4">Conflicts</div></div>
         </div>
     </div>
@@ -233,8 +261,101 @@
             });
         });
 
+        function loadActivities() {
+            $.get('/Editor/GetPRActivities', { prId: prId }, function (activities) {
+                const container = $('#activity-steps');
+        
+                if (!activities || activities.length === 0) {
+                    container.html(`
+                        <div class="empty py-5">
+                            <div class="empty-icon text-muted mb-3">
+                                <i class="ti ti-message-circle-off fs-1"></i>
+                            </div>
+                            <p class="empty-title text-start">No activities yet</p>
+                            <p class="empty-subtitle text-secondary text-start">
+                                When something happens on this pull request, it will appear here.
+                            </p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                // Satırı sola yaslamak için row ve col yapısı kullanıyoruz
+                let html = `
+                    <div class="row">
+                        <div class="col-md-9 col-lg-7">
+                            <ul class="steps steps-vertical">`;
+        
+                activities.forEach(act => {
+                    const { icon, color } = getActivityTheme(act.actionType);
+                    const actorName = act.actor.split('@@')[0];
+                    const formattedDate = new Date(act.timestamp).toLocaleString([], { 
+                        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
+                    });
+
+                    html += `
+                        <li class="step-item">
+                            <div class="step-icon bg-${color}-lt">
+                                <i class="ti ${icon} text-${color}"></i>
+                            </div>
+                            <div class="step-content">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <h4 class="step-title mb-0">
+                                        <span class="text-dark fw-bold">${escapeHtml(actorName)}</span>
+                                        <small class="text-muted ms-2 fw-normal">${formattedDate}</small>
+                                    </h4>
+                                    <span class="badge badge-outline text-${color} fw-medium border-${color}-subtle px-2" style="font-size: 0.7rem;">
+                                        ${act.actionType}
+                                    </span>
+                                </div>
+                                <div class="text-secondary small" style="line-height: 1.4;">
+                                    ${escapeHtml(act.details)}
+                                </div>
+                            </div>
+                        </li>
+                    `;
+                });
+        
+                html += `
+                            </ul>
+                        </div>
+                    </div>`;
+            
+                container.html(html);
+            });
+        }
+
+        function getActivityTheme(type) {
+            // Renkleri Tabler'ın 'light' varyasyonlarına (-lt) uygun olacak şekilde güncelledim
+            const themes = {
+                'Created':   { icon: 'ti-git-pull-request', color: 'blue' },
+                'Approved':  { icon: 'ti-circle-check',     color: 'green' },
+                'Rejected':  { icon: 'ti-circle-x',         color: 'red' },
+                'Merged':    { icon: 'ti-git-merge',       color: 'purple' },
+                'Completed': { icon: 'ti-circle-check-filled', color: 'indigo' }, // Complete PR için
+                'Commented': { icon: 'ti-message-dots',    color: 'orange' },
+                'Open':      { icon: 'ti-eye',             color: 'azure' }
+            };
+            return themes[type] || { icon: 'ti-dots-circle-horizontal', color: 'secondary' };
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+
+        $('a[data-bs-toggle="tab"][href="#updates"]').on('shown.bs.tab', function () {
+            loadActivities();
+        });
+
         function loadChangedFiles() {
-            $.get('/Editor/GetFilesBetweenBranches', { projectId: projectId, source: sourceBranch, target: targetBranch }, function (files) {
+            $.get('/Editor/GetFilesBetweenBranches', { projectId: projectId, source: sourceBranch, target: targetBranch, prId: prId }, function (files) {
                 $('#file-count').text(files.length);
                 let html = '';
                 files.forEach(file => {
@@ -252,7 +373,7 @@
             $('.list-group-item').removeClass('active');
             $(element).addClass('active');
             currentFilePath = filePath;
-            $.get('/Editor/GetFileDiffBetweenBranches', { projectId: projectId, filePath: filePath, source: sourceBranch, target: targetBranch }, function (res) {
+            $.get('/Editor/GetFileDiffBetweenBranches', { projectId: projectId, filePath: filePath, source: sourceBranch, target: targetBranch, prId: prId }, function (res) {
                 diffEditor.setModel({
                     original: monaco.editor.createModel(res.originalContent, 'csharp'),
                     modified: monaco.editor.createModel(res.modifiedContent, 'csharp')
