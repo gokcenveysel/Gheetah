@@ -117,21 +117,29 @@
                 </div>
             </div>
             <div id="pr-action-zone" class="d-flex gap-2">
-                @if (isReviewer)
+                @if (Model.Status == "Merged")
                 {
-                    <button class="btn btn-outline-success" onclick="updatePRStatus('Approved')">
-                        <i class="ti ti-check me-1"></i> Approve
-                    </button>
-                    <button class="btn btn-outline-danger" onclick="updatePRStatus('Rejected')">
-                        <i class="ti ti-x me-1"></i> Reject
-                    </button>
+                    <span class="badge bg-success fs-6 p-2">
+                        <i class="ti ti-check me-1"></i> Completed
+                    </span>
                 }
-
-                @if (isCreator)
+                else
                 {
-                    <button id="btn-complete-pr" class="btn btn-success" onclick="completePR()" disabled>
-                        <i class="ti ti-git-merge me-1"></i> Complete Merge
-                    </button>
+                    @if (isReviewer)
+                    {
+                        <button class="btn btn-outline-success" onclick="updatePRStatus('Approved')">
+                            <i class="ti ti-check me-1"></i> Approve
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="updatePRStatus('Rejected')">
+                            <i class="ti ti-x me-1"></i> Reject
+                        </button>
+                    }
+                    @if (isCreator)
+                    {
+                        <button id="btn-complete-pr" class="btn btn-success" onclick="completePR()" disabled>
+                            <i class="ti ti-git-merge me-1"></i> Complete Merge
+                        </button>
+                    }
                 }
             </div>
         </div>
@@ -158,7 +166,95 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade h-100 overflow-auto" id="overview"><div class="p-4">Overview (Sprint 4)</div></div>
+            <div class="tab-pane fade h-100 overflow-auto" id="overview">
+                <div class="justify-content-between p-5">
+                    <!-- Pipeline Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Merge & Build Pipeline</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="steps steps-vertical">
+                                <!-- Source Build Step -->
+                                <div class="step-item" id="step-source-build">
+                                    <div class="step-icon bg-secondary-lt" id="step-source-build-icon">
+                                        <i class="ti ti-loader" id="step-source-build-spinner" style="display:none;"></i>
+                                        <i class="ti ti-brand-c-sharp" id="step-source-build-icon-static"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-title d-flex justify-content-between">
+                                            <span>Build (Source Branch)</span>
+                                            <span id="source-build-status-badge" class="badge bg-secondary">Pending</span>
+                                        </div>
+                                        <div id="source-build-message" class="text-secondary small"></div>
+                                    </div>
+                                </div>
+                                <!-- Merge Step -->
+                                <div class="step-item" id="step-merge">
+                                    <div class="step-icon bg-secondary-lt" id="step-merge-icon">
+                                        <i class="ti ti-loader" id="step-merge-spinner" style="display:none;"></i>
+                                        <i class="ti ti-git-merge" id="step-merge-icon-static"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-title d-flex justify-content-between">
+                                            <span>Merge</span>
+                                            <span id="merge-status-badge" class="badge bg-secondary">Pending</span>
+                                        </div>
+                                        <div id="merge-message" class="text-secondary small"></div>
+                                    </div>
+                                </div>
+                                <!-- Target Build Step -->
+                                <div class="step-item" id="step-target-build">
+                                    <div class="step-icon bg-secondary-lt" id="step-target-build-icon">
+                                        <i class="ti ti-loader" id="step-target-build-spinner" style="display:none;"></i>
+                                        <i class="ti ti-settings" id="step-target-build-icon-static"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-title d-flex justify-content-between">
+                                            <span>Build (Target Branch)</span>
+                                            <span id="target-build-status-badge" class="badge bg-secondary">Pending</span>
+                                        </div>
+                                        <div id="target-build-message" class="text-secondary small"></div>
+                                        <div id="retry-build-btn-container" style="display:none;" class="mt-2">
+                                            <button class="btn btn-sm btn-outline-danger" onclick="retryBuild()">Retry Target Build</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Approvals Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Approvals</h3>
+                        </div>
+                        <div class="card-body" id="approvals-list">
+                            <div class="text-muted">Loading approvals...</div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Latest Comments</h3>
+                        </div>
+                        <div class="card-body" id="comments-list">
+                            <div class="text-muted">Loading comments...</div>
+                        </div>
+                    </div>
+
+                    <!-- Last Commit Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Last Commit</h3>
+                        </div>
+                        <div class="card-body" id="last-commit-info">
+                            <div class="text-muted">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="tab-pane fade h-100 overflow-auto" id="updates">
                 <div class="justify-content-between p-5">
                     <div id="activity-steps" class="steps-vertical">
@@ -228,131 +324,50 @@
         var currentZoneIds = [];
         var hoverDecorations = [];
 
+        var statusPollInterval = null;
+        var isPipelineRunning = false;
+
         $(document).ready(function () {
             monacoRequire(['vs/editor/editor.main'], function () {
-                diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-container'), {
-                    theme: 'vs',
-                    automaticLayout: true,
-                    readOnly: true,
-                    glyphMargin: true,
-                    renderSideBySide: true
-                });
-
-                const modifiedEditor = diffEditor.getModifiedEditor();
-
-                modifiedEditor.onMouseMove(function (e) {
-                    if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS || e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
-                        const line = e.target.position.lineNumber;
-                        const newDecorations = [{
-                            range: new monaco.Range(line, 1, line, 1),
-                            options: { glyphMarginClassName: 'comment-hint-glyph' }
-                        }];
-                        hoverDecorations = modifiedEditor.deltaDecorations(hoverDecorations, newDecorations);
-                    }
-                });
-
-                modifiedEditor.onMouseDown(function (e) {
-                    if (e.target.element && e.target.element.className.includes('comment-hint-glyph')) {
-                        showCommentInput(e.target.position.lineNumber);
-                    }
-                });
-
+                initMonacoDiffEditor();
                 loadChangedFiles();
             });
-        });
-
-        function loadActivities() {
-            $.get('/Editor/GetPRActivities', { prId: prId }, function (activities) {
-                const container = $('#activity-steps');
-        
-                if (!activities || activities.length === 0) {
-                    container.html(`
-                        <div class="empty py-5">
-                            <div class="empty-icon text-muted mb-3">
-                                <i class="ti ti-message-circle-off fs-1"></i>
-                            </div>
-                            <p class="empty-title text-start">No activities yet</p>
-                            <p class="empty-subtitle text-secondary text-start">
-                                When something happens on this pull request, it will appear here.
-                            </p>
-                        </div>
-                    `);
-                    return;
-                }
-
-                // Satırı sola yaslamak için row ve col yapısı kullanıyoruz
-                let html = `
-                    <div class="row">
-                        <div class="col-md-9 col-lg-7">
-                            <ul class="steps steps-vertical">`;
-        
-                activities.forEach(act => {
-                    const { icon, color } = getActivityTheme(act.actionType);
-                    const actorName = act.actor.split('@@')[0];
-                    const formattedDate = new Date(act.timestamp).toLocaleString([], { 
-                        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' 
-                    });
-
-                    html += `
-                        <li class="step-item">
-                            <div class="step-icon bg-${color}-lt">
-                                <i class="ti ${icon} text-${color}"></i>
-                            </div>
-                            <div class="step-content">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <h4 class="step-title mb-0">
-                                        <span class="text-dark fw-bold">${escapeHtml(actorName)}</span>
-                                        <small class="text-muted ms-2 fw-normal">${formattedDate}</small>
-                                    </h4>
-                                    <span class="badge badge-outline text-${color} fw-medium border-${color}-subtle px-2" style="font-size: 0.7rem;">
-                                        ${act.actionType}
-                                    </span>
-                                </div>
-                                <div class="text-secondary small" style="line-height: 1.4;">
-                                    ${escapeHtml(act.details)}
-                                </div>
-                            </div>
-                        </li>
-                    `;
-                });
-        
-                html += `
-                            </ul>
-                        </div>
-                    </div>`;
             
-                container.html(html);
-            });
-        }
-
-        function getActivityTheme(type) {
-            // Renkleri Tabler'ın 'light' varyasyonlarına (-lt) uygun olacak şekilde güncelledim
-            const themes = {
-                'Created':   { icon: 'ti-git-pull-request', color: 'blue' },
-                'Approved':  { icon: 'ti-circle-check',     color: 'green' },
-                'Rejected':  { icon: 'ti-circle-x',         color: 'red' },
-                'Merged':    { icon: 'ti-git-merge',       color: 'purple' },
-                'Completed': { icon: 'ti-circle-check-filled', color: 'indigo' }, // Complete PR için
-                'Commented': { icon: 'ti-message-dots',    color: 'orange' },
-                'Open':      { icon: 'ti-eye',             color: 'azure' }
-            };
-            return themes[type] || { icon: 'ti-dots-circle-horizontal', color: 'secondary' };
-        }
-
-        function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function(m) {
-                if (m === '&') return '&amp;';
-                if (m === '<') return '&lt;';
-                if (m === '>') return '&gt;';
-                return m;
-            });
-        }
-
-
-        $('a[data-bs-toggle="tab"][href="#updates"]').on('shown.bs.tab', function () {
-            loadActivities();
+            if ("@Model.Status" === "Merged") {
+            showCompletedBadge();
+            } else {
+                loadPersistedPipelineStatus();
+            }
         });
+
+        function initMonacoDiffEditor() {
+            diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-container'), {
+                theme: 'vs',
+                automaticLayout: true,
+                readOnly: true,
+                glyphMargin: true,
+                renderSideBySide: true
+            });
+
+            const modifiedEditor = diffEditor.getModifiedEditor();
+
+            modifiedEditor.onMouseMove(function (e) {
+                if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS || e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+                    const line = e.target.position.lineNumber;
+                    const newDecorations = [{
+                        range: new monaco.Range(line, 1, line, 1),
+                        options: { glyphMarginClassName: 'comment-hint-glyph' }
+                    }];
+                    hoverDecorations = modifiedEditor.deltaDecorations(hoverDecorations, newDecorations);
+                }
+            });
+
+            modifiedEditor.onMouseDown(function (e) {
+                if (e.target.element && e.target.element.className.includes('comment-hint-glyph')) {
+                    showCommentInput(e.target.position.lineNumber);
+                }
+            });
+        }
 
         function loadChangedFiles() {
             $.get('/Editor/GetFilesBetweenBranches', { projectId: projectId, source: sourceBranch, target: targetBranch, prId: prId }, function (files) {
@@ -365,7 +380,7 @@
                              </a>`;
                 });
                 $('#pr-file-list').html(html);
-                if(files.length > 0) loadDiff(files[0].replace(/\\/g, "/"), $('#pr-file-list a').first());
+                if (files.length > 0) loadDiff(files[0].replace(/\\/g, "/"), $('#pr-file-list a').first());
             });
         }
 
@@ -414,8 +429,7 @@
         function showCommentInput(line) {
             removeDraftZones();
             const node = document.createElement('div');
-            node.className = "comment-zone-container p-2"; // Padding'i p-3'ten p-2'ye çektik
-
+            node.className = "comment-zone-container p-2";
             node.innerHTML = `
                 <div class="d-flex align-items-start">
                     <span class="avatar avatar-sm me-2" style="background-image: url(https://ui-avatars.com/api/?name=@userEmail)"></span>
@@ -427,11 +441,9 @@
                         </div>
                     </div>
                 </div>`;
-
             const textarea = node.querySelector('textarea');
             textarea.addEventListener('mousedown', (e) => e.stopPropagation());
             textarea.addEventListener('keydown', (e) => e.stopPropagation());
-
             const submitBtn = node.querySelector('#btn-submit-comment');
             submitBtn.onclick = function() { addComment(line); };
 
@@ -444,19 +456,16 @@
                 });
                 currentZoneIds.push({ id: zoneId, isDraft: true });
             });
-
             setTimeout(() => {
                 const viewZoneElement = node.closest('.view-zones');
-                if (viewZoneElement) {
-                    viewZoneElement.removeAttribute('aria-hidden');
-                }
+                if (viewZoneElement) viewZoneElement.removeAttribute('aria-hidden');
                 textarea.focus();
             }, 50);
         }
 
         function addComment(line) {
             const text = $('#draft-text').val();
-            if(!text) return;
+            if (!text) return;
             $.ajax({
                 url: '/Editor/AddPRComment', type: 'POST', contentType: 'application/json',
                 data: JSON.stringify({ PR_Id: prId, FilePath: currentFilePath, LineNumber: parseInt(line), Content: text }),
@@ -475,10 +484,6 @@
             $.post('/Editor/ResolveComment', { commentId: id }, function() { renderComments(currentFilePath); });
         }
 
-        function updatePRStatus(s) {
-            $.post('/Editor/UpdatePRStatus', { prId: prId, status: s }, () => location.reload());
-        }
-
         function checkPRCompletionStatus(comments) {
             const btn = $('#btn-complete-pr');
             if (btn.length === 0) return;
@@ -489,13 +494,227 @@
             btn.prop('disabled', !shouldEnable);
         }
 
-        function completePR() {
-            showConfirm("Complete Merge", "Confirm to merge branches and close this PR.", function() {
-                $.post('/Editor/CompletePR', { prId: prId }, function() {
-                    showAlert("Success", "Merged successfully!", "success", () => window.location.href='/Editor/Index/@Model.ProjectId');
+        function loadActivities() {
+            $.get('/Editor/GetPRActivities', { prId: prId }, function (activities) {
+                const container = $('#activity-steps');
+                if (!activities || activities.length === 0) {
+                    container.html(`<div class="empty py-5"><div class="empty-icon text-muted mb-3"><i class="ti ti-message-circle-off fs-1"></i></div><p class="empty-title text-start">No activities yet</p><p class="empty-subtitle text-secondary text-start">When something happens on this pull request, it will appear here.</p></div>`);
+                    return;
+                }
+                let html = `<div class="row"><div class="col-md-9 col-lg-7"><ul class="steps steps-vertical">`;
+                activities.forEach(act => {
+                    const { icon, color } = getActivityTheme(act.actionType);
+                    const actorName = act.actor.split('@@')[0];
+                    const formattedDate = new Date(act.timestamp).toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    html += `<li class="step-item"><div class="step-icon bg-${color}-lt"><i class="ti ${icon} text-${color}"></i></div><div class="step-content"><div class="d-flex align-items-center justify-content-between mb-1"><h4 class="step-title mb-0"><span class="text-dark fw-bold">${escapeHtml(actorName)}</span><small class="text-muted ms-2 fw-normal">${formattedDate}</small></h4><span class="badge badge-outline text-${color} fw-medium border-${color}-subtle px-2" style="font-size: 0.7rem;">${act.actionType}</span></div><div class="text-secondary small" style="line-height: 1.4;">${escapeHtml(act.details)}</div></div></li>`;
                 });
+                html += `</ul></div></div>`;
+                container.html(html);
             });
         }
+
+        function getActivityTheme(type) {
+            const themes = {
+                'Created':   { icon: 'ti-git-pull-request', color: 'blue' },
+                'Approved':  { icon: 'ti-circle-check',     color: 'green' },
+                'Rejected':  { icon: 'ti-circle-x',         color: 'red' },
+                'Merged':    { icon: 'ti-git-merge',       color: 'purple' },
+                'Commented': { icon: 'ti-message-dots',    color: 'orange' },
+                'Open':      { icon: 'ti-eye',             color: 'azure' }
+            };
+            return themes[type] || { icon: 'ti-dots-circle-horizontal', color: 'secondary' };
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        $('a[data-bs-toggle="tab"][href="#updates"]').on('shown.bs.tab', function () { loadActivities(); });
+
+        window.completePR = function() {
+            showConfirm("Complete Merge", "Start merge and build process?", function() {
+                $.post('/Editor/StartMergeAndBuild', { prId: prId }, function(response) {
+                    if (response.success) {
+                        $('a[data-bs-toggle="tab"][href="#overview"]').tab('show');
+                        startPolling();
+                    } else {
+                        showAlert("Error", response.message || "Could not start merge/build process", "danger");
+                    }
+                }).fail(function(err) {
+                    showAlert("Error", err.responseText || "Unknown error", "danger");
+                });
+            });
+        };
+
+        function startPolling() {
+            if (statusPollInterval) clearInterval(statusPollInterval);
+            isPipelineRunning = true;
+            updateStepUI('source-build', 'pending');
+            updateStepUI('merge', 'pending');
+            updateStepUI('target-build', 'pending');
+            $('#retry-build-btn-container').hide();
+
+            statusPollInterval = setInterval(function() {
+                $.get('/Editor/GetMergeBuildStatus', { prId: prId }, function(status) {
+                    updateStepUI('source-build', status.sourceBuildStatus, status.sourceBuildMessage);
+                    updateStepUI('merge', status.mergeStatus, status.mergeMessage);
+                    updateStepUI('target-build', status.targetBuildStatus, status.targetBuildMessage);
+
+                    if (status.targetBuildStatus === 'failed' && status.mergeStatus === 'success') {
+                        $('#retry-build-btn-container').show();
+                    } else {
+                        $('#retry-build-btn-container').hide();
+                    }
+
+                    if (status.isCompleted) {
+                        clearInterval(statusPollInterval);
+                        isPipelineRunning = false;
+                        showCompletedBadge();
+                        showAlert("Success", "Source build, merge, and target build completed successfully!", "success");
+                        setTimeout(() => location.reload(), 2000);
+                    } else if (status.hasError) {
+                        clearInterval(statusPollInterval);
+                        isPipelineRunning = false;
+                    }
+                }).fail(function() {});
+            }, 1500);
+        }
+
+        function updateStepUI(step, status, message) {
+            let stepId, badgeId, msgId, spinnerId, staticIconId, iconClass;
+            if (step === 'source-build') {
+                stepId = '#step-source-build';
+                badgeId = '#source-build-status-badge';
+                msgId = '#source-build-message';
+                spinnerId = '#step-source-build-spinner';
+                staticIconId = '#step-source-build-icon-static';
+                iconClass = 'ti ti-brand-c-sharp';
+            } else if (step === 'merge') {
+                stepId = '#step-merge';
+                badgeId = '#merge-status-badge';
+                msgId = '#merge-message';
+                spinnerId = '#step-merge-spinner';
+                staticIconId = '#step-merge-icon-static';
+                iconClass = 'ti ti-git-merge';
+            } else {
+                stepId = '#step-target-build';
+                badgeId = '#target-build-status-badge';
+                msgId = '#target-build-message';
+                spinnerId = '#step-target-build-spinner';
+                staticIconId = '#step-target-build-icon-static';
+                iconClass = 'ti ti-settings';
+            }
+
+            const badgeElem = $(badgeId);
+            const msgElem = $(msgId);
+            const iconDiv = $(`${stepId} .step-icon`);
+            const spinner = $(spinnerId);
+            const staticIcon = $(staticIconId);
+
+            badgeElem.removeClass('bg-secondary bg-warning bg-success bg-danger');
+            iconDiv.removeClass('bg-secondary-lt bg-warning-lt bg-success-lt bg-danger-lt');
+            spinner.hide();
+            staticIcon.show();
+
+            if (status === 'pending') {
+                badgeElem.addClass('badge bg-azure text-azure-fg').text('Pending');
+                iconDiv.addClass('bg-secondary-lt');
+                staticIcon.attr('class', iconClass);
+            } else if (status === 'running') {
+                badgeElem.addClass('badge bg-yellow text-yellow-fg').text('Running');
+                iconDiv.addClass('bg-warning-lt');
+                staticIcon.hide();
+                spinner.show();
+            } else if (status === 'success') {
+                badgeElem.addClass('badge bg-green text-green-fg').text('Success');
+                iconDiv.addClass('bg-success-lt');
+                staticIcon.attr('class', 'ti ti-check');
+            } else if (status === 'failed') {
+                badgeElem.addClass('badge bg-red text-red-fg').text('Failed');
+                iconDiv.addClass('bg-danger-lt');
+                staticIcon.attr('class', 'ti ti-x');
+            }
+            if (message) msgElem.html(message);
+        }
+
+        function retryBuild() {
+            $.post('/Editor/RetryBuild', { prId: prId }, function(response) {
+                if (response.success) {
+                    startPolling();
+                } else {
+                    showAlert("Error", response.message || "Could not retry build", "danger");
+                }
+            });
+        }
+
+        function showCompletedBadge() {
+            $('#pr-action-zone').html('<span class="badge badge-sm bg-green-lt text-uppercase ms-auto"><i class="ti ti-check me-1"></i> Completed</span>');
+        }
+
+        function loadPersistedPipelineStatus() {
+            $.get('/Editor/GetMergeBuildStatus', { prId: prId }, function(status) {
+                if (status && status.sourceBuildStatus) {
+                    updateStepUI('source-build', status.sourceBuildStatus, status.sourceBuildMessage);
+                    updateStepUI('merge', status.mergeStatus, status.mergeMessage);
+                    updateStepUI('target-build', status.targetBuildStatus, status.targetBuildMessage);
+
+                    if (status.isCompleted) {
+                        isPipelineRunning = false;
+                        if (statusPollInterval) clearInterval(statusPollInterval);
+                        showCompletedBadge();
+                    }
+                }
+            }).fail(function() {});
+        }
+
+        function loadOverviewData() {
+            loadPersistedPipelineStatus();
+            $.get('/Editor/GetPRActivities', { prId: prId }, function(activities) {
+                const approvals = activities.filter(a => a.actionType === 'Approved');
+                let approvalsHtml = '';
+                if (approvals.length === 0) {
+                    approvalsHtml = '<div class="text-muted">No approvals yet.</div>';
+                } else {
+                    approvals.forEach(app => {
+                        const actor = app.actor.split('@@')[0];
+                        approvalsHtml += `<div class="d-flex mb-2"><i class="ti ti-circle-check text-success me-2"></i> <strong>${escapeHtml(actor)}</strong> approved on ${new Date(app.timestamp).toLocaleString()}</div>`;
+                    });
+                }
+                $('#approvals-list').html(approvalsHtml);
+
+                const comments = activities.filter(a => a.actionType === 'Commented').slice(-5);
+                let commentsHtml = '';
+                if (comments.length === 0) {
+                    commentsHtml = '<div class="text-muted">No comments yet.</div>';
+                } else {
+                    comments.forEach(comm => {
+                        const actor = comm.actor.split('@@')[0];
+                        commentsHtml += `<div class="d-flex mb-2"><i class="ti ti-message-dots text-info me-2"></i> <strong>${escapeHtml(actor)}</strong>: ${escapeHtml(comm.details)}<br/><small class="text-muted">${new Date(comm.timestamp).toLocaleString()}</small></div>`;
+                    });
+                }
+                $('#comments-list').html(commentsHtml);
+            });
+
+            $.get('/Editor/GetPushHistory', { projectId: projectId }, function(history) {
+                const related = history.find(h => h.branchName === sourceBranch);
+                if (related) {
+                    $('#last-commit-info').html(`<div><i class="ti ti-code"></i> Commit: <code>${related.commitHash?.substring(0,7)}</code><br/><strong>${escapeHtml(related.pushedBy)}</strong> pushed on ${related.pushedAt}<br/></div>`);
+                } else {
+                    $('#last-commit-info').html('<div class="text-muted">No commit information found for this branch.</div>');
+                }
+            });
+        }
+
+        $('a[data-bs-toggle="tab"][href="#overview"]').on('shown.bs.tab', function() {
+            loadOverviewData();
+            if (isPipelineRunning) startPolling();
+        });
 
         function showConfirm(title, message, onConfirm) {
             $('#confirm-title').text(title); $('#confirm-text').text(message);
@@ -509,8 +728,12 @@
             $('#alert-icon').attr('class', type === 'success' ? 'ti ti-check fs-1 text-success' : 'ti ti-alert-circle fs-1 text-danger');
             const modalEl = document.getElementById('modal-alert');
             const modal = new bootstrap.Modal(modalEl);
-            if(onClose) $(modalEl).off('hidden.bs.modal').one('hidden.bs.modal', onClose);
+            if (onClose) $(modalEl).off('hidden.bs.modal').one('hidden.bs.modal', onClose);
             modal.show();
         }
+
+        window.updatePRStatus = function(s) {
+            $.post('/Editor/UpdatePRStatus', { prId: prId, status: s }, () => location.reload());
+        };
     </script>
 }
