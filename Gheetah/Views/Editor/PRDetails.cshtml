@@ -262,7 +262,28 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade h-100 overflow-auto" id="conflicts"><div class="p-4">Conflicts</div></div>
+            <div class="tab-pane fade h-100" id="conflicts" style="display:flex; flex-direction:row;">
+                <!-- Left panel: conflicted file list -->
+                <div class="col-3 border-end overflow-auto h-100 bg-light">
+                    <div class="p-2 fw-bold text-muted small border-bottom bg-white d-flex justify-content-between">
+                        <span>CONFLICTED FILES</span>
+                        <span class="badge bg-red-lt" id="conflict-file-count">0</span>
+                    </div>
+                    <div id="conflict-file-list" class="list-group list-group-flush"></div>
+                </div>
+                <!-- Right panel: diff view & resolve buttons -->
+                <div class="col-9 h-100 d-flex flex-column">
+                    <div id="conflict-diff-container" style="flex:1; min-height:0;"></div>
+                    <div id="resolve-bar" class="p-2 bg-light border-top d-flex justify-content-center gap-2" style="display:none !important;">
+                        <button class="btn btn-outline-secondary" onclick="resolveConflict('ours')">
+                            <i class="ti ti-folders me-1"></i> Accept Ours (Target)
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="resolveConflict('theirs')">
+                            <i class="ti ti-file-diff me-1"></i> Accept Theirs (Source)
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -487,7 +508,19 @@
         function checkPRCompletionStatus(comments) {
             const btn = $('#btn-complete-pr');
             if (btn.length === 0) return;
-            const isApproved = "@Model.Status" === "Approved";
+
+            const prStatus = "@Model.Status";
+
+            // Eğer PR zaten ConflictsResolved veya Merged ise butonu devre dışı bırak
+            if (prStatus === "ConflictsResolved" || prStatus === "Merged") {
+                btn.prop('disabled', true);
+                if (prStatus === "ConflictsResolved") {
+                    btn.html('<i class="ti ti-loader me-1"></i> Building Target...');
+                }
+                return;
+            }
+
+            const isApproved = prStatus === "Approved";
             const hasReviewers = @(Model.Reviewers.Count > 0 ? "true" : "false");
             const hasActive = comments.some(c => c.status === 0);
             const shouldEnable = !hasActive && (!hasReviewers || isApproved);
@@ -555,9 +588,19 @@
         function startPolling() {
             if (statusPollInterval) clearInterval(statusPollInterval);
             isPipelineRunning = true;
-            updateStepUI('source-build', 'pending');
-            updateStepUI('merge', 'pending');
-            updateStepUI('target-build', 'pending');
+
+            // Eğer merge zaten başarılıysa sadece target build'i bekle
+            const prStatus = "@Model.Status";
+            if (prStatus === "ConflictsResolved") {
+                updateStepUI('source-build', 'success', 'Source branch build succeeded');
+                updateStepUI('merge', 'success', 'Merge completed after conflict resolution');
+                updateStepUI('target-build', 'running');
+            } else {
+                updateStepUI('source-build', 'pending');
+                updateStepUI('merge', 'pending');
+                updateStepUI('target-build', 'pending');
+            }
+
             $('#retry-build-btn-container').hide();
 
             statusPollInterval = setInterval(function() {
@@ -578,9 +621,10 @@
                         showCompletedBadge();
                         showAlert("Success", "Source build, merge, and target build completed successfully!", "success");
                         setTimeout(() => location.reload(), 2000);
-                    } else if (status.hasError) {
+                    } else if (status.hasError && status.targetBuildStatus === 'failed') {
                         clearInterval(statusPollInterval);
                         isPipelineRunning = false;
+                        showCompletedBadge();
                     }
                 }).fail(function() {});
             }, 1500);
@@ -654,7 +698,14 @@
         }
 
         function showCompletedBadge() {
-            $('#pr-action-zone').html('<span class="badge badge-sm bg-green-lt text-uppercase ms-auto"><i class="ti ti-check me-1"></i> Completed</span>');
+            const prStatus = "@Model.Status";
+            if (prStatus === "Merged") {
+                $('#pr-action-zone').html('<span class="badge badge-sm bg-green-lt text-uppercase ms-auto"><i class="ti ti-check me-1"></i> Completed</span>');
+            } else if (prStatus === "ConflictsResolved") {
+                $('#pr-action-zone').html('<span class="badge badge-sm bg-yellow-lt text-uppercase ms-auto"><i class="ti ti-loader me-1"></i> Building...</span>');
+            } else if (prStatus === "BuildFailed") {
+                $('#pr-action-zone').html('<span class="badge badge-sm bg-red-lt text-uppercase ms-auto"><i class="ti ti-x me-1"></i> Build Failed</span>');
+            }
         }
 
         function loadPersistedPipelineStatus() {
@@ -670,7 +721,7 @@
                         showCompletedBadge();
                     }
                 }
-            }).fail(function() {});
+            }); // .fail() kısmını kaldırabilirsiniz
         }
 
         function loadOverviewData() {
@@ -723,9 +774,129 @@
             modal.show();
         }
 
+                // --- Conflict resolution variables ---
+        var conflictDiffEditor = null;
+        var activeConflictFile = "";
+        var allConflictedFiles = [];
+
+        // Load conflicted files when the Conflicts tab is shown
+        $('a[data-bs-toggle="tab"][href="#conflicts"]').on('shown.bs.tab', function() {
+            loadConflictedFiles();
+        });
+
+        function loadConflictedFiles() {
+            $.get('/Editor/GetConflictedFiles', { prId: prId }, function(files) {
+                allConflictedFiles = files;
+                $('#conflict-file-count').text(files.length);
+
+                let html = '';
+                if (files.length === 0) {
+                    // ✅ Hiç conflict yoksa açıklayıcı mesaj göster
+                    html = '<div class="text-muted text-center py-4">No conflicts detected</div>';
+                    // Diff editor'ı temizle
+                    if (conflictDiffEditor) {
+                        conflictDiffEditor.setModel({
+                            original: monaco.editor.createModel('', 'plaintext'),
+                            modified: monaco.editor.createModel('', 'plaintext')
+                        });
+                    }
+                    $('#resolve-bar').hide();
+                    // Complete Merge butonunu yeniden etkinleştir
+                    checkPRCompletionStatus([]);
+                } else {
+                    files.forEach(file => {
+                        let safePath = file.replace(/\\/g, "/");
+                        let fileName = safePath.split('/').pop();
+                        html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="openConflictFile('${safePath}', this)">
+                                    <i class="ti ti-alert-triangle text-danger me-2"></i> ${fileName}
+                                 </a>`;
+                    });
+                }
+
+                $('#conflict-file-list').html(html);
+
+                // Auto-select first file if any
+                if (files.length > 0) {
+                    $('#conflict-file-list a').first().click();
+                }
+            });
+        }
+
+        function openConflictFile(filePath, element) {
+            $('.list-group-item').removeClass('active');
+            $(element).addClass('active');
+            activeConflictFile = filePath;
+
+            $.get('/Editor/GetConflictContent', { prId: prId, filePath: filePath }, function(data) {
+                // Initialise or update diff editor inside #conflict-diff-container
+                if (!conflictDiffEditor) {
+                    conflictDiffEditor = monaco.editor.createDiffEditor(document.getElementById('conflict-diff-container'), {
+                        theme: 'vs',
+                        automaticLayout: true,
+                        readOnly: true,
+                        renderSideBySide: true
+                    });
+                }
+                conflictDiffEditor.setModel({
+                    original: monaco.editor.createModel(data.oursContent, 'csharp'),   // Target = ours
+                    modified: monaco.editor.createModel(data.theirsContent, 'csharp')  // Source = theirs
+                });
+                $('#resolve-bar').show();
+            });
+        }
+
+        function resolveConflict(resolution) {
+            if (!activeConflictFile) return;
+            showConfirm("Confirm Resolution", `Accept ${resolution} version for this file?`, function() {
+                $.post('/Editor/ResolveConflict', {
+                    prId: prId,
+                    filePath: activeConflictFile,
+                    resolution: resolution
+                }, function(res) {
+                    if (res.success) {
+                        if (res.allResolved) {
+                            // Tüm conflict'ler çözüldü, merge tamamlandı, target build başladı
+                            showAlert("Success", "All conflicts resolved! Target build started in background.", "success", function() {
+                                // Overview tab'ına geç ve polling'i başlat
+                                $('a[data-bs-toggle="tab"][href="#overview"]').tab('show');
+                                startPolling();
+                            });
+                        } else {
+                            // Sadece bu dosya çözüldü, diğerleri olabilir
+                            showAlert("Success", "Conflict resolved for " + activeConflictFile.split('/').pop(), "success");
+                            // Listeyi yenile
+                            loadConflictedFiles();
+                        }
+                    } else {
+                        showAlert("Error", "Failed to resolve conflict.", "danger");
+                    }
+                }).fail(function(err) {
+                    showAlert("Error", err.responseText || "Unknown error", "danger");
+                });
+            });
+        }
+
+        // Helper to show info alert (uses existing modal-alert)
+        function alertInfo(msg) {
+            showAlert("Info", msg, "info");
+        }
+
         function showAlert(title, message, type, onClose) {
-            $('#alert-title').text(title); $('#alert-text').text(message);
-            $('#alert-icon').attr('class', type === 'success' ? 'ti ti-check fs-1 text-success' : 'ti ti-alert-circle fs-1 text-danger');
+            $('#alert-title').text(title);
+            $('#alert-text').text(message);
+
+            // Icon'ı tipe göre ayarla
+            let iconClass = 'ti ti-info-circle fs-1 text-info'; // varsayılan
+            if (type === 'success') {
+                iconClass = 'ti ti-check fs-1 text-success';
+            } else if (type === 'danger') {
+                iconClass = 'ti ti-alert-circle fs-1 text-danger';
+            } else if (type === 'warning') {
+                iconClass = 'ti ti-alert-triangle fs-1 text-warning';
+            }
+
+            $('#alert-icon').attr('class', iconClass);
+
             const modalEl = document.getElementById('modal-alert');
             const modal = new bootstrap.Modal(modalEl);
             if (onClose) $(modalEl).off('hidden.bs.modal').one('hidden.bs.modal', onClose);

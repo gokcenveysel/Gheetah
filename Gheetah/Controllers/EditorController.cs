@@ -863,7 +863,14 @@ namespace Gheetah.Controllers
             if (saved != null)
                 return Ok(saved);
 
-            return NotFound();
+            // Hiç ilerleme yoksa boş bir durum dön
+            return Ok(new MergeBuildProgress
+            {
+                PrId = prId,
+                SourceBuildStatus = "pending",
+                MergeStatus = "pending",
+                TargetBuildStatus = "pending"
+            });
         }
 
         [HttpPost]
@@ -888,6 +895,267 @@ namespace Gheetah.Controllers
             return Ok(new { success = true });
         }
 
+        /// <summary>
+        /// Switches the Git repository to the specified branch.
+        /// Requires no uncommitted changes.
+        /// </summary>
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> SwitchBranch([FromForm] string projectId, [FromForm] string branchName)
+        {
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound("Project not found");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Repository.IsValid(projectPath))
+                return BadRequest("Repository not valid.");
+
+            using (var repo = new Repository(projectPath))
+            {
+                var branch = repo.Branches[branchName];
+                if (branch == null) return NotFound("Branch not found");
+
+                // Prevent switching if the working directory has uncommitted changes
+                if (repo.RetrieveStatus().IsDirty)
+                    return Conflict("You have uncommitted changes. Commit or discard them before switching branches.");
+
+                Commands.Checkout(repo, branch);
+            }
+
+            return Ok(new { success = true, currentBranch = branchName });
+        }
+
+        // -------------------- Conflict Resolution --------------------
+
+        /// <summary>
+        /// Returns the list of conflicted file paths (relative to repo root) for the given PR.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetConflictedFiles(string prId)
+        {
+            var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+            var pr = allPrs.FirstOrDefault(p => p.PR_Id == prId);
+            if (pr == null) return NotFound("PR not found");
+
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == pr.ProjectId);
+            if (project == null) return NotFound("Project not found");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Repository.IsValid(projectPath)) return Json(new List<string>());
+
+            using (var repo = new Repository(projectPath))
+            {
+                if (repo.Info.CurrentOperation != CurrentOperation.Merge)
+                    return Json(new List<string>());  // no merge in progress → no conflicts
+
+                var conflictedPaths = repo.Index.Conflicts
+                    .Select(c => c.Ours?.Path ?? c.Theirs?.Path ?? c.Ancestor?.Path)
+                    .Distinct()
+                    .ToList();
+                return Json(conflictedPaths);
+            }
+        }
+
+        /// <summary>
+        /// Returns the content of a conflicted file from the target branch (Ours) and source branch (Theirs).
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetConflictContent(string prId, string filePath)
+        {
+            var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+            var pr = allPrs.FirstOrDefault(p => p.PR_Id == prId);
+            if (pr == null) return NotFound("PR not found");
+
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == pr.ProjectId);
+            if (project == null) return NotFound("Project not found");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            using (var repo = new Repository(projectPath))
+            {
+                var targetBranch = repo.Branches[pr.TargetBranch] ?? repo.Branches["main"];
+                var sourceBranch = repo.Branches[pr.SourceBranch];
+                if (sourceBranch == null || targetBranch == null)
+                    return NotFound("Branch not found");
+
+                string relativePath = filePath.Replace("\\", "/");
+                string oursContent = "";
+                string theirsContent = "";
+
+                var oursBlob = targetBranch.Tip[relativePath]?.Target as Blob;
+                if (oursBlob != null) oursContent = oursBlob.GetContentText();
+
+                var theirsBlob = sourceBranch.Tip[relativePath]?.Target as Blob;
+                if (theirsBlob != null) theirsContent = theirsBlob.GetContentText();
+
+                return Json(new { oursContent, theirsContent });
+            }
+        }
+
+        /// <summary>
+        /// Resolves a single conflicted file by accepting either "ours" (target branch) or "theirs" (source branch).
+        /// </summary>
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> ResolveConflict(string prId, string filePath, string resolution)
+        {
+            var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+            var pr = allPrs.FirstOrDefault(p => p.PR_Id == prId);
+            if (pr == null) return NotFound("PR not found");
+
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == pr.ProjectId);
+            if (project == null) return NotFound("Project not found");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            using (var repo = new Repository(projectPath))
+            {
+                if (repo.Info.CurrentOperation != CurrentOperation.Merge)
+                    return BadRequest("No merge in progress");
+
+                var targetBranch = repo.Branches[pr.TargetBranch] ?? repo.Branches["main"];
+                var sourceBranch = repo.Branches[pr.SourceBranch];
+                if (sourceBranch == null || targetBranch == null)
+                    return NotFound("Branch not found");
+
+                string relativePath = filePath.Replace("\\", "/");
+                string chosenContent = "";
+
+                if (resolution.Equals("ours", StringComparison.OrdinalIgnoreCase))
+                {
+                    var blob = targetBranch.Tip[relativePath]?.Target as Blob;
+                    chosenContent = blob?.GetContentText() ?? "";
+                }
+                else if (resolution.Equals("theirs", StringComparison.OrdinalIgnoreCase))
+                {
+                    var blob = sourceBranch.Tip[relativePath]?.Target as Blob;
+                    chosenContent = blob?.GetContentText() ?? "";
+                }
+                else
+                {
+                    return BadRequest("Resolution must be 'ours' or 'theirs'");
+                }
+
+                // Write chosen content to working directory
+                var fullPath = Path.Combine(projectPath, relativePath);
+                await System.IO.File.WriteAllTextAsync(fullPath, chosenContent);
+
+                // Stage the file (this resolves the conflict in the index)
+                Commands.Stage(repo, relativePath);
+
+                // ✅ Eğer tüm conflict'ler çözüldüyse merge commit oluştur
+                if (!repo.Index.Conflicts.Any())
+                {
+                    var userEmail = User.Identity?.Name ?? "system@gheetah.com";
+                    var userName = User.Identity?.Name ?? "System";
+                    var author = new Signature(userName, userEmail, DateTimeOffset.Now);
+                    
+                    try
+                    {
+                        repo.Commit(
+                            $"Merge branch '{pr.SourceBranch}' into {pr.TargetBranch} - conflicts resolved",
+                            author,
+                            author);
+
+                        // Branch'i sil
+                        if (sourceBranch != null)
+                        {
+                            repo.Branches.Remove(sourceBranch);
+                        }
+
+                        // PR'ı "ConflictsResolved" ara durumuna al
+                        pr.Status = "ConflictsResolved";
+                        await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
+                        await AddActivity(prId, "ConflictsResolved", userEmail,
+                            $"Conflicts resolved for PR. Merge completed. Branch '{pr.SourceBranch}' deleted.");
+
+                        // ✅ Merge/build progress'i güncelle: merge başarılı
+                        if (_mergeBuildProgress.TryGetValue(prId, out var progress))
+                        {
+                            progress.MergeStatus = "success";
+                            progress.MergeMessage = "Merge completed after conflict resolution";
+                            progress.MergeEndTime = DateTime.UtcNow;
+                        }
+
+                        // ✅ Arka planda target build'i başlat
+                        var targetBuildProgress = _mergeBuildProgress.TryGetValue(prId, out var existingProgress) 
+                            ? existingProgress 
+                            : new MergeBuildProgress { PrId = prId };
+                        
+                        targetBuildProgress.TargetBuildStatus = "running";
+                        targetBuildProgress.TargetBuildStartTime = DateTime.UtcNow;
+                        _mergeBuildProgress[prId] = targetBuildProgress;
+
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                var buildOk = await BuildBranchAsync(prId, userEmail, userName, isSource: false);
+                                targetBuildProgress.TargetBuildEndTime = DateTime.UtcNow;
+                                
+                                if (buildOk)
+                                {
+                                    targetBuildProgress.TargetBuildStatus = "success";
+                                    targetBuildProgress.TargetBuildMessage = "Target branch build succeeded after conflict resolution";
+                                    
+                                    // PR'ı Merged yap
+                                    var freshPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+                                    var freshPr = freshPrs.FirstOrDefault(p => p.PR_Id == prId);
+                                    if (freshPr != null)
+                                    {
+                                        freshPr.Status = "Merged";
+                                        await _fileService.SaveConfigAsync("internal-pull-requests.json", freshPrs);
+                                        await AddActivity(prId, "Merged", userEmail, "PR merge completed with target build success.");
+                                    }
+                                }
+                                else
+                                {
+                                    targetBuildProgress.TargetBuildStatus = "failed";
+                                    targetBuildProgress.TargetBuildMessage = "Target branch build failed after conflict resolution";
+                                    
+                                    // PR'ı BuildFailed yap
+                                    var freshPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+                                    var freshPr = freshPrs.FirstOrDefault(p => p.PR_Id == prId);
+                                    if (freshPr != null)
+                                    {
+                                        freshPr.Status = "BuildFailed";
+                                        await _fileService.SaveConfigAsync("internal-pull-requests.json", freshPrs);
+                                        await AddActivity(prId, "BuildFailed", userEmail, "Target build failed after conflict resolution.");
+                                    }
+                                }
+                                
+                                await SaveMergeBuildResult(targetBuildProgress);
+                            }
+                            catch (Exception ex)
+                            {
+                                targetBuildProgress.TargetBuildStatus = "failed";
+                                targetBuildProgress.TargetBuildMessage = $"Target build error: {ex.Message}";
+                                await SaveMergeBuildResult(targetBuildProgress);
+                            }
+                        });
+
+                        return Ok(new { success = true, allResolved = true, message = "Conflicts resolved. Target build started in background." });
+                    }
+                    catch (Exception ex)
+                    {
+                        return StatusCode(500, $"Failed to finalize merge: {ex.Message}");
+                    }
+                }
+
+                return Ok(new { success = true, allResolved = false });
+            }
+        }
+
         private async Task BuildTargetBranchOnlyAsync(string prId, MergeBuildProgress progress, string userEmail, string userName)
         {
             progress.TargetBuildStatus = "running";
@@ -909,16 +1177,49 @@ namespace Gheetah.Controllers
 
         private async Task ProcessMergeAndBuildAsync(string prId, MergeBuildProgress progress, string userEmail, string userName)
         {
+            // projectPath'i metodun başında hesaplayalım
+            string projectPath = null;
             try
             {
+                var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+                var pr = allPrs.FirstOrDefault(p => p.PR_Id == prId);
+                if (pr == null) return;
+
+                var projects = await _projectService.GetProjectsAsync();
+                var project = projects.FirstOrDefault(p => p.Id == pr.ProjectId);
+                if (project == null) return;
+
+                var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+                projectPath = Path.Combine(clonesRoot, project.Name);
+            }
+            catch
+            {
+                // Proje yolu alınamazsa devam edemeyiz
+                return;
+            }
+
+            try
+            {
+                // 1️⃣ SOURCE BUILD
                 progress.SourceBuildStatus = "running";
                 progress.SourceBuildStartTime = DateTime.UtcNow;
                 var sourceBuildOk = await BuildBranchAsync(prId, userEmail, userName, isSource: true);
                 progress.SourceBuildEndTime = DateTime.UtcNow;
+                
                 if (sourceBuildOk)
                 {
                     progress.SourceBuildStatus = "success";
                     progress.SourceBuildMessage = "Source branch build succeeded";
+
+                    // ✅ Build sonrası çalışma dizinini temizle
+                    try
+                    {
+                        CleanRepository(projectPath);
+                    }
+                    catch
+                    {
+                        // Temizlik başarısız olsa bile merge'i dene
+                    }
                 }
                 else
                 {
@@ -928,10 +1229,12 @@ namespace Gheetah.Controllers
                     return;
                 }
 
+                // 2️⃣ MERGE
                 progress.MergeStatus = "running";
                 progress.MergeStartTime = DateTime.UtcNow;
                 var mergeResult = await PerformMergeAsync(prId, userEmail, userName);
                 progress.MergeEndTime = DateTime.UtcNow;
+                
                 if (mergeResult.Success)
                 {
                     progress.MergeStatus = "success";
@@ -945,10 +1248,12 @@ namespace Gheetah.Controllers
                     return;
                 }
 
+                // 3️⃣ TARGET BUILD
                 progress.TargetBuildStatus = "running";
                 progress.TargetBuildStartTime = DateTime.UtcNow;
                 var targetBuildOk = await BuildBranchAsync(prId, userEmail, userName, isSource: false);
                 progress.TargetBuildEndTime = DateTime.UtcNow;
+                
                 if (targetBuildOk)
                 {
                     progress.TargetBuildStatus = "success";
@@ -997,6 +1302,24 @@ namespace Gheetah.Controllers
             }
 
             var buildResult = await _projectService.BuildProjectAsync(project.Id, project.LanguageType);
+
+            // --- Hata/başarı mesajını progress'e yazmak için progress nesnesini alalım ---
+            if (_mergeBuildProgress.TryGetValue(prId, out var progress))
+            {
+                if (isSource)
+                {
+                    progress.SourceBuildMessage = buildResult.IsSuccess
+                        ? "Source branch build succeeded"
+                        : $"Source branch build failed: {buildResult.Message}";
+                }
+                else
+                {
+                    progress.TargetBuildMessage = buildResult.IsSuccess
+                        ? "Target branch build succeeded"
+                        : $"Target branch build failed: {buildResult.Message}";
+                }
+            }
+
             return buildResult.IsSuccess;
         }
 
@@ -1016,37 +1339,84 @@ namespace Gheetah.Controllers
             if (!Repository.IsValid(projectPath))
                 return (false, null, "Repository not valid");
 
-            using var repo = new Repository(projectPath);
-            var sourceBranch = repo.Branches[pr.SourceBranch];
-            var targetBranch = repo.Branches[pr.TargetBranch] ?? repo.Branches["main"];
-            if (sourceBranch == null || targetBranch == null)
-                return (false, null, "Source or target branch not found");
-
-            Commands.Checkout(repo, targetBranch);
-            var signature = new Signature(userName, userEmail, DateTimeOffset.Now);
-
-            var mergeResult = repo.Merge(sourceBranch, signature);
-
-            if (mergeResult.Status == MergeStatus.Conflicts)
+            try
             {
-                return (false, null, "Merge conflicts detected. Please resolve in Conflicts tab.");
-            }
+                using var repo = new Repository(projectPath);
+                var sourceBranch = repo.Branches[pr.SourceBranch];
+                var targetBranch = repo.Branches[pr.TargetBranch] ?? repo.Branches["main"];
+                if (sourceBranch == null || targetBranch == null)
+                    return (false, null, "Source or target branch not found");
 
-            if (mergeResult.Status == MergeStatus.UpToDate)
-            {
+                // Merge zaten devam ediyorsa (conflict sonrası)
+                if (repo.Info.CurrentOperation == CurrentOperation.Merge)
+                {
+                    if (repo.Index.Conflicts.Any())
+                        return (false, null, "There are still unresolved conflicts. Resolve them first in the Conflicts tab.");
+
+                    var author = new Signature(userName, userEmail, DateTimeOffset.Now);
+                    repo.Commit($"Merge branch '{pr.SourceBranch}' into {pr.TargetBranch}", author, author);
+                    repo.Branches.Remove(sourceBranch);
+                    pr.Status = "Merged";
+                    await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
+                    await AddActivity(prId, "Merged", userEmail, $"PR merged into '{pr.TargetBranch}' and branch '{pr.SourceBranch}' deleted.");
+                    return (true, "Merge completed successfully", null);
+                }
+
+                // Normal merge
+                Commands.Checkout(repo, targetBranch);
+                var signature = new Signature(userName, userEmail, DateTimeOffset.Now);
+                var mergeResult = repo.Merge(sourceBranch, signature);
+
+                if (mergeResult.Status == MergeStatus.Conflicts)
+                    return (false, null, "Merge conflicts detected. Please resolve in Conflicts tab.");
+
+                if (mergeResult.Status == MergeStatus.UpToDate)
+                {
+                    repo.Branches.Remove(sourceBranch);
+                    pr.Status = "Merged";
+                    await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
+                    await AddActivity(prId, "Merged", userEmail, $"PR merged (already up-to-date). Branch '{pr.SourceBranch}' deleted.");
+                    return (true, "Already up-to-date, merge not needed.", null);
+                }
+
+                // Başarılı merge
                 repo.Branches.Remove(sourceBranch);
                 pr.Status = "Merged";
                 await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
-                await AddActivity(prId, "Merged", userEmail, $"PR merged (already up-to-date). Branch '{pr.SourceBranch}' deleted.");
-                return (true, "Already up-to-date, merge not needed.", null);
+                await AddActivity(prId, "Merged", userEmail, $"PR merged into '{pr.TargetBranch}' and branch '{pr.SourceBranch}' deleted.");
+                return (true, "Merge completed successfully", null);
             }
+            catch (Exception ex)
+            {
+                return (false, null, $"Merge failed: {ex.Message}");
+            }
+        }
 
-            repo.Branches.Remove(sourceBranch);
-            pr.Status = "Merged";
-            await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
-            await AddActivity(prId, "Merged", userEmail, $"PR merged into '{pr.TargetBranch}' and branch '{pr.SourceBranch}' deleted.");
+        private void CleanRepository(string projectPath)
+        {
+            using (var repo = new Repository(projectPath))
+            {
+                // 1. Çalışma dizinini HEAD'e sıfırla (git reset --hard)
+                repo.Reset(ResetMode.Hard);
 
-            return (true, "Merge completed successfully", null);
+                // 2. İzlenmeyen tüm dosyaları sil (git clean -fd karşılığı)
+                var untrackedOptions = new StatusOptions
+                {
+                    IncludeUntracked = true,
+                    IncludeIgnored = false
+                };
+                var untrackedFiles = repo.RetrieveStatus(untrackedOptions)
+                    .Where(e => e.State == FileStatus.NewInWorkdir);
+
+                foreach (var entry in untrackedFiles)
+                {
+                    var fullPath = Path.Combine(repo.Info.WorkingDirectory, entry.FilePath);
+                    if (System.IO.File.Exists(fullPath))
+                    {
+                        System.IO.File.Delete(fullPath);
+                    }
+                }
+            }
         }
 
         private async Task SaveMergeBuildResult(MergeBuildProgress progress)

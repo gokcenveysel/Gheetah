@@ -813,10 +813,12 @@
                 if (typeof window.openBranchModal === "function") {
                     window.openBranchModal();
                 }
+                return;
             }
-    
-            var currentFileDirty = activeFilePath ? (openFiles[activeFilePath]?.isDirty || false) : false;
-            updateUIStates(activeFilePath, currentFileDirty);
+            // value is an existing branch name
+            if (value) {
+                switchToBranch(value);
+            }
         }
 
         window.handlePushAction = function() {
@@ -1053,6 +1055,62 @@
             const isReviewerValid = window.hasOtherReviewers ? selectedReviewers.length > 0 : true;
 
             $('#btn-submit-pr').prop('disabled', !(target && comment && isReviewerValid));
+        }
+
+        function switchToBranch(branchName) {
+            // Check for unsaved open files
+            var anyDirty = Object.values(openFiles).some(f => f.isDirty);
+            if (anyDirty) {
+                showConfirm("Unsaved Changes",
+                    "You have unsaved files. Switching branches will discard all changes. Continue?",
+                    function() {
+                        performBranchSwitch(branchName);
+                    });
+            } else {
+                performBranchSwitch(branchName);
+            }
+        }
+
+        function performBranchSwitch(branchName) {
+            $.ajax({
+                url: '/Editor/SwitchBranch',
+                type: 'POST',
+                data: { projectId: projectId, branchName: branchName },
+                success: function(response) {
+                    // Close all open tabs and clear editor
+                    closeAllTabs();
+                    // Refresh the solution tree
+                    $('#editor-treeview').jstree(true).refresh();
+                    // Update the dropdown to reflect the new branch
+                    refreshBranchList(branchName);
+                    // Also refresh git changes if the Git tab is active
+                    if ($('#tab-git').hasClass('active')) {
+                        refreshGitChanges();
+                    }
+                    showCustomToast('success', `Switched to branch '${branchName}'.`);
+                },
+                error: function(err) {
+                    showAlert("Branch Switch Failed", err.responseText || "Could not switch branch.", "danger");
+                }
+            });
+        }
+
+        function closeAllTabs() {
+            // Dispose editor models (optional, to free memory)
+            for (let path in openFiles) {
+                if (openFiles[path].model) {
+                    openFiles[path].model.dispose();
+                }
+            }
+            openFiles = {};
+            activeFilePath = "";
+            $('#editor-tabs').empty().html('<span id="no-file-msg" class="text-muted small italic px-2">No file open</span>');
+            if (editor) {
+                editor.setModel(null);
+            }
+            // Remove dirty markers from tree items
+            $('.file-dirty').removeClass('file-dirty');
+            updateUIStates(null, false);
         }
 
         function showConfirm(title, message, onConfirm) {
