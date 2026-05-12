@@ -3,6 +3,16 @@
 }
 
 <style>
+    /* Step Definition Linker Highlight */
+    .step-definition-highlight {
+        background-color: rgba(0, 84, 166, 0.15) !important;
+    }
+
+    .step-definition-glyph {
+        background: #0054a6;
+        width: 3px !important;
+        margin-left: 3px;
+    }
     /* 1. LAYOUT & SCROLL MANAGEMENT */
     html, body {
         height: 100%;
@@ -12,12 +22,64 @@
     }
 
     .page-wrapper {
-        height: calc(100vh - 64px); /* Navbar sonrası kalan tam alan */
+        height: calc(100vh - 64px);
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         width: 100%;
         overflow: hidden;
         background: #ffffff;
+        position: relative; /* İçerideki fixed eleman için referans */
+        padding-bottom: 28px; /* Status bar yüksekliği + biraz boşluk */
+    }
+
+    .ide-workspace {
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    /* Tabler.io Modern Status Bar */
+    .status-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 26px;
+        background: #f6f8fb; /* Tabler light background */
+        color: #656d77; /* Tabler muted text */
+        border-top: 1px solid rgba(101, 109, 119, 0.16);
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        font-size: 11px;
+        font-weight: 500;
+        gap: 16px;
+        z-index: 1050; /* Monaco Editör'ün üzerinde kalması için */
+        user-select: none;
+    }
+
+    /* Status Bar Item Tasarımı */
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #495057;
+    }
+
+        .status-item i {
+            font-size: 13px;
+            color: #656d77;
+        }
+
+        .status-item:hover {
+            color: #0054a6; /* Tabler Primary */
+        }
+
+    .status-divider {
+        width: 1px;
+        height: 12px;
+        background: rgba(101, 109, 119, 0.2);
     }
 
     /* 2. SIDEBAR (EXPLORER & GIT) STYLING */
@@ -198,66 +260,106 @@
 </style>
 
 <div class="page-wrapper">
-    <!-- LEFT SIDEBAR -->
-    <aside class="sidebar-container">
-        <div class="explorer-tabs">
-            <div id="tab-solution" class="explorer-tab-item active" onclick="switchSidebar('solution')">
-                <i class="ti ti-files me-1"></i> Solution
-            </div>
-            <div id="tab-git" class="explorer-tab-item" onclick="switchSidebar('git')">
-                <i class="ti ti-git-pull-request me-1"></i> Git
-            </div>
-        </div>
-
-        <div id="panel-solution" class="panel-content">
-            <div class="p-2 border-bottom bg-white d-flex justify-content-between align-items-center">
-                <strong class="small text-muted">FILES</strong>
-                <div class="d-flex gap-1">
-                    <button id="btn-save" class="btn-ghost-secondary" onclick="saveCurrentFile()" disabled title="Save (Ctrl+S)">
-                        <i class="ti ti-device-floppy fs-3"></i>
-                    </button>
-                    <button id="btn-save-all" class="btn-ghost-secondary" onclick="saveAllFiles()" disabled title="Save All">
-                        <i class="ti ti-files fs-3"></i>
-                    </button>
-                    <div class="vr mx-1"></div>
-                    <button class="btn-ghost-secondary" onclick="refreshTree()" title="Refresh">
-                        <i class="ti ti-refresh fs-3"></i>
-                    </button>
+    <div class="ide-workspace">
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar-container">
+            <div class="explorer-tabs">
+                <div id="tab-solution" class="explorer-tab-item active" onclick="switchSidebar('solution')">
+                    <i class="ti ti-files me-1"></i> Solution
+                </div>
+                <div id="tab-git" class="explorer-tab-item" onclick="switchSidebar('git')">
+                    <i class="ti ti-git-pull-request me-1"></i> Git
                 </div>
             </div>
-            <div id="editor-treeview" class="p-1"></div>
-        </div>
 
-        <div id="panel-git" class="panel-content d-none">
-            <div class="p-2 bg-light border-bottom">
-                <select id="branch-dropdown" class="form-select form-select-sm mb-2" onchange="handleBranchChange(this.value)"></select>
-                <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-primary w-50" onclick="window.pullLatest()"><i class="ti ti-download me-1"></i> Pull</button>
-                    <button id="btn-git-push" class="btn btn-sm btn-success w-50" onclick="handlePushAction()"><i class="ti ti-upload me-1"></i> Push</button>
+            <div id="panel-solution" class="panel-content">
+                <div class="p-2 border-bottom bg-white d-flex justify-content-between align-items-center">
+                    <strong class="small text-muted">FILES</strong>
+                    <div class="d-flex gap-1">
+                        <button id="btn-save" class="btn-ghost-secondary" onclick="saveCurrentFile()" disabled title="Save (Ctrl+S)">
+                            <i class="ti ti-device-floppy fs-3"></i>
+                        </button>
+                        <button id="btn-save-all" class="btn-ghost-secondary" onclick="saveAllFiles()" disabled title="Save All">
+                            <i class="ti ti-files fs-3"></i>
+                        </button>
+                        <div class="vr mx-1"></div>
+                        <button class="btn-ghost-secondary" onclick="refreshTree()" title="Refresh">
+                            <i class="ti ti-refresh fs-3"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="editor-treeview" class="p-1"></div>
+            </div>
+
+            <div id="panel-git" class="panel-content d-none">
+                <div class="p-2 bg-light border-bottom">
+                    <select id="branch-dropdown" class="form-select form-select-sm mb-2" onchange="handleBranchChange(this.value)"></select>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-primary w-50" onclick="window.pullLatest()"><i class="ti ti-download me-1"></i> Pull</button>
+                        <button id="btn-git-push" class="btn btn-sm btn-success w-50" onclick="handlePushAction()"><i class="ti ti-upload me-1"></i> Push</button>
+                    </div>
+                </div>
+                <div class="p-2 small fw-bold text-muted border-bottom bg-white">CHANGES</div>
+                <div id="git-changes-treeview" class="p-1"></div>
+            </div>
+
+            <div class="push-history-panel">
+                <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
+                    <strong class="small text-muted">PUSH HISTORY</strong>
+                    <button class="btn-ghost-secondary" onclick="openHistoryModal()">
+                        <i class="ti ti-maximize fs-3"></i>
+                    </button>
+                </div>
+                <div id="push-history-list"></div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="editor-main-area">
+            <div id="editor-tabs">
+                <span id="no-file-msg" class="text-muted small italic px-2">No file open</span>
+            </div>
+            <div id="monaco-container"></div>
+        </main>
+        <!-- STATUS BAR -->
+        <footer class="status-bar">
+            <div class="status-item">
+                <i class="ti ti-file-plus"></i>
+                <span><b>Ctrl+Shift+N:</b> New File</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <i class="ti ti-device-floppy"></i>
+                <span><b>Ctrl+S:</b> Save</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <i class="ti ti-square-x"></i>
+                <span><b>Ctrl+Q:</b> Close Tab</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <i class="ti ti-arrows-left-right"></i>
+                <span><b>Ctrl+1-9:</b> Switch Tab</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <i class="ti ti-trash"></i>
+                <span><b>Del:</b> Delete File</span>
+            </div>
+            <div class="status-divider"></div>
+            <div class="status-item">
+                <i class="ti ti-link"></i>
+                <span><b>Ctrl+Click:</b> Go to Definition</span>
+            </div>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <div class="status-item text-primary">
+                    <i class="ti ti-git-branch"></i>
+                    <span id="status-branch" class="fw-bold">@ViewBag.CurrentBranch</span>
                 </div>
             </div>
-            <div class="p-2 small fw-bold text-muted border-bottom bg-white">CHANGES</div>
-            <div id="git-changes-treeview" class="p-1"></div>
-        </div>
-
-        <div class="push-history-panel">
-            <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
-                <strong class="small text-muted">PUSH HISTORY</strong>
-                <button class="btn-ghost-secondary" onclick="openHistoryModal()">
-                    <i class="ti ti-maximize fs-3"></i>
-                </button>
-            </div>
-            <div id="push-history-list"></div>
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="editor-main-area">
-        <div id="editor-tabs">
-            <span id="no-file-msg" class="text-muted small italic px-2">No file open</span>
-        </div>
-        <div id="monaco-container"></div>
-    </main>
+        </footer>
+    </div>
 </div>
 
 <!-- MODALS -->
@@ -305,7 +407,45 @@
         </div>
     </div>
 </div>
-
+<!-- ADD NEW ITEM MODAL -->
+<div class="modal modal-blur fade" id="modal-new-file" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">File Type</label>
+                    <select id="new-file-type" class="form-select" onchange="updateTemplateOptions()">
+                        <option value="cs">C# Class (.cs)</option>
+                        <option value="feature">Feature File (.feature)</option>
+                        <option value="java">Java Class (.java)</option>
+                        <option value="xml">XML File (.xml)</option>
+                        <option value="json">JSON File (.json)</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="template-selector" style="display: none;">
+                    <label class="form-label">Template</label>
+                    <select id="new-file-template" class="form-select">
+                        <option value="class">Class</option>
+                        <option value="interface">Interface</option>
+                        <option value="stepdef">Step Definition</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">File Name (without extension)</label>
+                    <input type="text" id="new-file-name" class="form-control" placeholder="e.g., LoginSteps">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createNewFile()">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- CREATE PR DETAIL MODAL -->
 <div class="modal modal-blur fade" id="modal-create-pr-detail" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
@@ -413,6 +553,7 @@
         var activeFilePath = "";
         var hasServerChanges = false;
         var currentPRContext = {};
+        var selectedFolderPath = null;
 
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' } });
 
@@ -442,22 +583,240 @@
                         }
                     });
                 }
-                
+
                 createNormalEditor();
+                setupStepDefinitionLinker();
+
+                // ==================== MONACO EDITOR ACTIONS (KESİN ÇALIŞIR) ====================
+                editor.addAction({
+                    id: 'save-file',
+                    label: 'Save File',
+                    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+                    run: function() {
+                        if (activeFilePath && openFiles[activeFilePath] && openFiles[activeFilePath].isDirty) {
+                            saveCurrentFile();
+                        }
+                    }
+                });
+
+                editor.addAction({
+                    id: 'close-tab',
+                    label: 'Close Tab',
+                    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyQ],
+                    run: function() {
+                        if (activeFilePath && openFiles[activeFilePath]) {
+                            var path = activeFilePath;
+                            var safeId = btoa(path).replace(/=/g, "");
+                            if (openFiles[path].isDirty) {
+                                showConfirm("Unsaved Changes", "Close anyway?", function() {
+                                    executeTabClosure(path, safeId);
+                                });
+                            } else {
+                                executeTabClosure(path, safeId);
+                            }
+                        }
+                    }
+                });
+
+                // Ctrl+1'den Ctrl+9'a kadar tab'lara direkt geçiş
+                for (var i = 1; i <= 9; i++) {
+                    (function(index) {
+                        editor.addAction({
+                            id: 'switch-to-tab-' + index,
+                            label: 'Switch to Tab ' + index,
+                            keybindings: [monaco.KeyMod.CtrlCmd | (monaco.KeyCode.KEY_0 + index)],
+                            run: function() {
+                                var tabs = Object.keys(openFiles);
+                                if (tabs.length >= index) {
+                                    switchToTab(tabs[index - 1]);
+                                }
+                            }
+                        });
+                    })(i);
+                }
+
+                editor.addAction({
+                    id: 'new-file',
+                    label: 'New File',
+                    keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyN],
+                    run: function() {
+                        var selectedNode = $('#editor-treeview').jstree(true).get_selected(true)[0];
+                        if (selectedNode) {
+                            var folderPath = selectedNode.original.type === 'folder' ? selectedNode.id : selectedNode.parent;
+                            openNewFileDialog(folderPath);
+                        } else {
+                            showCustomToast('warning', 'Please select a folder first.');
+                        }
+                    }
+                });
             });
 
-            $(window).bind('keydown', function(event) {
-                if ((event.ctrlKey || event.metaKey) && String.fromCharCode(event.which).toLowerCase() == 's') {
-                    event.preventDefault(); saveCurrentFile();
+            // Delete tuşu - sadece treeview'da çalışır
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Delete') {
+                    var activeEl = document.activeElement;
+                    if (activeEl && activeEl.closest('.monaco-editor')) return;
+                    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) return;
+
+                    var selectedNode = $('#editor-treeview').jstree(true).get_selected(true)[0];
+                    if (selectedNode && selectedNode.original && selectedNode.original.type === 'file') {
+                        e.preventDefault();
+                        deleteSelectedFile(selectedNode.id);
+                    }
+                }
+            });
+
+            // Tarayıcı kapanma güvenliği
+            window.addEventListener('beforeunload', function(e) {
+                var anyDirty = Object.values(openFiles).some(f => f.isDirty);
+                if (anyDirty) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
                 }
             });
         });
+
+        // Tab geçiş yardımcı fonksiyonları
+        function switchToNextTab() {
+            var tabs = Object.keys(openFiles);
+            if (tabs.length < 2) return;
+
+            var currentIndex = tabs.indexOf(activeFilePath);
+            if (currentIndex === -1) {
+                // Aktif dosya yoksa ilk tab'a geç
+                switchToTab(tabs[0]);
+                return;
+            }
+
+            var nextIndex = (currentIndex + 1) % tabs.length;
+            switchToTab(tabs[nextIndex]);
+        }
+
+        function switchToPreviousTab() {
+            var tabs = Object.keys(openFiles);
+            if (tabs.length < 2) return;
+
+            var currentIndex = tabs.indexOf(activeFilePath);
+            if (currentIndex === -1) {
+                switchToTab(tabs[0]);
+                return;
+            }
+
+            var prevIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+            switchToTab(tabs[prevIndex]);
+        }
+
+        function openNewFileDialog(folderPath) {
+            selectedFolderPath = folderPath;
+            $('#new-file-name').val('');
+            updateTemplateOptions();
+            $('#modal-new-file').modal('show');
+        }
+
+        function updateTemplateOptions() {
+            var type = $('#new-file-type').val();
+            $('#template-selector').toggle(type === 'cs');
+        }
+
+        function createNewFile() {
+            var fileType = $('#new-file-type').val();
+            var templateType = $('#new-file-template').val() || 'class';
+            var fileName = $('#new-file-name').val().trim();
+
+            if (!fileName) {
+                showAlert("Error", "Please enter a file name.", "danger");
+                return;
+            }
+
+            $.ajax({
+                url: '/Editor/AddNewFile',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    ParentFolderPath: selectedFolderPath,
+                    FileName: fileName,
+                    FileType: fileType,
+                    TemplateType: templateType
+                }),
+                success: function(response) {
+                    $('#modal-new-file').modal('hide');
+                    // ✅ hasServerChanges = true yapma, Git tabı GetModifiedFiles ile güncellenecek
+                    updateUIStates(activeFilePath, openFiles[activeFilePath]?.isDirty || false);
+
+                    openFileInTab(response.filePath, response.fileName);
+                    $('#editor-treeview').jstree(true).refresh();
+                    showCustomToast('success', `File '${response.fileName}' created and staged.`);
+                },
+                error: function(err) {
+                    showAlert("Error", err.responseText || "Failed to create file.", "danger");
+                }
+            });
+        }
+
+        // Delete file function (context menu için)
+        function deleteSelectedFile(filePath) {
+            showConfirm("Delete File", "Are you sure you want to delete this file?", function() {
+                $.ajax({
+                    url: '/Editor/DeleteFile',
+                    type: 'POST',
+                    data: { filePath: filePath },
+                    success: function(response) {
+                        if (openFiles[filePath]) {
+                            executeTabClosure(filePath, btoa(filePath).replace(/=/g, ""));
+                        }
+                        $('#editor-treeview').jstree(true).refresh();
+                        // ✅ hasServerChanges = true yapma
+                        updateUIStates(activeFilePath, openFiles[activeFilePath]?.isDirty || false);
+                        // Git tabını yenile
+                        if ($('#tab-git').hasClass('active')) {
+                            refreshGitChanges();
+                        }
+                        showCustomToast('success', 'File deleted.');
+                    },
+                    error: function(err) {
+                        showAlert("Error", err.responseText || "Could not delete file.", "danger");
+                    }
+                });
+            });
+        }
+
+        // Rename function (context menu için)
+        function renameSelectedFile(oldPath) {
+            var oldName = oldPath.split('/').pop().split('\\').pop();
+            var fileNameWithoutExt = oldName.substring(0, oldName.lastIndexOf('.'));
+            var newName = prompt("Enter new name (without extension):", fileNameWithoutExt);
+            if (newName && newName !== fileNameWithoutExt) {
+                $.ajax({
+                    url: '/Editor/RenameFile',
+                    type: 'POST',
+                    data: { oldPath: oldPath, newName: newName },
+                    success: function(response) {
+                        // Eski dosyayı tablardan kaldır, yeni dosyayı ekle
+                        if (openFiles[oldPath]) {
+                            var oldFile = openFiles[oldPath];
+                            openFiles[response.newPath] = oldFile;
+                            delete openFiles[oldPath];
+                            // Tab UI güncellemesi için basit çözüm: tab'ı kapatıp yeni yolu aç
+                            executeTabClosure(oldPath, btoa(oldPath).replace(/=/g, ""));
+                            // Ağacı yenile
+                            $('#editor-treeview').jstree(true).refresh();
+                        }
+                        hasServerChanges = true;
+                        updateUIStates(activeFilePath, openFiles[activeFilePath]?.isDirty || false);
+                        showCustomToast('success', 'File renamed.');
+                    },
+                    error: function(err) {
+                        showAlert("Error", err.responseText || "Could not rename file.", "danger");
+                    }
+                });
+            }
+        }
 
         // --- Editor Management ---
 
         function createNormalEditor() {
             const container = document.getElementById('monaco-container');
-            // Eğer halihazırda bir editor varsa, onu güvenli bir şekilde yok et (dispose)
             if (editor) {
                 editor.dispose();
                 editor = null;
@@ -466,7 +825,7 @@
                 diffEditor.dispose();
                 diffEditor = null;
             }
-            container.innerHTML = ''; // DOM temizliği
+            container.innerHTML = '';
 
             editor = monaco.editor.create(container, {
                 theme: 'vs-light',
@@ -476,6 +835,7 @@
                 readOnly: true
             });
             isDiffMode = false;
+            setupStepDefinitionLinker();
         }
 
         function openFileInTab(path, fileName) {
@@ -483,9 +843,9 @@
                 createNormalEditor();
             }
 
-            if (openFiles[path]) { 
-                switchToTab(path); 
-                return; 
+            if (openFiles[path]) {
+                switchToTab(path);
+                return;
             }
 
             $.get('/Editor/GetFileContent', { filePath: path }, function (response) {
@@ -495,8 +855,8 @@
                 var backup = localStorage.getItem("backup_" + path);
                 if(backup && backup !== response.content) {
                     showConfirm(
-                        "Backup Found", 
-                        "Unsaved local changes were found for " + fileName + ". Should I load it?", 
+                        "Backup Found",
+                        "Unsaved local changes were found for " + fileName + ". Should I load it?",
                         function() {
                             model.setValue(backup);
                         }
@@ -528,13 +888,16 @@
             $(`#tab-${safeId}`).addClass('active');
 
             updateUIStates(path, file.isDirty);
+
+            // ✅ Model değiştiğinde linker'ı yeniden bağla
+            setupStepDefinitionLinker();
         }
 
         function openDiffView(path, fileName) {
             $.get('/Editor/GetFileDiff', { filePath: path }, function (response) {
                 isDiffMode = true;
                 const container = document.getElementById('monaco-container');
-                container.innerHTML = ''; 
+                container.innerHTML = '';
 
                 diffEditor = monaco.editor.createDiffEditor(container, {
                     theme: 'vs-light',
@@ -543,8 +906,11 @@
                     fontSize: 14
                 });
 
-                const originalModel = monaco.editor.createModel(response.originalContent, getLanguageByExtension(fileName));
-                const modifiedModel = monaco.editor.createModel(response.modifiedContent, getLanguageByExtension(fileName));
+                // ✅ Dil desteği: dosya uzantısına göre dil belirle
+                var lang = getLanguageByExtension(fileName);
+
+                const originalModel = monaco.editor.createModel(response.originalContent, lang);
+                const modifiedModel = monaco.editor.createModel(response.modifiedContent, lang);
 
                 diffEditor.setModel({
                     original: originalModel,
@@ -552,7 +918,7 @@
                 });
 
                 $('.tab-item').removeClass('active');
-                activeFilePath = ""; 
+                activeFilePath = "";
             });
         }
 
@@ -580,7 +946,43 @@
                     'default': { 'icon': 'ti ti-file' },
                     'folder': { 'icon': 'ti ti-folder' }
                 },
-                'plugins': ['wholerow', 'types']
+                'plugins': ['wholerow', 'types', 'contextmenu', 'rename'],
+                'contextmenu': {
+                    'items': function(node) {
+                        var items = {};
+
+                        if (node.original.type === 'folder') {
+                            items['NewFile'] = {
+                                'label': 'Add New Item...',
+                                'icon': 'ti ti-file-plus',
+                                'action': function() { openNewFileDialog(node.id); }
+                            };
+                        } else if (node.original.type === 'file') {
+                            items['Rename'] = {
+                                'label': 'Rename',
+                                'icon': 'ti ti-pencil',
+                                'action': function() {
+                                    // Inline rename başlat
+                                    $('#editor-treeview').jstree(true).edit(node);
+                                }
+                            };
+                            items['Delete'] = {
+                                'label': 'Delete',
+                                'icon': 'ti ti-trash',
+                                'action': function() { deleteSelectedFile(node.id); }
+                            };
+                        }
+
+                        // Her zaman Refresh
+                        items['Refresh'] = {
+                            'label': 'Refresh',
+                            'icon': 'ti ti-refresh',
+                            'action': function() { $('#editor-treeview').jstree(true).refresh(); }
+                        };
+
+                        return items;
+                    }
+                }
             })
             .on('select_node.jstree', function (e, data) {
                 if (data.node.original.type !== "folder") {
@@ -591,7 +993,6 @@
                 var anchor = document.getElementById(data.node.id + "_anchor");
                 if(anchor) {
                     $(anchor).prev('.jstree-ocl').removeClass('ti-arrow-badge-right').addClass('ti-arrow-badge-down');
-
                     $(anchor).find('i.jstree-themeicon').removeClass('ti-folder').addClass('ti-folder-open');
                 }
             })
@@ -599,13 +1000,104 @@
                 var anchor = document.getElementById(data.node.id + "_anchor");
                 if(anchor) {
                     $(anchor).prev('.jstree-ocl').removeClass('ti-arrow-badge-down').addClass('ti-arrow-badge-right');
-
                     $(anchor).find('i.jstree-themeicon').removeClass('ti-folder-open').addClass('ti-folder');
                 }
             })
             .on('ready.jstree', function () {
                 $('.jstree-closed > .jstree-ocl').addClass('ti ti-arrow-badge-right');
                 $('.jstree-opened > .jstree-ocl').addClass('ti ti-arrow-badge-down');
+            })
+            .on('rename.jstree', function (e, data) {
+                // Düzenleme başlarken uzantıyı gizle (sadece dosya adı görünsün)
+                var oldName = data.node.text;
+                var lastDot = oldName.lastIndexOf('.');
+                if (lastDot > 0) {
+                    // Orijinal tam ismi (uzantılı) bir data attribute olarak sakla
+                    data.node.original.fullName = oldName;
+                    data.node.text = oldName.substring(0, lastDot);
+                } else {
+                    // Nokta yoksa (örneğin uzantısız dosya) orijinal ismi olduğu gibi bırak
+                    data.node.original.fullName = oldName;
+                }
+            })
+            .on('rename_node.jstree', function (e, data) {
+                var oldFullName = data.old;                    // orijinal text (uzantılı)
+                var newNameInput = data.text;                 // kullanıcının girdiği yeni isim
+
+                // Uzantıyı ayıkla
+                var extension = '';
+                var lastDotInOld = oldFullName.lastIndexOf('.');
+                if (lastDotInOld > 0) {
+                    extension = oldFullName.substring(lastDotInOld);  // .feature gibi
+                }
+
+                // Yeni tam ismi oluştur
+                var newFullName;
+                if (newNameInput.includes('.')) {
+                    // Kullanıcı kendi uzantısını vermiş
+                    newFullName = newNameInput;
+                } else if (extension) {
+                    // Uzantı verilmemiş, eski uzantıyı ekle
+                    newFullName = newNameInput + extension;
+                } else {
+                    // Uzantısız dosya (nadir durum)
+                    newFullName = newNameInput;
+                }
+
+                // Sunucuya HER ZAMAN uzantısız ismi gönder
+                var newNameWithoutExt = newNameInput.includes('.')
+                    ? newNameInput.substring(0, newNameInput.lastIndexOf('.'))
+                    : newNameInput;
+
+                var oldPath = data.node.id;  // eski tam path (sunucu tarafında kullanılacak)
+
+                $.ajax({
+                    url: '/Editor/RenameFile',
+                    type: 'POST',
+                    data: { oldPath: oldPath, newName: newNameWithoutExt },  // sunucuya uzantısız gönder
+                    success: function(response) {
+                        // Yeni path'i al
+                        var newPath = response.newPath;
+
+                        // openFiles'taki eski path'i yeni path ile güncelle
+                        if (openFiles[oldPath]) {
+                            var fileData = openFiles[oldPath];
+                            fileData.fileName = newFullName;
+                            openFiles[newPath] = fileData;
+                            delete openFiles[oldPath];
+
+                            // Tab UI'ı güncelle
+                            var oldSafeId = btoa(oldPath).replace(/=/g, "");
+                            var newSafeId = btoa(newPath).replace(/=/g, "");
+                            var $tab = $(`#tab-${oldSafeId}`);
+                            if ($tab.length > 0) {
+                                $tab.attr('id', `tab-${newSafeId}`);
+                                $tab.find('.tab-title').text(newFullName);
+                                $tab.attr('onclick', `switchToTab(decodeURIComponent('${encodeURIComponent(newPath)}'))`);
+                                $tab.find('.tab-close').attr('onclick', `closeTab(event, decodeURIComponent('${encodeURIComponent(newPath)}'))`);
+                            }
+
+                            // Aktif dosya buysa activeFilePath'i güncelle
+                            if (activeFilePath === oldPath) {
+                                activeFilePath = newPath;
+                            }
+                        }
+
+                        // ✅ Node'un id'sini jsTree API'si ile güncelle (hata vermez)
+                        $('#editor-treeview').jstree(true).set_id(data.node, newPath);
+
+                        // Node text'ini güncelle
+                        $('#editor-treeview').jstree(true).set_text(data.node, newFullName);
+
+                        // UI durumunu güncelle
+                        updateUIStates(activeFilePath, openFiles[activeFilePath]?.isDirty || false);
+                        showCustomToast('success', 'File renamed.');
+                    },
+                    error: function(err) {
+                        showAlert("Error", err.responseText || "Could not rename file.", "danger");
+                        $.jstree.rollback(data);
+                    }
+                });
             });
         }
 
@@ -633,18 +1125,18 @@
         }
 
         function switchSidebar(type) {
-                    $('.explorer-tab-item').removeClass('active');
-                    $(`#tab-${type}`).addClass('active');
+            $('.explorer-tab-item').removeClass('active');
+            $(`#tab-${type}`).addClass('active');
 
-                    if (type === 'solution') {
-                        $('#panel-solution').removeClass('d-none');
-                        $('#panel-git').addClass('d-none');
-                    } else {
-                        $('#panel-solution').addClass('d-none');
-                        $('#panel-git').removeClass('d-none');
-                        refreshGitChanges();
-                    }
-                    setTimeout(() => { if(editor) editor.layout(); }, 50);
+            if (type === 'solution') {
+                $('#panel-solution').removeClass('d-none');
+                $('#panel-git').addClass('d-none');
+            } else {
+                $('#panel-solution').addClass('d-none');
+                $('#panel-git').removeClass('d-none');
+                refreshGitChanges();
+            }
+            setTimeout(() => { if(editor) editor.layout(); }, 50);
         }
 
         // --- UI & Helper Methods ---
@@ -675,14 +1167,29 @@
         }
 
         function executeTabClosure(path, safeId) {
+            // Model'i dispose et
+            if (openFiles[path] && openFiles[path].model) {
+                openFiles[path].model.dispose();
+            }
+    
+            // Tab'ı DOM'dan kaldır
             $(`#tab-${safeId}`).remove();
-            $(`#pane-${safeId}`).remove();
             delete openFiles[path];
 
-            if ($('#editor-tabs .nav-link').length > 0) {
-                $('#editor-tabs .nav-link').last().tab('show');
+            // Başka açık dosya var mı kontrol et
+            var remainingPaths = Object.keys(openFiles);
+            if (remainingPaths.length > 0) {
+                // Son kalan tab'a geç
+                var lastPath = remainingPaths[remainingPaths.length - 1];
+                switchToTab(lastPath);
             } else {
-                $('#editor-placeholder').show();
+                // Hiç tab kalmadıysa editor'ü temizle
+                activeFilePath = "";
+                if (editor) {
+                    editor.setModel(null);
+                }
+                $('#no-file-msg').show();
+                updateUIStates(null, false);
             }
         }
 
@@ -696,9 +1203,10 @@
 
             var currentBranch = $('#branch-dropdown').val();
             var isForbiddenBranch = (currentBranch === "main" || currentBranch === "master");
-    
+
+            // hasServerChanges: sadece save işlemlerinde true olur, rename/delete/newFile ayrıca kontrol edilir
             var canPush = (anyFileDirty || hasServerChanges) && !isForbiddenBranch;
-    
+
             $('#btn-git-push')
                 .prop('disabled', !canPush)
                 .toggleClass('btn-success', !isForbiddenBranch)
@@ -710,7 +1218,7 @@
             if (path) {
                 var safePath = path.replace(/\\/g, "\\\\");
                 var nodeAnchor = $(`#${safeId(path)}_anchor`); 
- 
+
                 if (isDirty) {
                     nodeAnchor.addClass('file-dirty');
                 } else {
@@ -721,7 +1229,21 @@
 
         function getLanguageByExtension(fileName) {
             var ext = fileName.split('.').pop().toLowerCase();
-            var map = { 'cs': 'csharp', 'java': 'java', 'feature': 'gherkin', 'json': 'json', 'csproj': 'xml', 'xml': 'xml' };
+            var map = {
+                'cs': 'csharp',
+                'java': 'java',
+                'feature': 'gherkin',
+                'json': 'json',
+                'csproj': 'xml',
+                'xml': 'xml',
+                'js': 'javascript',
+                'ts': 'typescript',
+                'html': 'html',
+                'css': 'css',
+                'py': 'python',
+                'rb': 'ruby',
+                'md': 'markdown'
+            };
             return map[ext] || 'plaintext';
         }
 
@@ -1111,6 +1633,89 @@
             // Remove dirty markers from tree items
             $('.file-dirty').removeClass('file-dirty');
             updateUIStates(null, false);
+        }
+
+        // Step Definition Linker
+        var stepLinkerDisposable = null;
+
+        function setupStepDefinitionLinker() {
+            if (!editor) return;
+
+            if (stepLinkerDisposable) {
+                stepLinkerDisposable.dispose();
+                stepLinkerDisposable = null;
+            }
+
+            stepLinkerDisposable = editor.onMouseDown(function(e) {
+                if (!(e.event.ctrlKey || e.event.metaKey)) return;
+                if (!e.target.position) return;
+
+                if (!activeFilePath) return;
+                var fileName = activeFilePath.replace(/\\/g, '/').split('/').pop() || '';
+
+                if (!fileName.toLowerCase().endsWith('.feature')) return;
+
+                var model = editor.getModel();
+                if (!model) return;
+
+                var lineNumber = e.target.position.lineNumber;
+                var lineContent = model.getLineContent(lineNumber).trim();
+
+                e.event.preventDefault();
+
+                var stepMatch = lineContent.match(/^\s*(Given|When|Then|And|But)\s+(.+)$/i);
+                if (!stepMatch) {
+                    showCustomToast('info', 'Click on a Given/When/Then/And/But step to navigate.');
+                    return;
+                }
+
+                var stepText = stepMatch[2].trim();
+
+                $.ajax({
+                    url: '/Editor/FindStepDefinition',
+                    type: 'GET',
+                    data: {
+                        projectId: projectId,
+                        stepText: stepText
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var targetFileName = response.filePath.replace(/\\/g, '/').split('/').pop();
+
+                            openFileInTab(response.filePath, targetFileName);
+
+                            setTimeout(function() {
+                                if (editor) {
+                                    editor.revealLineInCenter(response.lineNumber);
+                                    editor.setPosition({
+                                        lineNumber: response.lineNumber,
+                                        column: 1
+                                    });
+
+                                    var decorations = editor.deltaDecorations([], [{
+                                        range: new monaco.Range(response.lineNumber, 1, response.lineNumber, 1),
+                                        options: {
+                                            isWholeLine: true,
+                                            className: 'step-definition-highlight'
+                                        }
+                                    }]);
+
+                                    setTimeout(function() {
+                                        editor.deltaDecorations(decorations, []);
+                                    }, 3000);
+                                }
+                            }, 500);
+
+                            showCustomToast('success', `Found: ${targetFileName} line ${response.lineNumber}`);
+                        } else {
+                            showCustomToast('warning', 'No step definition found for this step.');
+                        }
+                    },
+                    error: function(err) {
+                        showAlert("Error", "Failed to search step definitions.", "danger");
+                    }
+                });
+            });
         }
 
         function showConfirm(title, message, onConfirm) {

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Gheetah.Controllers
 {
@@ -1155,6 +1156,351 @@ namespace Gheetah.Controllers
                 return Ok(new { success = true, allResolved = false });
             }
         }
+
+        // Yeni endpoint: AddNewFile
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> AddNewFile([FromBody] AddNewFileRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.ParentFolderPath))
+                return BadRequest("Parent folder path is required.");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            if (!request.ParentFolderPath.StartsWith(clonesRoot))
+                return Forbid();
+
+            var forbiddenFolders = new[] { "bin", "obj", ".git", ".vs" };
+            if (forbiddenFolders.Any(f => request.ParentFolderPath.Contains(Path.DirectorySeparatorChar + f + Path.DirectorySeparatorChar)))
+                return BadRequest("Cannot create files in system folders.");
+
+            string content = GenerateFileContent(request.FileType, request.TemplateType, request.FileName, request.ParentFolderPath);
+            string extension = GetExtensionForType(request.FileType);
+            string newFilePath = Path.Combine(request.ParentFolderPath, request.FileName + extension);
+
+            if (System.IO.File.Exists(newFilePath))
+                return Conflict("A file with this name already exists.");
+
+            await System.IO.File.WriteAllTextAsync(newFilePath, content);
+
+            // Yeni dosyayı Git'e stage et (tracked yap)
+            try
+            {
+                var gitRoot = FindGitRoot(newFilePath);
+                if (!string.IsNullOrEmpty(gitRoot) && Repository.IsValid(gitRoot))
+                {
+                    using (var repo = new Repository(gitRoot))
+                    {
+                        string relativePath = Path.GetRelativePath(gitRoot, newFilePath).Replace("\\", "/");
+                        Commands.Stage(repo, relativePath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Stage işlemi başarısız olursa yine de dosya oluşturulmuş olsun, loglama yapılabilir.
+                Console.WriteLine($"Git stage failed for new file: {ex.Message}");
+            }
+
+            return Ok(new { success = true, filePath = newFilePath, fileName = request.FileName + extension });
+        }
+
+        // Yeni endpoint: DeleteFile
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> DeleteFile([FromForm] string filePath)
+        {
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            if (!filePath.StartsWith(clonesRoot)) return Forbid();
+
+            if (!System.IO.File.Exists(filePath)) return NotFound("File not found.");
+
+            // Önce Git'ten kaldırmayı dene
+            try
+            {
+                var gitRoot = FindGitRoot(filePath);
+                if (!string.IsNullOrEmpty(gitRoot) && Repository.IsValid(gitRoot))
+                {
+                    using (var repo = new Repository(gitRoot))
+                    {
+                        string relativePath = Path.GetRelativePath(gitRoot, filePath).Replace("\\", "/");
+                        
+                        // Dosyanın Git durumunu kontrol et
+                        var status = repo.RetrieveStatus(new StatusOptions { PathSpec = new[] { relativePath } });
+                        var fileStatus = status.FirstOrDefault();
+                        
+                        if (fileStatus != null)
+                        {
+                            if (fileStatus.State == FileStatus.NewInIndex || fileStatus.State == FileStatus.NewInWorkdir)
+                            {
+                                // Yeni eklenmiş (staged) dosya → önce unstaged yap
+                                Commands.Unstage(repo, relativePath);
+                            }
+                            
+                            // Tracked dosya → Git remove ile sil (hem index'ten hem working directory'den)
+                            Commands.Remove(repo, relativePath, true);
+                        }
+                        else
+                        {
+                            // Dosya Git'te görünmüyorsa (untracked), sadece fiziksel olarak sil
+                            System.IO.File.Delete(filePath);
+                            return Ok(new { success = true, message = "File deleted." });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Git remove failed: {ex.Message}");
+            }
+
+            // Git işlemi başarısız olursa yedek olarak fiziksel silme
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+            }
+
+            return Ok(new { success = true, message = "File deleted." });
+        }
+
+        // Yeni endpoint: RenameFile
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> RenameFile([FromForm] string oldPath, [FromForm] string newName)
+        {
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            if (!oldPath.StartsWith(clonesRoot)) return Forbid();
+
+            if (!System.IO.File.Exists(oldPath)) return NotFound("File not found.");
+
+            string directory = Path.GetDirectoryName(oldPath);
+            string extension = Path.GetExtension(oldPath);
+            string newPath = Path.Combine(directory, newName + extension);
+
+            if (System.IO.File.Exists(newPath)) return Conflict("A file with this name already exists.");
+
+            bool gitMoved = false;
+            try
+            {
+                var gitRoot = FindGitRoot(oldPath);
+                if (!string.IsNullOrEmpty(gitRoot) && Repository.IsValid(gitRoot))
+                {
+                    using (var repo = new Repository(gitRoot))
+                    {
+                        string oldRelative = Path.GetRelativePath(gitRoot, oldPath).Replace("\\", "/");
+                        string newRelative = Path.GetRelativePath(gitRoot, newPath).Replace("\\", "/");
+                        Commands.Move(repo, oldRelative, newRelative);
+                        gitMoved = true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Git rename failed: {ex.Message}");
+            }
+
+            // Git taşıma başarısız olduysa dosya sisteminde taşıma yap
+            if (!gitMoved)
+            {
+                System.IO.File.Move(oldPath, newPath);
+            }
+
+            return Ok(new { success = true, newPath = newPath });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FindStepDefinition(string projectId, string stepText)
+        {
+            if (string.IsNullOrWhiteSpace(stepText))
+                return BadRequest("Step text is required.");
+
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound("Project not found.");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+            
+            if (!Directory.Exists(projectPath))
+                return NotFound("Project folder not found.");
+
+            // Step text'i temizle
+            stepText = stepText.Trim();
+
+            // C# için pattern'ler - daha kapsamlı
+            var csharpPatterns = new List<string>
+            {
+                // SpecFlow/Reqnroll attribute'leri - tüm varyasyonlar
+                @"\[(Given|When|Then|And|But)\s*\(\s*@""(.+?)""\s*\)\]",
+                @"\[(Given|When|Then|And|But)\s*\(\s*""(.+?)""\s*\)\]",
+                @"\[(Given|When|Then|And|But)\s*\(\s*@'(.+?)'\s*\)\]",
+                @"\[(Given|When|Then|And|But)\s*\(\s*'(.+?)'\s*\)\]",
+                // name parametreli
+                @"\[(Given|When|Then|And|But)\s*\(\s*name\s*:\s*""(.+?)""\s*\)\]",
+            };
+
+            // Java için pattern'ler
+            var javaPatterns = new List<string>
+            {
+                @"@(Given|When|Then|And|But)\s*\(\s*""(.+?)""\s*\)",
+                @"@(Given|When|Then|And|But)\s*\(\s*'(.+?)'\s*\)",
+                @"@(Given|When|Then|And|But)\s*\(\s*value\s*=\s*""(.+?)""\s*\)",
+            };
+
+            var searchExtensions = project.LanguageType?.ToLower() switch
+            {
+                "c#" => new[] { ".cs" },
+                "java" => new[] { ".java" },
+                _ => new[] { ".cs", ".java" }
+            };
+
+            var patterns = project.LanguageType?.ToLower() switch
+            {
+                "c#" => csharpPatterns,
+                "java" => javaPatterns,
+                _ => csharpPatterns.Concat(javaPatterns).ToList()
+            };
+
+            // Projedeki tüm kod dosyalarını tara
+            var allCodeFiles = Directory.GetFiles(projectPath, "*.*", SearchOption.AllDirectories)
+                .Where(f => searchExtensions.Contains(Path.GetExtension(f).ToLower()))
+                .Where(f => !f.Contains("\\bin\\") && !f.Contains("\\obj\\") && !f.Contains("\\.git\\"));
+
+            foreach (var filePath in allCodeFiles)
+            {
+                var lines = await System.IO.File.ReadAllLinesAsync(filePath);
+                
+                for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+                {
+                    var line = lines[lineIndex];
+                    
+                    foreach (var pattern in patterns)
+                    {
+                        var match = Regex.Match(line, pattern, RegexOptions.IgnoreCase);
+                        if (match.Success)
+                        {
+                            var capturedStepPattern = match.Groups[2].Value.Trim();
+                            
+                            if (StepTextsMatch(stepText, capturedStepPattern))
+                            {
+                                return Ok(new
+                                {
+                                    success = true,
+                                    filePath = filePath,
+                                    lineNumber = lineIndex + 1,
+                                    methodLine = lineIndex + 1,
+                                    matchedStep = capturedStepPattern
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            return Ok(new { success = false, message = $"No step definition found for: '{stepText}'" });
+        }
+
+        /// <summary>
+        /// Gherkin adımı ile step definition pattern'ini karşılaştırır.
+        /// Pattern içindeki regex gruplarını (.*) veya (seçenek|seçenek) gibi ifadeleri
+        /// joker karakter olarak ele alır.
+        /// </summary>
+        private bool StepTextsMatch(string gherkinStep, string stepDefPattern)
+        {
+            gherkinStep = gherkinStep.Trim();
+            stepDefPattern = stepDefPattern.Trim();
+
+            // 1. Direkt eşleşme (parametresiz adımlar için)
+            if (string.Equals(gherkinStep, stepDefPattern, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // 2. Step definition pattern'ini regex'e çevirip eşleştir
+            try
+            {
+                // Pattern'deki özel regex karakterlerini escape et
+                var escaped = Regex.Escape(stepDefPattern);
+                
+                // Escaped edilmiş regex gruplarını ve placeholder'ları joker karaktere çevir
+                
+                // \(\.\*\) → (.*) → herhangi metin
+                escaped = Regex.Replace(escaped, @"\\\(\\\.\*\\\)", ".*?");
+                
+                // \(\.\+\) → (.+) → en az bir karakter
+                escaped = Regex.Replace(escaped, @"\\\(\\\.\+\+\\\)", ".+?");
+                
+                // \(seçenek\|seçenek\) gibi OR grupları → joker
+                escaped = Regex.Replace(escaped, @"\\\([^)]+\\\)", ".*?");
+                
+                // \{string\}, \{int\}, \{word\} gibi SpecFlow placeholder'ları
+                escaped = escaped.Replace("\\{string\\}", ".*?");
+                escaped = escaped.Replace("\\{int\\}", "\\d+");
+                escaped = escaped.Replace("\\{word\\}", "\\w+");
+                escaped = escaped.Replace("\\{float\\}", "\\d+(\\.\\d+)?");
+                escaped = escaped.Replace("\\{.*?\\}", ".*?");
+                
+                // Escaped tırnakları geri çevir (pattern içindeki "" kısımları)
+                escaped = escaped.Replace("\\\"\\\"", "\"");
+                escaped = escaped.Replace("\"\"", "\"");
+                
+                var regex = new Regex("^" + escaped + "$", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                return regex.IsMatch(gherkinStep);
+            }
+            catch
+            {
+                // Regex çevrimi başarısız olursa, basit wildcard karşılaştırma dene
+                return WildcardMatch(gherkinStep, stepDefPattern);
+            }
+        }
+
+        /// <summary>
+        /// Basit wildcard karşılaştırma: (.*) ve (seçenek|seçenek) gruplarını * olarak ele alır
+        /// </summary>
+        private bool WildcardMatch(string text, string pattern)
+        {
+            // Regex gruplarını * ile değiştir
+            var wildcardPattern = Regex.Replace(pattern, @"\([^)]+\)", "*");
+            // Birden fazla *'i tek * yap
+            wildcardPattern = Regex.Replace(wildcardPattern, @"\*+", "*");
+            // Escape et ve *'i .*?'ye çevir
+            var escaped = Regex.Escape(wildcardPattern).Replace("\\*", ".*?");
+            
+            try
+            {
+                return Regex.IsMatch(text, "^" + escaped + "$", RegexOptions.IgnoreCase);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // Yardımcı metotlar (mevcut sınıfa ekleyin)
+        private string GenerateFileContent(string fileType, string templateType, string fileName, string folderPath)
+        {
+            string namespaceName = Path.GetFileName(folderPath);
+            return fileType switch
+            {
+                "cs" => templateType switch
+                {
+                    "class" => $"namespace {namespaceName};\n\npublic class {fileName}\n{{\n\t// TODO: Implement {fileName}\n}}",
+                    "interface" => $"namespace {namespaceName};\n\npublic interface I{fileName}\n{{\n\t// TODO: Define contract\n}}",
+                    "stepdef" => $"using TechTalk.SpecFlow;\n\nnamespace {namespaceName};\n\n[Binding]\npublic class {fileName}\n{{\n\t// TODO: Add step definitions\n}}",
+                    _ => $"namespace {namespaceName};\n\npublic class {fileName}\n{{\n}}"
+                },
+                "feature" => $"Feature: {fileName}\n\tAs a user\n\tI want to ...\n\tSo that ...\n\nScenario: First scenario\n\tGiven ...\n\tWhen ...\n\tThen ...",
+                "java" => $"public class {fileName} {{\n\tpublic static void main(String[] args) {{\n\t\t// TODO: Implement\n\t}}\n}}",
+                _ => $"// New {fileType} file: {fileName}"
+            };
+        }
+
+        private string GetExtensionForType(string fileType) => fileType switch
+        {
+            "cs" => ".cs",
+            "java" => ".java",
+            "feature" => ".feature",
+            "xml" => ".xml",
+            "json" => ".json",
+            _ => ".txt"
+        };
 
         private async Task BuildTargetBranchOnlyAsync(string prId, MergeBuildProgress progress, string userEmail, string userName)
         {

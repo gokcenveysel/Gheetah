@@ -410,9 +410,13 @@
             $(element).addClass('active');
             currentFilePath = filePath;
             $.get('/Editor/GetFileDiffBetweenBranches', { projectId: projectId, filePath: filePath, source: sourceBranch, target: targetBranch, prId: prId }, function (res) {
+                // ✅ Dosya uzantısına göre dil belirle
+                var fileName = filePath.split('/').pop();
+                var lang = getLanguageByExtension(fileName);
+
                 diffEditor.setModel({
-                    original: monaco.editor.createModel(res.originalContent, 'csharp'),
-                    modified: monaco.editor.createModel(res.modifiedContent, 'csharp')
+                    original: monaco.editor.createModel(res.originalContent, lang),
+                    modified: monaco.editor.createModel(res.modifiedContent, lang)
                 });
                 renderComments(filePath);
             });
@@ -828,7 +832,6 @@
             activeConflictFile = filePath;
 
             $.get('/Editor/GetConflictContent', { prId: prId, filePath: filePath }, function(data) {
-                // Initialise or update diff editor inside #conflict-diff-container
                 if (!conflictDiffEditor) {
                     conflictDiffEditor = monaco.editor.createDiffEditor(document.getElementById('conflict-diff-container'), {
                         theme: 'vs',
@@ -837,9 +840,14 @@
                         renderSideBySide: true
                     });
                 }
+
+                // ✅ Dosya uzantısına göre dil belirle
+                var fileName = filePath.split('/').pop();
+                var lang = getLanguageByExtension(fileName);
+
                 conflictDiffEditor.setModel({
-                    original: monaco.editor.createModel(data.oursContent, 'csharp'),   // Target = ours
-                    modified: monaco.editor.createModel(data.theirsContent, 'csharp')  // Source = theirs
+                    original: monaco.editor.createModel(data.oursContent, lang),
+                    modified: monaco.editor.createModel(data.theirsContent, lang)
                 });
                 $('#resolve-bar').show();
             });
@@ -906,5 +914,25 @@
         window.updatePRStatus = function(s) {
             $.post('/Editor/UpdatePRStatus', { prId: prId, status: s }, () => location.reload());
         };
+        
+        function getLanguageByExtension(fileName) {
+            var ext = fileName.split('.').pop().toLowerCase();
+            var map = {
+                'cs': 'csharp',
+                'java': 'java',
+                'feature': 'gherkin',
+                'json': 'json',
+                'csproj': 'xml',
+                'xml': 'xml',
+                'js': 'javascript',
+                'ts': 'typescript',
+                'html': 'html',
+                'css': 'css',
+                'py': 'python',
+                'rb': 'ruby',
+                'md': 'markdown'
+            };
+            return map[ext] || 'plaintext';
+        }
     </script>
 }
