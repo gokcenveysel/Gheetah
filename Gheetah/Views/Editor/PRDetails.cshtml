@@ -410,7 +410,7 @@
             $(element).addClass('active');
             currentFilePath = filePath;
             $.get('/Editor/GetFileDiffBetweenBranches', { projectId: projectId, filePath: filePath, source: sourceBranch, target: targetBranch, prId: prId }, function (res) {
-                // ✅ Dosya uzantısına göre dil belirle
+
                 var fileName = filePath.split('/').pop();
                 var lang = getLanguageByExtension(fileName);
 
@@ -515,7 +515,6 @@
 
             const prStatus = "@Model.Status";
 
-            // Eğer PR zaten ConflictsResolved veya Merged ise butonu devre dışı bırak
             if (prStatus === "ConflictsResolved" || prStatus === "Merged") {
                 btn.prop('disabled', true);
                 if (prStatus === "ConflictsResolved") {
@@ -593,7 +592,6 @@
             if (statusPollInterval) clearInterval(statusPollInterval);
             isPipelineRunning = true;
 
-            // Eğer merge zaten başarılıysa sadece target build'i bekle
             const prStatus = "@Model.Status";
             if (prStatus === "ConflictsResolved") {
                 updateStepUI('source-build', 'success', 'Source branch build succeeded');
@@ -725,7 +723,7 @@
                         showCompletedBadge();
                     }
                 }
-            }); // .fail() kısmını kaldırabilirsiniz
+            });
         }
 
         function loadOverviewData() {
@@ -778,12 +776,10 @@
             modal.show();
         }
 
-                // --- Conflict resolution variables ---
         var conflictDiffEditor = null;
         var activeConflictFile = "";
         var allConflictedFiles = [];
 
-        // Load conflicted files when the Conflicts tab is shown
         $('a[data-bs-toggle="tab"][href="#conflicts"]').on('shown.bs.tab', function() {
             loadConflictedFiles();
         });
@@ -795,9 +791,7 @@
 
                 let html = '';
                 if (files.length === 0) {
-                    // ✅ Hiç conflict yoksa açıklayıcı mesaj göster
                     html = '<div class="text-muted text-center py-4">No conflicts detected</div>';
-                    // Diff editor'ı temizle
                     if (conflictDiffEditor) {
                         conflictDiffEditor.setModel({
                             original: monaco.editor.createModel('', 'plaintext'),
@@ -805,7 +799,6 @@
                         });
                     }
                     $('#resolve-bar').hide();
-                    // Complete Merge butonunu yeniden etkinleştir
                     checkPRCompletionStatus([]);
                 } else {
                     files.forEach(file => {
@@ -819,7 +812,6 @@
 
                 $('#conflict-file-list').html(html);
 
-                // Auto-select first file if any
                 if (files.length > 0) {
                     $('#conflict-file-list a').first().click();
                 }
@@ -841,7 +833,6 @@
                     });
                 }
 
-                // ✅ Dosya uzantısına göre dil belirle
                 var fileName = filePath.split('/').pop();
                 var lang = getLanguageByExtension(fileName);
 
@@ -863,16 +854,12 @@
                 }, function(res) {
                     if (res.success) {
                         if (res.allResolved) {
-                            // Tüm conflict'ler çözüldü, merge tamamlandı, target build başladı
                             showAlert("Success", "All conflicts resolved! Target build started in background.", "success", function() {
-                                // Overview tab'ına geç ve polling'i başlat
                                 $('a[data-bs-toggle="tab"][href="#overview"]').tab('show');
                                 startPolling();
                             });
                         } else {
-                            // Sadece bu dosya çözüldü, diğerleri olabilir
                             showAlert("Success", "Conflict resolved for " + activeConflictFile.split('/').pop(), "success");
-                            // Listeyi yenile
                             loadConflictedFiles();
                         }
                     } else {
@@ -884,7 +871,6 @@
             });
         }
 
-        // Helper to show info alert (uses existing modal-alert)
         function alertInfo(msg) {
             showAlert("Info", msg, "info");
         }
@@ -893,8 +879,7 @@
             $('#alert-title').text(title);
             $('#alert-text').text(message);
 
-            // Icon'ı tipe göre ayarla
-            let iconClass = 'ti ti-info-circle fs-1 text-info'; // varsayılan
+            let iconClass = 'ti ti-info-circle fs-1 text-info';
             if (type === 'success') {
                 iconClass = 'ti ti-check fs-1 text-success';
             } else if (type === 'danger') {

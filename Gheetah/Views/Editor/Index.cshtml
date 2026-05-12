@@ -3,7 +3,6 @@
 }
 
 <style>
-    /* Step Definition Linker Highlight */
     .step-definition-highlight {
         background-color: rgba(0, 84, 166, 0.15) !important;
     }
@@ -13,12 +12,11 @@
         width: 3px !important;
         margin-left: 3px;
     }
-    /* 1. LAYOUT & SCROLL MANAGEMENT */
     html, body {
         height: 100%;
         margin: 0;
         padding: 0;
-        overflow: hidden; /* Tarayıcı scroll'unu tamamen engelle */
+        overflow: hidden;
     }
 
     .page-wrapper {
@@ -28,8 +26,8 @@
         width: 100%;
         overflow: hidden;
         background: #ffffff;
-        position: relative; /* İçerideki fixed eleman için referans */
-        padding-bottom: 28px; /* Status bar yüksekliği + biraz boşluk */
+        position: relative; 
+        padding-bottom: 28px;
     }
 
     .ide-workspace {
@@ -39,15 +37,14 @@
         overflow: hidden;
     }
 
-    /* Tabler.io Modern Status Bar */
     .status-bar {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
         height: 26px;
-        background: #f6f8fb; /* Tabler light background */
-        color: #656d77; /* Tabler muted text */
+        background: #f6f8fb;
+        color: #656d77;
         border-top: 1px solid rgba(101, 109, 119, 0.16);
         display: flex;
         align-items: center;
@@ -55,11 +52,10 @@
         font-size: 11px;
         font-weight: 500;
         gap: 16px;
-        z-index: 1050; /* Monaco Editör'ün üzerinde kalması için */
+        z-index: 1050; 
         user-select: none;
     }
 
-    /* Status Bar Item Tasarımı */
     .status-item {
         display: flex;
         align-items: center;
@@ -73,7 +69,7 @@
         }
 
         .status-item:hover {
-            color: #0054a6; /* Tabler Primary */
+            color: #0054a6; 
         }
 
     .status-divider {
@@ -82,7 +78,6 @@
         background: rgba(101, 109, 119, 0.2);
     }
 
-    /* 2. SIDEBAR (EXPLORER & GIT) STYLING */
     .sidebar-container {
         width: 300px;
         min-width: 300px;
@@ -123,7 +118,6 @@
             border-bottom: 2px solid #0054a6;
         }
 
-    /* Panellerin İçeriği */
     .panel-content {
         flex-grow: 1;
         overflow-y: auto;
@@ -131,7 +125,6 @@
         flex-direction: column;
     }
 
-    /* 3. PUSH HISTORY PANEL (Sidebar Alt Kısmı) */
     .push-history-panel {
         height: 220px;
         border-top: 1px solid #dee2e6;
@@ -147,7 +140,6 @@
         padding: 8px;
     }
 
-    /* 4. MAIN EDITOR AREA STYLING */
     .editor-main-area {
         flex-grow: 1;
         display: flex;
@@ -157,7 +149,6 @@
         background: #ffffff;
     }
 
-    /* Editor Tabs (Monaco Üstü) */
     #editor-tabs {
         height: 38px;
         background: #f1f3f5;
@@ -200,14 +191,12 @@
             color: #e74c3c;
         }
 
-    /* Monaco Container */
     #monaco-container {
         flex-grow: 1;
         width: 100%;
         height: 100%;
     }
 
-    /* 5. JSTREE & ICON CUSTOMIZATION */
     .jstree-default .jstree-anchor {
         font-size: 13px !important;
     }
@@ -228,7 +217,6 @@
         color: #2e7d32 !important;
     }
 
-    /* Dirty (Kaydedilmemiş) Dosya Belirteci */
     .file-dirty > a.jstree-anchor {
         color: #e74c3c !important;
         font-weight: 600;
@@ -240,7 +228,6 @@
             vertical-align: middle;
         }
 
-    /* Ghost Buttons */
     .btn-ghost-secondary {
         border: none;
         background: transparent;
@@ -549,7 +536,7 @@
         var diffEditor = null;
         var isDiffMode = false;
         var projectId = "@ViewBag.ProjectId";
-        var openFiles = {}; // { path: { model: obj, hash: str, fileName: str, isDirty: bool } }
+        var openFiles = {}; 
         var activeFilePath = "";
         var hasServerChanges = false;
         var currentPRContext = {};
@@ -587,12 +574,8 @@
                 createNormalEditor();
                 setupStepDefinitionLinker();
 
-                // ==================== GLOBAL INTELLISENSE ENGINE ====================
-
-                // IntelliSense verisini cache'le
                 var intelliSenseData = null;
 
-                // Backend'den IntelliSense verisini al
                 function loadIntelliSenseData(callback) {
                     if (intelliSenseData) {
                         callback(intelliSenseData);
@@ -607,7 +590,6 @@
                     });
                 }
 
-                // C# Snippet Provider
                 monaco.languages.registerCompletionItemProvider('csharp', {
                     triggerCharacters: ['.', ' ', '\n'],
                     provideCompletionItems: function(model, position) {
@@ -623,7 +605,6 @@
 
                                 var suggestions = [];
 
-                                // Namespace önerileri
                                 if (data.namespaces && data.namespaces.length > 0) {
                                     data.namespaces.forEach(function(ns) {
                                         suggestions.push({
@@ -637,7 +618,6 @@
                                     });
                                 }
 
-                                // Temel C# snippet'leri
                                 suggestions.push(
                                     {
                                         label: 'class',
@@ -735,7 +715,6 @@
                     }
                 });
 
-                // Gherkin Snippet Provider
                 monaco.languages.registerCompletionItemProvider('gherkin', {
                     triggerCharacters: [' ', '\n'],
                     provideCompletionItems: function(model, position) {
@@ -819,7 +798,6 @@
                     }
                 });
 
-                // Java Snippet Provider
                 monaco.languages.registerCompletionItemProvider('java', {
                     triggerCharacters: ['.', ' ', '\n'],
                     provideCompletionItems: function(model, position) {
@@ -874,7 +852,6 @@
                     }
                 });
 
-                // ==================== MONACO EDITOR ACTIONS (KESİN ÇALIŞIR) ====================
                 editor.addAction({
                     id: 'save-file',
                     label: 'Save File',
@@ -905,7 +882,6 @@
                     }
                 });
 
-                // Ctrl+1'den Ctrl+9'a kadar tab'lara direkt geçiş
                 for (var i = 1; i <= 9; i++) {
                     (function(index) {
                         editor.addAction({
@@ -938,7 +914,6 @@
                 });
             });
 
-            // Delete tuşu - sadece treeview'da çalışır
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Delete') {
                     var activeEl = document.activeElement;
@@ -953,7 +928,6 @@
                 }
             });
 
-            // Tarayıcı kapanma güvenliği
             window.addEventListener('beforeunload', function(e) {
                 var anyDirty = Object.values(openFiles).some(f => f.isDirty);
                 if (anyDirty) {
@@ -964,14 +938,12 @@
             });
         });
 
-        // Tab geçiş yardımcı fonksiyonları
         function switchToNextTab() {
             var tabs = Object.keys(openFiles);
             if (tabs.length < 2) return;
 
             var currentIndex = tabs.indexOf(activeFilePath);
             if (currentIndex === -1) {
-                // Aktif dosya yoksa ilk tab'a geç
                 switchToTab(tabs[0]);
                 return;
             }
@@ -1028,7 +1000,6 @@
                 }),
                 success: function(response) {
                     $('#modal-new-file').modal('hide');
-                    // ✅ hasServerChanges = true yapma, Git tabı GetModifiedFiles ile güncellenecek
                     updateUIStates(activeFilePath, openFiles[activeFilePath]?.isDirty || false);
 
                     openFileInTab(response.filePath, response.fileName);
@@ -1041,7 +1012,6 @@
             });
         }
 
-        // Delete file function (context menu için)
         function deleteSelectedFile(filePath) {
             showConfirm("Delete File", "Are you sure you want to delete this file?", function() {
                 $.ajax({
@@ -1053,9 +1023,7 @@
                             executeTabClosure(filePath, btoa(filePath).replace(/=/g, ""));
                         }
                         $('#editor-treeview').jstree(true).refresh();
-                        // ✅ hasServerChanges = true yapma
                         updateUIStates(activeFilePath, openFiles[activeFilePath]?.isDirty || false);
-                        // Git tabını yenile
                         if ($('#tab-git').hasClass('active')) {
                             refreshGitChanges();
                         }
@@ -1068,7 +1036,6 @@
             });
         }
 
-        // Rename function (context menu için)
         function renameSelectedFile(oldPath) {
             var oldName = oldPath.split('/').pop().split('\\').pop();
             var fileNameWithoutExt = oldName.substring(0, oldName.lastIndexOf('.'));
@@ -1079,14 +1046,11 @@
                     type: 'POST',
                     data: { oldPath: oldPath, newName: newName },
                     success: function(response) {
-                        // Eski dosyayı tablardan kaldır, yeni dosyayı ekle
                         if (openFiles[oldPath]) {
                             var oldFile = openFiles[oldPath];
                             openFiles[response.newPath] = oldFile;
                             delete openFiles[oldPath];
-                            // Tab UI güncellemesi için basit çözüm: tab'ı kapatıp yeni yolu aç
                             executeTabClosure(oldPath, btoa(oldPath).replace(/=/g, ""));
-                            // Ağacı yenile
                             $('#editor-treeview').jstree(true).refresh();
                         }
                         hasServerChanges = true;
@@ -1099,8 +1063,6 @@
                 });
             }
         }
-
-        // --- Editor Management ---
 
         function createNormalEditor() {
             const container = document.getElementById('monaco-container');
@@ -1176,7 +1138,6 @@
 
             updateUIStates(path, file.isDirty);
 
-            // ✅ Model değiştiğinde linker'ı yeniden bağla
             setupStepDefinitionLinker();
         }
 
@@ -1193,7 +1154,6 @@
                     fontSize: 14
                 });
 
-                // ✅ Dil desteği: dosya uzantısına göre dil belirle
                 var lang = getLanguageByExtension(fileName);
 
                 const originalModel = monaco.editor.createModel(response.originalContent, lang);
@@ -1209,7 +1169,6 @@
             });
         }
 
-        // --- Git & Tree Management ---
 
         function initializeTree() {
             $('#editor-treeview').jstree({
@@ -1249,7 +1208,6 @@
                                 'label': 'Rename',
                                 'icon': 'ti ti-pencil',
                                 'action': function() {
-                                    // Inline rename başlat
                                     $('#editor-treeview').jstree(true).edit(node);
                                 }
                             };
@@ -1260,7 +1218,6 @@
                             };
                         }
 
-                        // Her zaman Refresh
                         items['Refresh'] = {
                             'label': 'Refresh',
                             'icon': 'ti ti-refresh',
@@ -1295,65 +1252,53 @@
                 $('.jstree-opened > .jstree-ocl').addClass('ti ti-arrow-badge-down');
             })
             .on('rename.jstree', function (e, data) {
-                // Düzenleme başlarken uzantıyı gizle (sadece dosya adı görünsün)
                 var oldName = data.node.text;
                 var lastDot = oldName.lastIndexOf('.');
                 if (lastDot > 0) {
-                    // Orijinal tam ismi (uzantılı) bir data attribute olarak sakla
                     data.node.original.fullName = oldName;
                     data.node.text = oldName.substring(0, lastDot);
                 } else {
-                    // Nokta yoksa (örneğin uzantısız dosya) orijinal ismi olduğu gibi bırak
                     data.node.original.fullName = oldName;
                 }
             })
             .on('rename_node.jstree', function (e, data) {
-                var oldFullName = data.old;                    // orijinal text (uzantılı)
-                var newNameInput = data.text;                 // kullanıcının girdiği yeni isim
+                var oldFullName = data.old;
+                var newNameInput = data.text;
 
-                // Uzantıyı ayıkla
                 var extension = '';
                 var lastDotInOld = oldFullName.lastIndexOf('.');
                 if (lastDotInOld > 0) {
-                    extension = oldFullName.substring(lastDotInOld);  // .feature gibi
+                    extension = oldFullName.substring(lastDotInOld);
                 }
 
-                // Yeni tam ismi oluştur
                 var newFullName;
                 if (newNameInput.includes('.')) {
-                    // Kullanıcı kendi uzantısını vermiş
                     newFullName = newNameInput;
                 } else if (extension) {
-                    // Uzantı verilmemiş, eski uzantıyı ekle
                     newFullName = newNameInput + extension;
                 } else {
-                    // Uzantısız dosya (nadir durum)
                     newFullName = newNameInput;
                 }
 
-                // Sunucuya HER ZAMAN uzantısız ismi gönder
                 var newNameWithoutExt = newNameInput.includes('.')
                     ? newNameInput.substring(0, newNameInput.lastIndexOf('.'))
                     : newNameInput;
 
-                var oldPath = data.node.id;  // eski tam path (sunucu tarafında kullanılacak)
+                var oldPath = data.node.id;
 
                 $.ajax({
                     url: '/Editor/RenameFile',
                     type: 'POST',
-                    data: { oldPath: oldPath, newName: newNameWithoutExt },  // sunucuya uzantısız gönder
+                    data: { oldPath: oldPath, newName: newNameWithoutExt },
                     success: function(response) {
-                        // Yeni path'i al
                         var newPath = response.newPath;
 
-                        // openFiles'taki eski path'i yeni path ile güncelle
                         if (openFiles[oldPath]) {
                             var fileData = openFiles[oldPath];
                             fileData.fileName = newFullName;
                             openFiles[newPath] = fileData;
                             delete openFiles[oldPath];
 
-                            // Tab UI'ı güncelle
                             var oldSafeId = btoa(oldPath).replace(/=/g, "");
                             var newSafeId = btoa(newPath).replace(/=/g, "");
                             var $tab = $(`#tab-${oldSafeId}`);
@@ -1364,19 +1309,14 @@
                                 $tab.find('.tab-close').attr('onclick', `closeTab(event, decodeURIComponent('${encodeURIComponent(newPath)}'))`);
                             }
 
-                            // Aktif dosya buysa activeFilePath'i güncelle
                             if (activeFilePath === oldPath) {
                                 activeFilePath = newPath;
                             }
                         }
 
-                        // ✅ Node'un id'sini jsTree API'si ile güncelle (hata vermez)
                         $('#editor-treeview').jstree(true).set_id(data.node, newPath);
-
-                        // Node text'ini güncelle
                         $('#editor-treeview').jstree(true).set_text(data.node, newFullName);
 
-                        // UI durumunu güncelle
                         updateUIStates(activeFilePath, openFiles[activeFilePath]?.isDirty || false);
                         showCustomToast('success', 'File renamed.');
                     },
@@ -1426,7 +1366,6 @@
             setTimeout(() => { if(editor) editor.layout(); }, 50);
         }
 
-        // --- UI & Helper Methods ---
 
         function addTabUI(path, fileName) {
             $('#no-file-msg').hide();
@@ -1454,23 +1393,18 @@
         }
 
         function executeTabClosure(path, safeId) {
-            // Model'i dispose et
             if (openFiles[path] && openFiles[path].model) {
                 openFiles[path].model.dispose();
             }
     
-            // Tab'ı DOM'dan kaldır
             $(`#tab-${safeId}`).remove();
             delete openFiles[path];
 
-            // Başka açık dosya var mı kontrol et
             var remainingPaths = Object.keys(openFiles);
             if (remainingPaths.length > 0) {
-                // Son kalan tab'a geç
                 var lastPath = remainingPaths[remainingPaths.length - 1];
                 switchToTab(lastPath);
             } else {
-                // Hiç tab kalmadıysa editor'ü temizle
                 activeFilePath = "";
                 if (editor) {
                     editor.setModel(null);
@@ -1491,7 +1425,6 @@
             var currentBranch = $('#branch-dropdown').val();
             var isForbiddenBranch = (currentBranch === "main" || currentBranch === "master");
 
-            // hasServerChanges: sadece save işlemlerinde true olur, rename/delete/newFile ayrıca kontrol edilir
             var canPush = (anyFileDirty || hasServerChanges) && !isForbiddenBranch;
 
             $('#btn-git-push')
@@ -1624,7 +1557,6 @@
                 }
                 return;
             }
-            // value is an existing branch name
             if (value) {
                 switchToBranch(value);
             }
@@ -1770,7 +1702,6 @@
         window.commitAndPush = function() {
             var newBranchName = $('#input-branch-name').val();
     
-            // MODAL GÜNCELLEMESİ: showAlert
             if (!newBranchName) { 
                 showAlert("Missed Information", "Please enter a branch name!", "warning"); 
                 return; 
@@ -1855,7 +1786,6 @@
             $('#modal-create-pr-detail').modal('show');
         }
 
-        // Form doğrulama (Target Branch ve Comment zorunlu)
         function validatePRForm() {
             const target = $('#pr-target-branch').val();
             const comment = $('#pr-comment').val().trim();
@@ -1867,7 +1797,6 @@
         }
 
         function switchToBranch(branchName) {
-            // Check for unsaved open files
             var anyDirty = Object.values(openFiles).some(f => f.isDirty);
             if (anyDirty) {
                 showConfirm("Unsaved Changes",
@@ -1886,13 +1815,9 @@
                 type: 'POST',
                 data: { projectId: projectId, branchName: branchName },
                 success: function(response) {
-                    // Close all open tabs and clear editor
                     closeAllTabs();
-                    // Refresh the solution tree
                     $('#editor-treeview').jstree(true).refresh();
-                    // Update the dropdown to reflect the new branch
                     refreshBranchList(branchName);
-                    // Also refresh git changes if the Git tab is active
                     if ($('#tab-git').hasClass('active')) {
                         refreshGitChanges();
                     }
@@ -1905,7 +1830,6 @@
         }
 
         function closeAllTabs() {
-            // Dispose editor models (optional, to free memory)
             for (let path in openFiles) {
                 if (openFiles[path].model) {
                     openFiles[path].model.dispose();
@@ -1917,12 +1841,10 @@
             if (editor) {
                 editor.setModel(null);
             }
-            // Remove dirty markers from tree items
             $('.file-dirty').removeClass('file-dirty');
             updateUIStates(null, false);
         }
 
-        // Step Definition Linker
         var stepLinkerDisposable = null;
 
         function setupStepDefinitionLinker() {

@@ -38,7 +38,7 @@ namespace Gheetah.Controllers
             var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
             var projectPath = Path.Combine(clonesRoot, targetProject.Name);
 
-            string currentBranch = "main"; // Fallback
+            string currentBranch = "main";
 
             if (Directory.Exists(projectPath) && Repository.IsValid(projectPath))
             {
@@ -156,11 +156,9 @@ namespace Gheetah.Controllers
 
                 using (var repo = new Repository(projectPath))
                 {
-                    // Algoritma: Mevcut branch'i BaseBranch (Origin) olarak kaydet
                     string baseBranchName = repo.Head.FriendlyName;
                     Signature author = new Signature(currentUser.FullName, currentUser.Email, DateTimeOffset.Now);
 
-                    // Repo boşsa veya ilk commit atılıyorsa
                     if (repo.Info.IsHeadDetached || repo.Head.Tip == null)
                     {
                         Commands.Stage(repo, "*");
@@ -168,20 +166,17 @@ namespace Gheetah.Controllers
                         baseBranchName = repo.Head.FriendlyName;
                     }
 
-                    // Target branch kontrolü ve yaratımı
                     Branch targetBranch = repo.Branches[branchName];
                     if (targetBranch == null)
                     {
                         targetBranch = repo.CreateBranch(branchName);
                     }
 
-                    // Branch'e geçiş yap ve değişiklikleri commit et
                     Commands.Checkout(repo, targetBranch);
                     Commands.Stage(repo, "*");
                     
                     var commit = repo.Commit($"Gheetah Push: {branchName}", author, author);
 
-                    // PR yerine sadece Push History kaydı oluşturuyoruz
                     await AddToPushHistory(projectId, branchName, baseBranchName, commit.Id.Sha, currentUser);
 
                     return Ok(new
@@ -864,7 +859,6 @@ namespace Gheetah.Controllers
             if (saved != null)
                 return Ok(saved);
 
-            // Hiç ilerleme yoksa boş bir durum dön
             return Ok(new MergeBuildProgress
             {
                 PrId = prId,
@@ -896,10 +890,6 @@ namespace Gheetah.Controllers
             return Ok(new { success = true });
         }
 
-        /// <summary>
-        /// Switches the Git repository to the specified branch.
-        /// Requires no uncommitted changes.
-        /// </summary>
         [HttpPost]
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> SwitchBranch([FromForm] string projectId, [FromForm] string branchName)
@@ -919,7 +909,6 @@ namespace Gheetah.Controllers
                 var branch = repo.Branches[branchName];
                 if (branch == null) return NotFound("Branch not found");
 
-                // Prevent switching if the working directory has uncommitted changes
                 if (repo.RetrieveStatus().IsDirty)
                     return Conflict("You have uncommitted changes. Commit or discard them before switching branches.");
 
@@ -929,11 +918,6 @@ namespace Gheetah.Controllers
             return Ok(new { success = true, currentBranch = branchName });
         }
 
-        // -------------------- Conflict Resolution --------------------
-
-        /// <summary>
-        /// Returns the list of conflicted file paths (relative to repo root) for the given PR.
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetConflictedFiles(string prId)
         {
@@ -953,7 +937,7 @@ namespace Gheetah.Controllers
             using (var repo = new Repository(projectPath))
             {
                 if (repo.Info.CurrentOperation != CurrentOperation.Merge)
-                    return Json(new List<string>());  // no merge in progress → no conflicts
+                    return Json(new List<string>());
 
                 var conflictedPaths = repo.Index.Conflicts
                     .Select(c => c.Ours?.Path ?? c.Theirs?.Path ?? c.Ancestor?.Path)
@@ -963,9 +947,6 @@ namespace Gheetah.Controllers
             }
         }
 
-        /// <summary>
-        /// Returns the content of a conflicted file from the target branch (Ours) and source branch (Theirs).
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetConflictContent(string prId, string filePath)
         {
@@ -1001,9 +982,6 @@ namespace Gheetah.Controllers
             }
         }
 
-        /// <summary>
-        /// Resolves a single conflicted file by accepting either "ours" (target branch) or "theirs" (source branch).
-        /// </summary>
         [HttpPost]
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> ResolveConflict(string prId, string filePath, string resolution)
@@ -1047,14 +1025,11 @@ namespace Gheetah.Controllers
                     return BadRequest("Resolution must be 'ours' or 'theirs'");
                 }
 
-                // Write chosen content to working directory
                 var fullPath = Path.Combine(projectPath, relativePath);
                 await System.IO.File.WriteAllTextAsync(fullPath, chosenContent);
 
-                // Stage the file (this resolves the conflict in the index)
                 Commands.Stage(repo, relativePath);
 
-                // ✅ Eğer tüm conflict'ler çözüldüyse merge commit oluştur
                 if (!repo.Index.Conflicts.Any())
                 {
                     var userEmail = User.Identity?.Name ?? "system@gheetah.com";
@@ -1068,19 +1043,16 @@ namespace Gheetah.Controllers
                             author,
                             author);
 
-                        // Branch'i sil
                         if (sourceBranch != null)
                         {
                             repo.Branches.Remove(sourceBranch);
                         }
 
-                        // PR'ı "ConflictsResolved" ara durumuna al
                         pr.Status = "ConflictsResolved";
                         await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
                         await AddActivity(prId, "ConflictsResolved", userEmail,
                             $"Conflicts resolved for PR. Merge completed. Branch '{pr.SourceBranch}' deleted.");
 
-                        // ✅ Merge/build progress'i güncelle: merge başarılı
                         if (_mergeBuildProgress.TryGetValue(prId, out var progress))
                         {
                             progress.MergeStatus = "success";
@@ -1088,7 +1060,6 @@ namespace Gheetah.Controllers
                             progress.MergeEndTime = DateTime.UtcNow;
                         }
 
-                        // ✅ Arka planda target build'i başlat
                         var targetBuildProgress = _mergeBuildProgress.TryGetValue(prId, out var existingProgress) 
                             ? existingProgress 
                             : new MergeBuildProgress { PrId = prId };
@@ -1109,7 +1080,6 @@ namespace Gheetah.Controllers
                                     targetBuildProgress.TargetBuildStatus = "success";
                                     targetBuildProgress.TargetBuildMessage = "Target branch build succeeded after conflict resolution";
                                     
-                                    // PR'ı Merged yap
                                     var freshPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
                                     var freshPr = freshPrs.FirstOrDefault(p => p.PR_Id == prId);
                                     if (freshPr != null)
@@ -1157,7 +1127,6 @@ namespace Gheetah.Controllers
             }
         }
 
-        // Yeni endpoint: AddNewFile
         [HttpPost]
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> AddNewFile([FromBody] AddNewFileRequest request)
@@ -1182,7 +1151,6 @@ namespace Gheetah.Controllers
 
             await System.IO.File.WriteAllTextAsync(newFilePath, content);
 
-            // Yeni dosyayı Git'e stage et (tracked yap)
             try
             {
                 var gitRoot = FindGitRoot(newFilePath);
@@ -1197,14 +1165,12 @@ namespace Gheetah.Controllers
             }
             catch (Exception ex)
             {
-                // Stage işlemi başarısız olursa yine de dosya oluşturulmuş olsun, loglama yapılabilir.
                 Console.WriteLine($"Git stage failed for new file: {ex.Message}");
             }
 
             return Ok(new { success = true, filePath = newFilePath, fileName = request.FileName + extension });
         }
 
-        // Yeni endpoint: DeleteFile
         [HttpPost]
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> DeleteFile([FromForm] string filePath)
@@ -1214,7 +1180,6 @@ namespace Gheetah.Controllers
 
             if (!System.IO.File.Exists(filePath)) return NotFound("File not found.");
 
-            // Önce Git'ten kaldırmayı dene
             try
             {
                 var gitRoot = FindGitRoot(filePath);
@@ -1224,7 +1189,6 @@ namespace Gheetah.Controllers
                     {
                         string relativePath = Path.GetRelativePath(gitRoot, filePath).Replace("\\", "/");
                         
-                        // Dosyanın Git durumunu kontrol et
                         var status = repo.RetrieveStatus(new StatusOptions { PathSpec = new[] { relativePath } });
                         var fileStatus = status.FirstOrDefault();
                         
@@ -1232,16 +1196,13 @@ namespace Gheetah.Controllers
                         {
                             if (fileStatus.State == FileStatus.NewInIndex || fileStatus.State == FileStatus.NewInWorkdir)
                             {
-                                // Yeni eklenmiş (staged) dosya → önce unstaged yap
                                 Commands.Unstage(repo, relativePath);
                             }
                             
-                            // Tracked dosya → Git remove ile sil (hem index'ten hem working directory'den)
                             Commands.Remove(repo, relativePath, true);
                         }
                         else
                         {
-                            // Dosya Git'te görünmüyorsa (untracked), sadece fiziksel olarak sil
                             System.IO.File.Delete(filePath);
                             return Ok(new { success = true, message = "File deleted." });
                         }
@@ -1253,7 +1214,6 @@ namespace Gheetah.Controllers
                 Console.WriteLine($"Git remove failed: {ex.Message}");
             }
 
-            // Git işlemi başarısız olursa yedek olarak fiziksel silme
             if (System.IO.File.Exists(filePath))
             {
                 System.IO.File.Delete(filePath);
@@ -1262,7 +1222,6 @@ namespace Gheetah.Controllers
             return Ok(new { success = true, message = "File deleted." });
         }
 
-        // Yeni endpoint: RenameFile
         [HttpPost]
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> RenameFile([FromForm] string oldPath, [FromForm] string newName)
@@ -1298,7 +1257,6 @@ namespace Gheetah.Controllers
                 Console.WriteLine($"Git rename failed: {ex.Message}");
             }
 
-            // Git taşıma başarısız olduysa dosya sisteminde taşıma yap
             if (!gitMoved)
             {
                 System.IO.File.Move(oldPath, newPath);
@@ -1323,22 +1281,17 @@ namespace Gheetah.Controllers
             if (!Directory.Exists(projectPath))
                 return NotFound("Project folder not found.");
 
-            // Step text'i temizle
             stepText = stepText.Trim();
 
-            // C# için pattern'ler - daha kapsamlı
             var csharpPatterns = new List<string>
             {
-                // SpecFlow/Reqnroll attribute'leri - tüm varyasyonlar
                 @"\[(Given|When|Then|And|But)\s*\(\s*@""(.+?)""\s*\)\]",
                 @"\[(Given|When|Then|And|But)\s*\(\s*""(.+?)""\s*\)\]",
                 @"\[(Given|When|Then|And|But)\s*\(\s*@'(.+?)'\s*\)\]",
                 @"\[(Given|When|Then|And|But)\s*\(\s*'(.+?)'\s*\)\]",
-                // name parametreli
                 @"\[(Given|When|Then|And|But)\s*\(\s*name\s*:\s*""(.+?)""\s*\)\]",
             };
 
-            // Java için pattern'ler
             var javaPatterns = new List<string>
             {
                 @"@(Given|When|Then|And|But)\s*\(\s*""(.+?)""\s*\)",
@@ -1360,7 +1313,6 @@ namespace Gheetah.Controllers
                 _ => csharpPatterns.Concat(javaPatterns).ToList()
             };
 
-            // Projedeki tüm kod dosyalarını tara
             var allCodeFiles = Directory.GetFiles(projectPath, "*.*", SearchOption.AllDirectories)
                 .Where(f => searchExtensions.Contains(Path.GetExtension(f).ToLower()))
                 .Where(f => !f.Contains("\\bin\\") && !f.Contains("\\obj\\") && !f.Contains("\\.git\\"));
@@ -1399,9 +1351,6 @@ namespace Gheetah.Controllers
             return Ok(new { success = false, message = $"No step definition found for: '{stepText}'" });
         }
 
-        /// <summary>
-        /// IntelliSense için proje bilgilerini döndürür
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetIntelliSenseData(string projectId)
         {
@@ -1422,7 +1371,6 @@ namespace Gheetah.Controllers
                 StepDefinitions = new List<StepDefinitionInfo>()
             };
 
-            // Namespace'leri topla (.cs dosyalarından)
             if (project.LanguageType?.ToLower() == "c#")
             {
                 var csFiles = Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories)
@@ -1443,7 +1391,6 @@ namespace Gheetah.Controllers
                 }
                 result.Namespaces = namespaces.ToList();
 
-                // Step definition'ları topla
                 var stepFiles = csFiles.Where(f => 
                 {
                     var content = System.IO.File.ReadAllText(f);
@@ -1476,45 +1423,30 @@ namespace Gheetah.Controllers
             return Ok(result);
         }
 
-        /// <summary>
-        /// Gherkin adımı ile step definition pattern'ini karşılaştırır.
-        /// Pattern içindeki regex gruplarını (.*) veya (seçenek|seçenek) gibi ifadeleri
-        /// joker karakter olarak ele alır.
-        /// </summary>
         private bool StepTextsMatch(string gherkinStep, string stepDefPattern)
         {
             gherkinStep = gherkinStep.Trim();
             stepDefPattern = stepDefPattern.Trim();
 
-            // 1. Direkt eşleşme (parametresiz adımlar için)
             if (string.Equals(gherkinStep, stepDefPattern, StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            // 2. Step definition pattern'ini regex'e çevirip eşleştir
             try
             {
-                // Pattern'deki özel regex karakterlerini escape et
                 var escaped = Regex.Escape(stepDefPattern);
                 
-                // Escaped edilmiş regex gruplarını ve placeholder'ları joker karaktere çevir
-                
-                // \(\.\*\) → (.*) → herhangi metin
                 escaped = Regex.Replace(escaped, @"\\\(\\\.\*\\\)", ".*?");
                 
-                // \(\.\+\) → (.+) → en az bir karakter
                 escaped = Regex.Replace(escaped, @"\\\(\\\.\+\+\\\)", ".+?");
                 
-                // \(seçenek\|seçenek\) gibi OR grupları → joker
                 escaped = Regex.Replace(escaped, @"\\\([^)]+\\\)", ".*?");
                 
-                // \{string\}, \{int\}, \{word\} gibi SpecFlow placeholder'ları
                 escaped = escaped.Replace("\\{string\\}", ".*?");
                 escaped = escaped.Replace("\\{int\\}", "\\d+");
                 escaped = escaped.Replace("\\{word\\}", "\\w+");
                 escaped = escaped.Replace("\\{float\\}", "\\d+(\\.\\d+)?");
                 escaped = escaped.Replace("\\{.*?\\}", ".*?");
                 
-                // Escaped tırnakları geri çevir (pattern içindeki "" kısımları)
                 escaped = escaped.Replace("\\\"\\\"", "\"");
                 escaped = escaped.Replace("\"\"", "\"");
                 
@@ -1523,21 +1455,14 @@ namespace Gheetah.Controllers
             }
             catch
             {
-                // Regex çevrimi başarısız olursa, basit wildcard karşılaştırma dene
                 return WildcardMatch(gherkinStep, stepDefPattern);
             }
         }
 
-        /// <summary>
-        /// Basit wildcard karşılaştırma: (.*) ve (seçenek|seçenek) gruplarını * olarak ele alır
-        /// </summary>
         private bool WildcardMatch(string text, string pattern)
         {
-            // Regex gruplarını * ile değiştir
             var wildcardPattern = Regex.Replace(pattern, @"\([^)]+\)", "*");
-            // Birden fazla *'i tek * yap
             wildcardPattern = Regex.Replace(wildcardPattern, @"\*+", "*");
-            // Escape et ve *'i .*?'ye çevir
             var escaped = Regex.Escape(wildcardPattern).Replace("\\*", ".*?");
             
             try
@@ -1550,7 +1475,6 @@ namespace Gheetah.Controllers
             }
         }
 
-        // Yardımcı metotlar (mevcut sınıfa ekleyin)
         private string GenerateFileContent(string fileType, string templateType, string fileName, string folderPath)
         {
             string namespaceName = Path.GetFileName(folderPath);
@@ -1600,7 +1524,6 @@ namespace Gheetah.Controllers
 
         private async Task ProcessMergeAndBuildAsync(string prId, MergeBuildProgress progress, string userEmail, string userName)
         {
-            // projectPath'i metodun başında hesaplayalım
             string projectPath = null;
             try
             {
@@ -1617,13 +1540,11 @@ namespace Gheetah.Controllers
             }
             catch
             {
-                // Proje yolu alınamazsa devam edemeyiz
                 return;
             }
 
             try
             {
-                // 1️⃣ SOURCE BUILD
                 progress.SourceBuildStatus = "running";
                 progress.SourceBuildStartTime = DateTime.UtcNow;
                 var sourceBuildOk = await BuildBranchAsync(prId, userEmail, userName, isSource: true);
@@ -1634,14 +1555,12 @@ namespace Gheetah.Controllers
                     progress.SourceBuildStatus = "success";
                     progress.SourceBuildMessage = "Source branch build succeeded";
 
-                    // ✅ Build sonrası çalışma dizinini temizle
                     try
                     {
                         CleanRepository(projectPath);
                     }
                     catch
                     {
-                        // Temizlik başarısız olsa bile merge'i dene
                     }
                 }
                 else
@@ -1652,7 +1571,6 @@ namespace Gheetah.Controllers
                     return;
                 }
 
-                // 2️⃣ MERGE
                 progress.MergeStatus = "running";
                 progress.MergeStartTime = DateTime.UtcNow;
                 var mergeResult = await PerformMergeAsync(prId, userEmail, userName);
@@ -1671,7 +1589,6 @@ namespace Gheetah.Controllers
                     return;
                 }
 
-                // 3️⃣ TARGET BUILD
                 progress.TargetBuildStatus = "running";
                 progress.TargetBuildStartTime = DateTime.UtcNow;
                 var targetBuildOk = await BuildBranchAsync(prId, userEmail, userName, isSource: false);
@@ -1726,7 +1643,6 @@ namespace Gheetah.Controllers
 
             var buildResult = await _projectService.BuildProjectAsync(project.Id, project.LanguageType);
 
-            // --- Hata/başarı mesajını progress'e yazmak için progress nesnesini alalım ---
             if (_mergeBuildProgress.TryGetValue(prId, out var progress))
             {
                 if (isSource)
@@ -1770,7 +1686,6 @@ namespace Gheetah.Controllers
                 if (sourceBranch == null || targetBranch == null)
                     return (false, null, "Source or target branch not found");
 
-                // Merge zaten devam ediyorsa (conflict sonrası)
                 if (repo.Info.CurrentOperation == CurrentOperation.Merge)
                 {
                     if (repo.Index.Conflicts.Any())
@@ -1785,7 +1700,6 @@ namespace Gheetah.Controllers
                     return (true, "Merge completed successfully", null);
                 }
 
-                // Normal merge
                 Commands.Checkout(repo, targetBranch);
                 var signature = new Signature(userName, userEmail, DateTimeOffset.Now);
                 var mergeResult = repo.Merge(sourceBranch, signature);
@@ -1802,7 +1716,6 @@ namespace Gheetah.Controllers
                     return (true, "Already up-to-date, merge not needed.", null);
                 }
 
-                // Başarılı merge
                 repo.Branches.Remove(sourceBranch);
                 pr.Status = "Merged";
                 await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
@@ -1819,10 +1732,8 @@ namespace Gheetah.Controllers
         {
             using (var repo = new Repository(projectPath))
             {
-                // 1. Çalışma dizinini HEAD'e sıfırla (git reset --hard)
                 repo.Reset(ResetMode.Hard);
 
-                // 2. İzlenmeyen tüm dosyaları sil (git clean -fd karşılığı)
                 var untrackedOptions = new StatusOptions
                 {
                     IncludeUntracked = true,
