@@ -328,7 +328,6 @@
     }
 
     async function submitProject() {
-        // 1. Loader'ı Başlat
         if (typeof Loader !== "undefined" && Loader.show) {
             Loader.show("Desired project creating...");
         } else if (window.showGlobalLoader) {
@@ -350,7 +349,6 @@
         };
 
         try {
-            // Backend isteğini gönder
             const response = await fetch('/Projects/GenerateProject', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -359,7 +357,6 @@
 
             const result = await response.json();
 
-            // 2. İşlem bittiğinde Loader'ı Kapat
             if (typeof Loader !== "undefined" && Loader.hide) {
                 Loader.hide();
             } else if (window.hideGlobalLoader) {
@@ -367,31 +364,26 @@
             }
 
             if (result.success) {
-                // 3. Başarılı ise Success Modalını Göster (Yönlendirme yapma, modal üzerindeki buton yapsın)
                 var successModal = new bootstrap.Modal(document.getElementById('success-modal'));
                 successModal.show();
             } else {
-                // 4. Hata durumunda Error Modalını Göster
                 if (result.type === "config_error") {
                     document.getElementById('error-modal-message').innerText = result.message;
                     var errModal = new bootstrap.Modal(document.getElementById('error-modal'));
                     errModal.show();
                 } else {
-                    // Kritik olmayan hatalar için Tabler Toast veya Alert (isteğe bağlı)
                     alert("Generation Error: " + result.message);
                 }
             }
         } catch (error) {
-            // Hata durumunda Loader'ı her türlü kapat
             if (typeof Loader !== "undefined" && Loader.hide) Loader.hide();
             console.error("Fetch error:", error);
             alert("A system error occurred while generating the project.");
         }
     }
 
-    // Helper: Loader text güncelleme (Eğer layout destekliyorsa)
     function updateLoaderText(text) {
-        const loaderTextElement = document.querySelector('.loader-text'); // Layout'undaki class'a göre
+        const loaderTextElement = document.querySelector('.loader-text'); 
         if (loaderTextElement) loaderTextElement.innerText = text;
     }
 

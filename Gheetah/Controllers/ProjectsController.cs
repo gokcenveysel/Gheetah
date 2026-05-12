@@ -350,7 +350,6 @@ namespace Gheetah.Controllers
             }
         }
 
-        //------------- Eklenen Özellik: Şablondan Proje Oluşturma -------------
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         [HttpGet]
         public IActionResult CreateProject()
@@ -421,7 +420,6 @@ namespace Gheetah.Controllers
         {
             Directory.CreateDirectory(targetDir);
 
-            // 1. Dependency Map'i yükle
             string rootDir = _env.ContentRootPath;
             string mapPath = Path.Combine(rootDir, "Templates", model.Language, "dependency_map.json");
             string adapterDeps = "";
@@ -433,19 +431,16 @@ namespace Gheetah.Controllers
                 using var doc = JsonDocument.Parse(mapJson);
                 var root = doc.RootElement;
 
-                // Adapter Bağımlılıklarını Al
                 if (root.TryGetProperty("Adapters", out var adapters) && 
                     adapters.TryGetProperty(model.TestAdapter, out var adapterValue))
                 {
                     adapterDeps = adapterValue.GetString();
                 }
 
-                // Addon Bağımlılıklarını Al (Multiple Selection)
                 if (root.TryGetProperty("Addons", out var addons))
                 {
                     foreach (var selectedAddon in model.Addons ?? new List<string>())
                     {
-                        // UI'dan gelen "Database" veya "DB" isimlendirme farkını handle et
                         string addonKey = selectedAddon == "DB" ? "Database" : selectedAddon;
                         
                         if (addons.TryGetProperty(addonKey, out var addonValue))
@@ -460,14 +455,12 @@ namespace Gheetah.Controllers
             {
                 string fileName = Path.GetFileName(file);
                 
-                // CSharp için proje dosyasını isimlendirme
                 if (model.Language == "C#" && fileName.EndsWith(".csproj"))
                     fileName = $"{model.ProjectName}.csproj";
 
                 string destFile = Path.Combine(targetDir, fileName);
                 string content = System.IO.File.ReadAllText(file);
 
-                // 2. Placeholder Değişimleri (Dinamik Dependecy Enjeksiyonu)
                 content = content.Replace("{{ProjectName}}", model.ProjectName)
                                  .Replace("{{TestAdapter}}", model.TestAdapter)
                                  .Replace("{{AdapterDependencies}}", adapterDeps)
@@ -476,7 +469,6 @@ namespace Gheetah.Controllers
                 System.IO.File.WriteAllText(destFile, content);
             }
 
-            // Klasörleri kopyalamaya devam et (Recursive)
             foreach (var directory in Directory.GetDirectories(sourceDir))
             {
                 string dirName = Path.GetFileName(directory);
@@ -494,7 +486,6 @@ namespace Gheetah.Controllers
                 ? Path.Combine(projectPath, "StepDefinitions") 
                 : Path.Combine(projectPath, "src", "test", "java", model.ProjectName, "stepdefinitions");
 
-            // Artik Directory.GetCurrentDirectory() yerine rootDir kullaniyoruz
             string addonSourceBase = Path.Combine(rootDir, "Templates", model.Language, "Addons");
 
             foreach (var addon in model.Addons)
