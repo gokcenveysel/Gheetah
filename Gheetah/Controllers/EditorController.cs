@@ -1400,6 +1400,83 @@ namespace Gheetah.Controllers
         }
 
         /// <summary>
+        /// IntelliSense için proje bilgilerini döndürür
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetIntelliSenseData(string projectId)
+        {
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound("Project not found.");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+            
+            if (!Directory.Exists(projectPath))
+                return NotFound("Project folder not found.");
+
+            var result = new IntelliSenseData
+            {
+                Language = project.LanguageType ?? "c#",
+                Namespaces = new List<string>(),
+                StepDefinitions = new List<StepDefinitionInfo>()
+            };
+
+            // Namespace'leri topla (.cs dosyalarından)
+            if (project.LanguageType?.ToLower() == "c#")
+            {
+                var csFiles = Directory.GetFiles(projectPath, "*.cs", SearchOption.AllDirectories)
+                    .Where(f => !f.Contains("\\bin\\") && !f.Contains("\\obj\\"));
+                
+                var namespaces = new HashSet<string>();
+                foreach (var file in csFiles)
+                {
+                    var lines = await System.IO.File.ReadAllLinesAsync(file);
+                    foreach (var line in lines)
+                    {
+                        var match = Regex.Match(line, @"^namespace\s+(.+?);");
+                        if (match.Success)
+                        {
+                            namespaces.Add(match.Groups[1].Value);
+                        }
+                    }
+                }
+                result.Namespaces = namespaces.ToList();
+
+                // Step definition'ları topla
+                var stepFiles = csFiles.Where(f => 
+                {
+                    var content = System.IO.File.ReadAllText(f);
+                    return content.Contains("[Binding]") || 
+                           content.Contains("[Given") || 
+                           content.Contains("[When") || 
+                           content.Contains("[Then");
+                });
+
+                foreach (var file in stepFiles)
+                {
+                    var lines = await System.IO.File.ReadAllLinesAsync(file);
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        var match = Regex.Match(lines[i], @"\[(Given|When|Then|And|But)\s*\(\s*@?""?(.+?)""?\s*\)\]");
+                        if (match.Success)
+                        {
+                            result.StepDefinitions.Add(new StepDefinitionInfo
+                            {
+                                Type = match.Groups[1].Value,
+                                Pattern = match.Groups[2].Value,
+                                FileName = Path.GetFileName(file),
+                                LineNumber = i + 1
+                            });
+                        }
+                    }
+                }
+            }
+
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Gherkin adımı ile step definition pattern'ini karşılaştırır.
         /// Pattern içindeki regex gruplarını (.*) veya (seçenek|seçenek) gibi ifadeleri
         /// joker karakter olarak ele alır.

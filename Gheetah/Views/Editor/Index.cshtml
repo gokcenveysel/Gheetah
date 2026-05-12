@@ -587,6 +587,293 @@
                 createNormalEditor();
                 setupStepDefinitionLinker();
 
+                // ==================== GLOBAL INTELLISENSE ENGINE ====================
+
+                // IntelliSense verisini cache'le
+                var intelliSenseData = null;
+
+                // Backend'den IntelliSense verisini al
+                function loadIntelliSenseData(callback) {
+                    if (intelliSenseData) {
+                        callback(intelliSenseData);
+                        return;
+                    }
+
+                    $.get('/Editor/GetIntelliSenseData', { projectId: projectId }, function(data) {
+                        intelliSenseData = data;
+                        callback(data);
+                    }).fail(function() {
+                        callback({ namespaces: [], stepDefinitions: [], language: 'c#' });
+                    });
+                }
+
+                // C# Snippet Provider
+                monaco.languages.registerCompletionItemProvider('csharp', {
+                    triggerCharacters: ['.', ' ', '\n'],
+                    provideCompletionItems: function(model, position) {
+                        return new Promise(function(resolve) {
+                            loadIntelliSenseData(function(data) {
+                                var word = model.getWordUntilPosition(position);
+                                var range = {
+                                    startLineNumber: position.lineNumber,
+                                    endLineNumber: position.lineNumber,
+                                    startColumn: word.startColumn,
+                                    endColumn: word.endColumn
+                                };
+
+                                var suggestions = [];
+
+                                // Namespace önerileri
+                                if (data.namespaces && data.namespaces.length > 0) {
+                                    data.namespaces.forEach(function(ns) {
+                                        suggestions.push({
+                                            label: ns,
+                                            kind: monaco.languages.CompletionItemKind.Module,
+                                            insertText: ns,
+                                            range: range,
+                                            detail: 'Namespace',
+                                            sortText: '1_' + ns
+                                        });
+                                    });
+                                }
+
+                                // Temel C# snippet'leri
+                                suggestions.push(
+                                    {
+                                        label: 'class',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        insertText: [
+                                            'class ${1:ClassName}',
+                                            '{',
+                                            '\t${0}',
+                                            '}'
+                                        ].join('\n'),
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: range,
+                                        detail: 'C# Class',
+                                        sortText: '2_class'
+                                    },
+                                    {
+                                        label: 'interface',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        insertText: [
+                                            'interface I${1:Name}',
+                                            '{',
+                                            '\t${0}',
+                                            '}'
+                                        ].join('\n'),
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: range,
+                                        detail: 'C# Interface',
+                                        sortText: '2_interface'
+                                    },
+                                    {
+                                        label: 'prop',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        insertText: 'public ${1:string} ${2:Name} { get; set; }',
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: range,
+                                        detail: 'C# Property',
+                                        sortText: '3_prop'
+                                    },
+                                    {
+                                        label: 'method',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        insertText: [
+                                            'public ${1:void} ${2:MethodName}()',
+                                            '{',
+                                            '\t${0}',
+                                            '}'
+                                        ].join('\n'),
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: range,
+                                        detail: 'C# Method',
+                                        sortText: '3_method'
+                                    },
+                                    {
+                                        label: 'stepdef',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        insertText: [
+                                            '[${1|Given,When,Then,And,But|}("${2:pattern}")]',
+                                            'public void ${3:MethodName}()',
+                                            '{',
+                                            '\t${0}',
+                                            '}'
+                                        ].join('\n'),
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: range,
+                                        detail: 'Step Definition',
+                                        sortText: '4_stepdef'
+                                    },
+                                    {
+                                        label: 'test',
+                                        kind: monaco.languages.CompletionItemKind.Snippet,
+                                        insertText: [
+                                            '[TestMethod]',
+                                            'public void ${1:TestMethodName}()',
+                                            '{',
+                                            '\t// Arrange',
+                                            '\t${2}',
+                                            '',
+                                            '\t// Act',
+                                            '\t${3}',
+                                            '',
+                                            '\t// Assert',
+                                            '\t${0}',
+                                            '}'
+                                        ].join('\n'),
+                                        insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                        range: range,
+                                        detail: 'Test Method',
+                                        sortText: '5_test'
+                                    }
+                                );
+
+                                resolve({ suggestions: suggestions });
+                            });
+                        });
+                    }
+                });
+
+                // Gherkin Snippet Provider
+                monaco.languages.registerCompletionItemProvider('gherkin', {
+                    triggerCharacters: [' ', '\n'],
+                    provideCompletionItems: function(model, position) {
+                        var word = model.getWordUntilPosition(position);
+                        var range = {
+                            startLineNumber: position.lineNumber,
+                            endLineNumber: position.lineNumber,
+                            startColumn: word.startColumn,
+                            endColumn: word.endColumn
+                        };
+
+                        var suggestions = [
+                            {
+                                label: 'Feature',
+                                kind: monaco.languages.CompletionItemKind.Snippet,
+                                insertText: [
+                                    'Feature: ${1:Feature Name}',
+                                    '\tAs a ${2:role}',
+                                    '\tI want to ${3:action}',
+                                    '\tSo that ${4:benefit}',
+                                    '',
+                                    '\tScenario: ${5:Scenario Name}',
+                                    '\t\tGiven ${6:precondition}',
+                                    '\t\tWhen ${7:action}',
+                                    '\t\tThen ${8:expected result}',
+                                    '${0}'
+                                ].join('\n'),
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Feature Template'
+                            },
+                            {
+                                label: 'Scenario',
+                                kind: monaco.languages.CompletionItemKind.Snippet,
+                                insertText: [
+                                    'Scenario: ${1:Scenario Name}',
+                                    '\tGiven ${2:precondition}',
+                                    '\tWhen ${3:action}',
+                                    '\tThen ${4:expected result}',
+                                    '${0}'
+                                ].join('\n'),
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Scenario Template'
+                            },
+                            {
+                                label: 'Given',
+                                kind: monaco.languages.CompletionItemKind.Keyword,
+                                insertText: 'Given ${1:condition}',
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Precondition'
+                            },
+                            {
+                                label: 'When',
+                                kind: monaco.languages.CompletionItemKind.Keyword,
+                                insertText: 'When ${1:action}',
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Action'
+                            },
+                            {
+                                label: 'Then',
+                                kind: monaco.languages.CompletionItemKind.Keyword,
+                                insertText: 'Then ${1:expected}',
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Expected Result'
+                            },
+                            {
+                                label: 'And',
+                                kind: monaco.languages.CompletionItemKind.Keyword,
+                                insertText: 'And ${1:step}',
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Additional Step'
+                            }
+                        ];
+
+                        return { suggestions: suggestions };
+                    }
+                });
+
+                // Java Snippet Provider
+                monaco.languages.registerCompletionItemProvider('java', {
+                    triggerCharacters: ['.', ' ', '\n'],
+                    provideCompletionItems: function(model, position) {
+                        var word = model.getWordUntilPosition(position);
+                        var range = {
+                            startLineNumber: position.lineNumber,
+                            endLineNumber: position.lineNumber,
+                            startColumn: word.startColumn,
+                            endColumn: word.endColumn
+                        };
+
+                        var suggestions = [
+                            {
+                                label: 'class',
+                                kind: monaco.languages.CompletionItemKind.Snippet,
+                                insertText: [
+                                    'public class ${1:ClassName} {',
+                                    '\t${0}',
+                                    '}'
+                                ].join('\n'),
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Java Class'
+                            },
+                            {
+                                label: 'main',
+                                kind: monaco.languages.CompletionItemKind.Snippet,
+                                insertText: [
+                                    'public static void main(String[] args) {',
+                                    '\t${0}',
+                                    '}'
+                                ].join('\n'),
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Main Method'
+                            },
+                            {
+                                label: 'method',
+                                kind: monaco.languages.CompletionItemKind.Snippet,
+                                insertText: [
+                                    'public ${1:void} ${2:methodName}() {',
+                                    '\t${0}',
+                                    '}'
+                                ].join('\n'),
+                                insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+                                range: range,
+                                detail: 'Java Method'
+                            }
+                        ];
+
+                        return { suggestions: suggestions };
+                    }
+                });
+
                 // ==================== MONACO EDITOR ACTIONS (KESİN ÇALIŞIR) ====================
                 editor.addAction({
                     id: 'save-file',
