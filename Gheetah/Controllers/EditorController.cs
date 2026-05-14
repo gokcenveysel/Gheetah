@@ -1160,13 +1160,13 @@ namespace Gheetah.Controllers
                     return NotFound("Branch not found");
 
                 string relativePath = filePath.Replace("\\", "/");
+        
                 string oursContent = "";
-                string theirsContent = "";
-
-                var oursBlob = targetBranch.Tip[relativePath]?.Target as Blob;
+                var oursBlob = sourceBranch.Tip[relativePath]?.Target as Blob;
                 if (oursBlob != null) oursContent = oursBlob.GetContentText();
 
-                var theirsBlob = sourceBranch.Tip[relativePath]?.Target as Blob;
+                string theirsContent = "";
+                var theirsBlob = targetBranch.Tip[relativePath]?.Target as Blob;
                 if (theirsBlob != null) theirsContent = theirsBlob.GetContentText();
 
                 return Json(new { oursContent, theirsContent });
@@ -1203,12 +1203,12 @@ namespace Gheetah.Controllers
 
                 if (resolution.Equals("ours", StringComparison.OrdinalIgnoreCase))
                 {
-                    var blob = targetBranch.Tip[relativePath]?.Target as Blob;
+                    var blob = sourceBranch.Tip[relativePath]?.Target as Blob;
                     chosenContent = blob?.GetContentText() ?? "";
                 }
                 else if (resolution.Equals("theirs", StringComparison.OrdinalIgnoreCase))
                 {
-                    var blob = sourceBranch.Tip[relativePath]?.Target as Blob;
+                    var blob = targetBranch.Tip[relativePath]?.Target as Blob;
                     chosenContent = blob?.GetContentText() ?? "";
                 }
                 else

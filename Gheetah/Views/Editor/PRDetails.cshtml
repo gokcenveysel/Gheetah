@@ -307,10 +307,10 @@
                     <div class="col-9" style="display: flex; flex-direction: column; height: 100%;">
                         <div class="diff-toolbar bg-light px-3 py-2 border-bottom d-flex justify-content-end gap-2" id="resolve-toolbar" style="display: none;">
                             <button class="btn btn-sm btn-outline-secondary" onclick="resolveConflict('ours')">
-                                <i class="ti ti-folders me-1"></i> Accept Ours (Target)
+                                <i class="ti ti-folders me-1"></i> Accept OURS (Source)
                             </button>
                             <button class="btn btn-sm btn-outline-primary" onclick="resolveConflict('theirs')">
-                                <i class="ti ti-file-diff me-1"></i> Accept Theirs (Source)
+                                <i class="ti ti-file-diff me-1"></i> Accept THEIRS (Target)
                             </button>
                         </div>
                         <div id="conflict-diff-container" style="flex: 1; min-height: 300px;"></div>
@@ -871,8 +871,8 @@
                 var lang = getLanguageByExtension(fileName);
 
                 conflictDiffEditor.setModel({
-                    original: monaco.editor.createModel(data.oursContent, lang),
-                    modified: monaco.editor.createModel(data.theirsContent, lang)
+                    original: monaco.editor.createModel(data.theirsContent, lang),
+                    modified: monaco.editor.createModel(data.oursContent, lang)
                 });
                 $('#resolve-toolbar').show();
             });
@@ -880,7 +880,9 @@
 
         function resolveConflict(resolution) {
             if (!activeConflictFile) return;
-            showConfirm("Confirm Resolution", `Accept ${resolution} version for this file?`, function() {
+
+            var resolutionText = resolution === 'ours' ? 'OURS (Source Branch)' : 'THEIRS (Target Branch)';
+            showConfirm("Confirm Resolution", `Accept ${resolutionText} version for this file?`, function() {
                 $.post('/Editor/ResolveConflict', {
                     prId: prId,
                     filePath: activeConflictFile,
