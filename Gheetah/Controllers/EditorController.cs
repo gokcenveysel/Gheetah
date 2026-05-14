@@ -233,7 +233,6 @@ namespace Gheetah.Controllers
 
                 using (var repo = new Repository(projectPath))
                 {
-                    // ========== AKTIF REMOTE PROVIDER'ı BUL ==========
                     var remote = repo.Network.Remotes["origin"];
                     RepoSettingsVm repoInfo = null;
                     string remoteProviderType = null;
@@ -255,8 +254,6 @@ namespace Gheetah.Controllers
                         baseBranchName = repo.Head.FriendlyName;
                     }
 
-                    // ========== SENARYO 3: Remote'da branch var, local'de yok? ==========
-                    // Önce remote referanslarını güncelle
                     if (remote != null && repoInfo != null && !string.IsNullOrEmpty(repoInfo.AccessToken))
                     {
                         try
@@ -274,25 +271,20 @@ namespace Gheetah.Controllers
                         }
                     }
 
-                    // Local branch var mı kontrol et
                     Branch localBranch = repo.Branches[branchName];
                     bool localBranchExists = localBranch != null;
 
-                    // Remote'da branch var mı kontrol et
                     string remoteTrackingRef = $"refs/remotes/origin/{branchName}";
                     bool remoteBranchExists = repo.Branches.Any(b => b.CanonicalName == remoteTrackingRef);
 
-                    // ========== SENARYO 3: Remote var, local yok ==========
                     if (remoteBranchExists && !localBranchExists)
                     {
-                        // Remote branch'ten local branch oluştur
                         var remoteBranch = repo.Branches[remoteTrackingRef];
                         localBranch = repo.CreateBranch(branchName, remoteBranch.Tip.Sha);
                         Commands.Checkout(repo, localBranch);
                         localBranchExists = true;
                     }
 
-                    // ========== LOCAL BRANCH OLUŞTUR (SENARYO 2 ve 4) ==========
                     if (!localBranchExists)
                     {
                         localBranch = repo.CreateBranch(branchName);
@@ -303,7 +295,6 @@ namespace Gheetah.Controllers
                         Commands.Checkout(repo, localBranch);
                     }
 
-                    // ========== DEĞİŞİKLİKLERİ COMMIT ET ==========
                     Commands.Stage(repo, "*");
                     var status = repo.RetrieveStatus();
                     string commitSha = null;
@@ -323,7 +314,6 @@ namespace Gheetah.Controllers
                         }
                     }
 
-                    // ========== REMOTE PUSH (TEK BİR PUSH, API YOK) ==========
                     string remoteMessage = "";
                     
                     if (remote != null && repoInfo != null && !string.IsNullOrEmpty(repoInfo.AccessToken))
@@ -332,14 +322,12 @@ namespace Gheetah.Controllers
                         {
                             var credentials = GetRemoteCredentials(repoInfo);
                             
-                            // Fetch (güncel remote referansları için)
                             var fetchOptions = new FetchOptions
                             {
                                 CredentialsProvider = (url, user, cred) => credentials
                             };
                             Commands.Fetch(repo, remote.Name, new string[0], fetchOptions, null);
 
-                            // Push - Branch remote'da yoksa otomatik oluşur!
                             string pushRefSpec = $"refs/heads/{branchName}:refs/heads/{branchName}";
                             var pushOptions = new PushOptions
                             {
@@ -348,13 +336,11 @@ namespace Gheetah.Controllers
 
                             repo.Network.Push(remote, pushRefSpec, pushOptions);
 
-                            // Tracked branch ayarla
                             repo.Branches.Update(localBranch, b =>
                             {
                                 b.TrackedBranch = remoteTrackingRef;
                             });
 
-                            // Push sonucu mesajı
                             if (!remoteBranchExists && !string.IsNullOrEmpty(commitSha))
                             {
                                 remoteMessage = " Remote branch created and changes pushed successfully.";
@@ -574,8 +560,8 @@ namespace Gheetah.Controllers
                             h.PushedAt,
                             h.CommitHash,
                             h.HasPR,
-                            prId = relatedPr?.PR_Id,       // JS tarafı için
-                            prStatus = relatedPr?.Status   // JS tarafı için
+                            prId = relatedPr?.PR_Id,
+                            prStatus = relatedPr?.Status
                         };
                     })
                     .ToList();
@@ -1299,7 +1285,6 @@ namespace Gheetah.Controllers
                                     targetBuildProgress.TargetBuildStatus = "failed";
                                     targetBuildProgress.TargetBuildMessage = "Target branch build failed after conflict resolution";
                                     
-                                    // PR'ı BuildFailed yap
                                     var freshPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
                                     var freshPr = freshPrs.FirstOrDefault(p => p.PR_Id == prId);
                                     if (freshPr != null)
@@ -1719,7 +1704,6 @@ namespace Gheetah.Controllers
                     {
                         CredentialsProvider = (url, user, cred) => credentials
                     };
-                    // Fetch
                     Commands.Fetch(repo, remote.Name, new string[0], fetchOptions, null);
 
                     var upstreamBranch = repo.Head.TrackedBranch;
@@ -1778,7 +1762,6 @@ namespace Gheetah.Controllers
 
                 repo.Network.Remotes.Add("origin", remoteUrl);
                 
-                // Fetch remote branches
                 var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
                 var repoInfo = repoSettings.FirstOrDefault(r => r.Id == providerId);
                 
@@ -1796,12 +1779,10 @@ namespace Gheetah.Controllers
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Fetch after connect failed: {ex.Message}");
-                        // Fetch başarısız olsa bile bağlantı kuruldu, devam et
                     }
                 }
             }
 
-            // projects.json'u güncelle
             var allProjects = await _fileService.LoadConfigAsync<List<Project>>("projects.json") ?? new List<Project>();
             var projectToUpdate = allProjects.FirstOrDefault(p => p.Id == projectId);
             if (projectToUpdate != null)
@@ -1844,30 +1825,6 @@ namespace Gheetah.Controllers
             return Ok(new { success = true, message = "Disconnected from remote repository." });
         }
 
-        private async Task<bool> RemoteBranchExistsAsync(Repository repo, Remote remote, string branchName, RepoSettingsVm repoInfo)
-        {
-            try
-            {
-                // Önce credentials'i al
-                var credentials = GetRemoteCredentials(repoInfo);
-        
-                // Fetch options ile kullan
-                var fetchOptions = new FetchOptions
-                {
-                    CredentialsProvider = (url, user, cred) => credentials
-                };
-                Commands.Fetch(repo, remote.Name, new string[0], fetchOptions, null);
-
-                // Remote branch kontrolü
-                var remoteBranchName = $"refs/remotes/origin/{branchName}";
-                return repo.Branches.Any(b => b.CanonicalName == remoteBranchName);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private UsernamePasswordCredentials GetRemoteCredentials(RepoSettingsVm repoInfo)
         {
             if (repoInfo == null)
@@ -1876,7 +1833,6 @@ namespace Gheetah.Controllers
             if (string.IsNullOrEmpty(repoInfo.AccessToken))
                 throw new UnauthorizedAccessException("Access token is missing for remote repository.");
 
-            // GitHub için: Token username, password "x-oauth-basic"
             if (repoInfo.RepoType?.Equals("GitHub", StringComparison.OrdinalIgnoreCase) == true)
             {
                 return new UsernamePasswordCredentials
@@ -1885,7 +1841,6 @@ namespace Gheetah.Controllers
                     Password = "x-oauth-basic"
                 };
             }
-            // Azure DevOps için
             else if (repoInfo.RepoType?.Equals("Azure", StringComparison.OrdinalIgnoreCase) == true)
             {
                 return new UsernamePasswordCredentials
@@ -1894,7 +1849,6 @@ namespace Gheetah.Controllers
                     Password = repoInfo.AccessToken
                 };
             }
-            // GitLab, Bitbucket vs. için
             else
             {
                 return new UsernamePasswordCredentials

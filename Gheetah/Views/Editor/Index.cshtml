@@ -1607,7 +1607,6 @@
         }
 
 
-        // Remote repo oluştur
         function createRemoteRepo(providerIdFromModal) {
             var providerId = providerIdFromModal || $('#connect-provider').val() || $('#remote-provider').val();
             if (!providerId) {
@@ -1615,7 +1614,6 @@
                 return;
             }
 
-            // Modal'dan çağrıldıysa modal'ı kapat
             if ($('#modal-connect-remote').hasClass('show')) {
                 $('#modal-connect-remote').modal('hide');
             }
@@ -1629,7 +1627,6 @@
                      <li>Push your local project to the remote</li>
                  </ul></small>`,
                 function() {
-                    // Yükleniyor göster
                     showCustomToast('info', 'Creating remote repository... This may take a moment.');
 
                     $.ajax({
@@ -1642,7 +1639,6 @@
                         success: function(response) {
                             if (response.success) {
                                 showCustomToast('success', response.message);
-                                // Remote panelini yenile
                                 setTimeout(function() {
                                     loadRemoteStatus();
                                 }, 500);
@@ -1728,7 +1724,7 @@
                         success: function(response) {
                             if (response.success) {
                                 showCustomToast('success', response.message);
-                                refreshTree(); // Ağacı yenile
+                                refreshTree();
                                 if ($('#tab-git').hasClass('active')) {
                                     refreshGitChanges();
                                 }
@@ -1738,7 +1734,6 @@
                         },
                         error: function(err) {
                             if (err.status === 409) {
-                                // Conflict durumu
                                 showAlert("Merge Conflicts",
                                     "Conflicts detected during pull. Please resolve them before continuing.",
                                     "warning");
@@ -1762,7 +1757,7 @@
                         success: function(response) {
                             if (response.success) {
                                 showCustomToast('success', response.message);
-                                loadRemoteStatus(); // Remote panelini yenile
+                                loadRemoteStatus();
                             } else {
                                 showAlert("Error", response.message, "danger");
                             }
@@ -2337,12 +2332,10 @@
         }
 
 
-                // ==================== CONNECT TO REMOTE - AKILLI EŞLEŞTİRME ====================
 
         var selectedRemoteUrl = null;
         var projectName = "@ViewBag.ProjectName";
 
-        // Ana fonksiyon - modal'ı açar
         function connectToRemote() {
             var providerId = $('#remote-provider').val();
             if (!providerId) {
@@ -2352,7 +2345,6 @@
 
             $('#matching-project-name').text(projectName);
 
-            // Modal açıldığında Connect butonunu devre dışı bırak
             $('#btn-connect-confirm').prop('disabled', true);
             selectedRemoteUrl = null;
             $('#manual-remote-url').val('');
@@ -2361,7 +2353,6 @@
             $('#modal-connect-remote').modal('show');
         }
 
-        // Modal içindeki provider dropdown'ını doldur
         function loadConnectModalProviders(selectedId) {
             $.get('/Projects/GetRemoteProviders', function(data) {
                 var html = '<option value="">Select Provider...</option>';
@@ -2373,14 +2364,12 @@
                 }
                 $('#connect-provider').html(html);
 
-                // Provider seçiliyse eşleşen repoları yükle
                 if (selectedId) {
                     loadMatchingRepos();
                 }
             });
         }
 
-        // Proje adıyla eşleşen repoları yükle
         function loadMatchingRepos() {
             var providerId = $('#connect-provider').val();
             if (!providerId) {
@@ -2415,7 +2404,7 @@
                         </div>
                     `);
                     $('#no-repo-suggestion').show();
-                    $('#btn-connect-confirm').prop('disabled', true); // ❌ Repo yok → disabled
+                    $('#btn-connect-confirm').prop('disabled', true);
                     return;
                 }
 
@@ -2443,7 +2432,6 @@
                 });
                 html += '</div>';
                 $('#repo-list-container').html(html);
-                // ✅ Repo listesi yüklendi ama henüz seçim yok → disabled
                 $('#btn-connect-confirm').prop('disabled', true);
             }).fail(function() {
                 $('#repo-list-container').html(`
@@ -2456,7 +2444,6 @@
             });
         }
 
-        // Repo seçimi
         function selectRepo(url, name, element) {
             $('#repo-list-container .list-group-item').removeClass('active');
             $('#repo-list-container .selected-icon').addClass('d-none');
@@ -2467,18 +2454,14 @@
             selectedRemoteUrl = url;
             $('#manual-remote-url').val(url);
 
-            // ✅ Repo seçildi → Connect butonunu aktif et!
             $('#btn-connect-confirm').prop('disabled', false);
         }
 
-        // Manuel URL sekmesine geçildiğinde input kontrolü
         $('#manual-remote-url').on('input', function() {
             var url = $(this).val().trim();
-            // URL varsa Connect'i aktif et, yoksa devre dışı bırak
             $('#btn-connect-confirm').prop('disabled', !url);
         });
 
-        // Modal kapandığında sıfırla
         $('#modal-connect-remote').on('hidden.bs.modal', function() {
             selectedRemoteUrl = null;
             $('#manual-remote-url').val('');
@@ -2492,7 +2475,6 @@
             $('#no-repo-suggestion').hide();
         });
 
-                // ==================== CONFIRM CONNECT TO REMOTE ====================
         function confirmConnectRemote() {
             var providerId = $('#connect-provider').val();
             var remoteUrl = selectedRemoteUrl || $('#manual-remote-url').val().trim();
@@ -2528,8 +2510,8 @@
                             if (response.success) {
                                 showCustomToast('success', response.message);
                                 $('#modal-connect-remote').modal('hide');
-                                loadRemoteStatus(); // Remote panelini yenile
-                                refreshBranchList(); // Branch listesini yenile
+                                loadRemoteStatus();
+                                refreshBranchList();
                             } else {
                                 showAlert("Error", response.message, "danger");
                             }
