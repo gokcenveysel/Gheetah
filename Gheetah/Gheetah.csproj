@@ -10,9 +10,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-		<PackageReference Include="Gherkin" Version="32.1.1" />
-		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.18" />
-		<PackageReference Include="Hangfire.Core" Version="1.8.18" />
+		<PackageReference Include="Gherkin" Version="39.1.0" />
+		<PackageReference Include="Hangfire.AspNetCore" Version="1.8.23" />
+		<PackageReference Include="Hangfire.Core" Version="1.8.23" />
 		<PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.1" />
 		<PackageReference Include="LibGit2Sharp" Version="0.31.0" />
 		<PackageReference Include="LibGit2Sharp.NativeBinaries" Version="2.0.323" />
@@ -21,8 +21,8 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.14" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.14" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="SharpCompress" Version="0.39.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+		<PackageReference Include="SharpCompress" Version="0.48.1" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -320,7 +320,7 @@ namespace Gheetah.Services
                 }
                 else if (extension == ".rar")
                 {
-                    using var archive = RarArchive.Open(archivePath);
+                    using var archive = RarArchive.OpenArchive(archivePath);
                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                     {
                         entry.WriteToDirectory(projectPath, new ExtractionOptions

@@ -100,6 +100,28 @@
         border-right: 4px solid #206bc4 !important;
         font-weight: 600;
     }
+    /* Conflicts Tab - Düzeltme */
+    #conflicts {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+        #conflicts > .conflicts-header {
+            flex-shrink: 0;
+        }
+
+        #conflicts > div:last-child {
+            flex: 1;
+            min-height: 0;
+        }
+
+    #conflict-diff-container {
+        min-height: 300px;
+    }
+
+    .monaco-diff-editor {
+        height: 100% !important;
+    }
 
 </style>
 
@@ -262,25 +284,37 @@
                     </div>
                 </div>
             </div>
-            <div class="tab-pane fade h-100" id="conflicts" style="display:flex; flex-direction:row;">
-                <!-- Left panel: conflicted file list -->
-                <div class="col-3 border-end overflow-auto h-100 bg-light">
-                    <div class="p-2 fw-bold text-muted small border-bottom bg-white d-flex justify-content-between">
-                        <span>CONFLICTED FILES</span>
-                        <span class="badge bg-red-lt" id="conflict-file-count">0</span>
+            <div class="tab-pane fade h-100 overflow-auto" id="conflicts">
+                <div class="conflicts-header bg-white border-bottom px-3 py-2 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="ti ti-git-merge fs-5 text-muted"></i>
+                        <span class="fw-semibold">Conflict Resolver</span>
+                        <span class="badge bg-red-lt" id="conflict-file-count-header">0 conflicts</span>
                     </div>
-                    <div id="conflict-file-list" class="list-group list-group-flush"></div>
+                    <div class="text-muted small">
+                        <i class="ti ti-info-circle me-1"></i> Resolve conflicts by choosing which version to keep
+                    </div>
                 </div>
-                <!-- Right panel: diff view & resolve buttons -->
-                <div class="col-9 h-100 d-flex flex-column">
-                    <div id="conflict-diff-container" style="flex:1; min-height:0;"></div>
-                    <div id="resolve-bar" class="p-2 bg-light border-top d-flex justify-content-center gap-2" style="display:none !important;">
-                        <button class="btn btn-outline-secondary" onclick="resolveConflict('ours')">
-                            <i class="ti ti-folders me-1"></i> Accept Ours (Target)
-                        </button>
-                        <button class="btn btn-outline-primary" onclick="resolveConflict('theirs')">
-                            <i class="ti ti-file-diff me-1"></i> Accept Theirs (Source)
-                        </button>
+
+                <div style="display: flex; min-height: 400px; height: calc(100% - 50px);">
+                    <div class="col-3 border-end overflow-auto bg-light" style="height: 100%;">
+                        <div class="p-2 fw-bold text-muted small border-bottom bg-white d-flex justify-content-between">
+                            <span><i class="ti ti-file-diff me-1"></i> CONFLICTED FILES</span>
+                            <span class="badge bg-red-lt" id="conflict-file-count">0</span>
+                        </div>
+                        <div id="conflict-file-list" class="list-group list-group-flush"></div>
+                    </div>
+
+                    <div class="col-9" style="display: flex; flex-direction: column; height: 100%;">
+                        <div class="diff-toolbar bg-light px-3 py-2 border-bottom d-flex justify-content-end gap-2" id="resolve-toolbar" style="display: none;">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="resolveConflict('ours')">
+                                <i class="ti ti-folders me-1"></i> Accept Ours (Target)
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="resolveConflict('theirs')">
+                                <i class="ti ti-file-diff me-1"></i> Accept Theirs (Source)
+                            </button>
+                        </div>
+                        <div id="conflict-diff-container" style="flex: 1; min-height: 300px;"></div>
                     </div>
                 </div>
             </div>
@@ -788,6 +822,7 @@
             $.get('/Editor/GetConflictedFiles', { prId: prId }, function(files) {
                 allConflictedFiles = files;
                 $('#conflict-file-count').text(files.length);
+                $('#conflict-file-count-header').text(files.length + ' conflict' + (files.length !== 1 ? 's' : ''));
 
                 let html = '';
                 if (files.length === 0) {
@@ -798,7 +833,7 @@
                             modified: monaco.editor.createModel('', 'plaintext')
                         });
                     }
-                    $('#resolve-bar').hide();
+                    $('#resolve-toolbar').hide();
                     checkPRCompletionStatus([]);
                 } else {
                     files.forEach(file => {
@@ -840,7 +875,7 @@
                     original: monaco.editor.createModel(data.oursContent, lang),
                     modified: monaco.editor.createModel(data.theirsContent, lang)
                 });
-                $('#resolve-bar').show();
+                $('#resolve-toolbar').show();
             });
         }
 
