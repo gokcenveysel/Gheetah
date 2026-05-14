@@ -57,6 +57,21 @@ namespace Gheetah.Controllers
             return View(projects);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetRemoteProviders()
+        {
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+    
+            var result = repoSettings.Select(r => new
+            {
+                id = r.Id,
+                name = r.DisplayName ?? r.RepoType,
+                type = r.RepoType
+            }).ToList();
+    
+            return Json(result);
+        }
+
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> ManageProjects()
         {
@@ -413,6 +428,110 @@ namespace Gheetah.Controllers
             catch (Exception ex)
             {
                 return Json(new { success = false, message = "Backend Error: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetReposForProvider(string providerId)
+        {
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+            var repoInfo = repoSettings.FirstOrDefault(r => r.Id == providerId);
+    
+            if (repoInfo == null)
+                return Json(new List<object>());
+    
+            var service = _repoServices.FirstOrDefault(s => s.IsMatch(repoInfo.RepoType));
+            if (service == null)
+                return Json(new List<object>());
+    
+            try
+            {
+                var repos = await service.GetReposAsync(repoInfo);
+        
+                var result = repos.Select(r => new
+                {
+                    name = r.Name ?? "Unknown",
+                    url = r.RemoteUrl ?? "",  // GitRepoVm'de RemoteUrl var
+                    description = ""          // GitRepoVm'de Description yok
+                }).ToList();
+        
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<object>());
+            }
+        }
+
+        /// <summary>
+        /// Proje adıyla eşleşen repoları döndürür (akıllı filtreleme)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetMatchingRepos(string providerId, string projectName)
+        {
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+            var repoInfo = repoSettings.FirstOrDefault(r => r.Id == providerId);
+            
+            if (repoInfo == null)
+                return Json(new List<object>());
+            
+            var service = _repoServices.FirstOrDefault(s => s.IsMatch(repoInfo.RepoType));
+            if (service == null)
+                return Json(new List<object>());
+            
+            try
+            {
+                var repos = await service.GetReposAsync(repoInfo);
+                
+                // Proje adıyla eşleşen repoları filtrele (case-insensitive)
+                var matchingRepos = repos
+                    .Where(r => 
+                    {
+                        var repoName = r.Name ?? "";
+                        if (string.IsNullOrWhiteSpace(repoName)) return false;
+                        
+                        // Tam eşleşme
+                        if (string.Equals(repoName, projectName, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                        
+                        // İçerme eşleşmesi
+                        if (repoName.Contains(projectName, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                        
+                        if (projectName.Contains(repoName, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                        
+                        // Normalize edilmiş eşleşme (tire, alt çizgi, nokta, boşluk kaldır)
+                        var normalizedRepo = repoName
+                            .Replace("-", "")
+                            .Replace("_", "")
+                            .Replace(".", "")
+                            .Replace(" ", "");
+                        var normalizedProject = projectName
+                            .Replace("-", "")
+                            .Replace("_", "")
+                            .Replace(".", "")
+                            .Replace(" ", "");
+                        
+                        return normalizedRepo.Contains(normalizedProject, StringComparison.OrdinalIgnoreCase) ||
+                               normalizedProject.Contains(normalizedRepo, StringComparison.OrdinalIgnoreCase);
+                    })
+                    .Select(r => new
+                    {
+                        name = r.Name ?? "Unknown",
+                        url = r.RemoteUrl ?? "",  // GitRepoVm'de RemoteUrl var
+                        description = "",          // GitRepoVm'de Description yok
+                        isExactMatch = string.Equals(r.Name, projectName, StringComparison.OrdinalIgnoreCase)
+                    })
+                    .OrderByDescending(r => r.isExactMatch) // Tam eşleşmeler önce gelsin
+                    .ThenBy(r => r.name)
+                    .ToList();
+                
+                return Json(matchingRepos);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<object>());
             }
         }
 

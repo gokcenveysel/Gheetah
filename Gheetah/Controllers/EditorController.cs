@@ -1,6 +1,7 @@
 ﻿using Gheetah.Interfaces;
 using Gheetah.Models;
 using Gheetah.Models.EditorModel;
+using Gheetah.Models.RepoSettingsModel;
 using LibGit2Sharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using Gheetah.Models.ProjectModel;
 
 namespace Gheetah.Controllers
 {
@@ -16,14 +18,16 @@ namespace Gheetah.Controllers
         private readonly IProjectService _projectService;
         private readonly IFileService _fileService;
         private readonly IUserService _userService;
+        private readonly IEnumerable<IGitRepoService> _repoServices;
 
         private static readonly ConcurrentDictionary<string, MergeBuildProgress> _mergeBuildProgress = new();
 
-        public EditorController(IProjectService projectService, IFileService fileService, IUserService userService)
+        public EditorController(IProjectService projectService, IFileService fileService, IUserService userService, IEnumerable<IGitRepoService> repoServices)
         {
             _projectService = projectService;
             _fileService = fileService;
             _userService = userService;
+            _repoServices = repoServices;
         }
 
         [HttpGet]
@@ -39,21 +43,92 @@ namespace Gheetah.Controllers
             var projectPath = Path.Combine(clonesRoot, targetProject.Name);
 
             string currentBranch = "main";
+            string remoteUrl = null;
+            bool hasRemote = false;
+            string remoteProviderType = null;
+            string projectOrigin = "local";
 
             if (Directory.Exists(projectPath) && Repository.IsValid(projectPath))
             {
                 using (var repo = new Repository(projectPath))
                 {
                     currentBranch = repo.Head.FriendlyName;
+                    
+                    var origin = repo.Network.Remotes["origin"];
+                    if (origin != null)
+                    {
+                        remoteUrl = origin.Url;
+                        hasRemote = true;
+                        remoteProviderType = DetectRemoteProvider(remoteUrl);
+                    }
                 }
+            }
+
+            if (!string.IsNullOrEmpty(targetProject.RepoUrl) && targetProject.RepoUrl != "Local Project")
+            {
+                projectOrigin = "cloned";
             }
 
             ViewBag.ProjectId = id;
             ViewBag.ProjectName = targetProject.Name;
             ViewBag.LanguageType = targetProject.LanguageType;
             ViewBag.CurrentBranch = currentBranch;
+            ViewBag.HasRemote = hasRemote;
+            ViewBag.RemoteUrl = remoteUrl;
+            ViewBag.RemoteProviderType = remoteProviderType;
+            ViewBag.ProjectOrigin = projectOrigin;
 
             return View();
+        }
+
+        private string DetectRemoteProvider(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return "Unknown";
+            
+            if (url.Contains("github.com")) return "GitHub";
+            if (url.Contains("dev.azure.com") || url.Contains("visualstudio.com")) return "Azure DevOps";
+            if (url.Contains("gitlab.com")) return "GitLab";
+            if (url.Contains("bitbucket.org")) return "Bitbucket";
+            return "Unknown";
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRemoteStatus(string projectId)
+        {
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound();
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Directory.Exists(projectPath) || !Repository.IsValid(projectPath))
+            {
+                return Ok(new
+                {
+                    connected = false,
+                    remoteUrl = "",
+                    providerType = "",
+                    currentBranch = "main",
+                    projectOrigin = project.RepoUrl == "Local Project" ? "local" : "cloned"
+                });
+            }
+
+            using (var repo = new Repository(projectPath))
+            {
+                var origin = repo.Network.Remotes["origin"];
+                var connected = origin != null;
+        
+                return Ok(new
+                {
+                    connected = connected,
+                    remoteUrl = origin?.Url ?? "",
+                    providerType = connected ? DetectRemoteProvider(origin.Url) : "",
+                    currentBranch = repo.Head.FriendlyName,
+                    projectOrigin = project.RepoUrl == "Local Project" ? "local" : "cloned",
+                    branches = repo.Branches.Where(b => !b.IsRemote).Select(b => b.FriendlyName).ToList()
+                });
+            }
         }
 
         [HttpGet]
@@ -154,37 +229,162 @@ namespace Gheetah.Controllers
                     Repository.Init(projectPath);
                 }
 
+                var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+
                 using (var repo = new Repository(projectPath))
                 {
-                    string baseBranchName = repo.Head.FriendlyName;
-                    Signature author = new Signature(currentUser.FullName, currentUser.Email, DateTimeOffset.Now);
+                    // ========== AKTIF REMOTE PROVIDER'ı BUL ==========
+                    var remote = repo.Network.Remotes["origin"];
+                    RepoSettingsVm repoInfo = null;
+                    string remoteProviderType = null;
+                    
+                    if (remote != null)
+                    {
+                        remoteProviderType = DetectRemoteProvider(remote.Url);
+                        repoInfo = repoSettings.FirstOrDefault(r => 
+                            r.RepoType?.Equals(remoteProviderType, StringComparison.OrdinalIgnoreCase) == true);
+                    }
 
-                    if (repo.Info.IsHeadDetached || repo.Head.Tip == null)
+                    Signature author = new Signature(currentUser.FullName, currentUser.Email, DateTimeOffset.Now);
+                    string baseBranchName = repo.Head?.FriendlyName ?? "main";
+
+                    if (repo.Head?.Tip == null)
                     {
                         Commands.Stage(repo, "*");
                         repo.Commit("Gheetah IDE: Initial commit", author, author);
                         baseBranchName = repo.Head.FriendlyName;
                     }
 
-                    Branch targetBranch = repo.Branches[branchName];
-                    if (targetBranch == null)
+                    // ========== SENARYO 3: Remote'da branch var, local'de yok? ==========
+                    // Önce remote referanslarını güncelle
+                    if (remote != null && repoInfo != null && !string.IsNullOrEmpty(repoInfo.AccessToken))
                     {
-                        targetBranch = repo.CreateBranch(branchName);
+                        try
+                        {
+                            var credentials = GetRemoteCredentials(repoInfo);
+                            var fetchOptions = new FetchOptions
+                            {
+                                CredentialsProvider = (url, user, cred) => credentials
+                            };
+                            Commands.Fetch(repo, remote.Name, new string[0], fetchOptions, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Fetch failed: {ex.Message}");
+                        }
                     }
 
-                    Commands.Checkout(repo, targetBranch);
-                    Commands.Stage(repo, "*");
-                    
-                    var commit = repo.Commit($"Gheetah Push: {branchName}", author, author);
+                    // Local branch var mı kontrol et
+                    Branch localBranch = repo.Branches[branchName];
+                    bool localBranchExists = localBranch != null;
 
-                    await AddToPushHistory(projectId, branchName, baseBranchName, commit.Id.Sha, currentUser);
+                    // Remote'da branch var mı kontrol et
+                    string remoteTrackingRef = $"refs/remotes/origin/{branchName}";
+                    bool remoteBranchExists = repo.Branches.Any(b => b.CanonicalName == remoteTrackingRef);
+
+                    // ========== SENARYO 3: Remote var, local yok ==========
+                    if (remoteBranchExists && !localBranchExists)
+                    {
+                        // Remote branch'ten local branch oluştur
+                        var remoteBranch = repo.Branches[remoteTrackingRef];
+                        localBranch = repo.CreateBranch(branchName, remoteBranch.Tip.Sha);
+                        Commands.Checkout(repo, localBranch);
+                        localBranchExists = true;
+                    }
+
+                    // ========== LOCAL BRANCH OLUŞTUR (SENARYO 2 ve 4) ==========
+                    if (!localBranchExists)
+                    {
+                        localBranch = repo.CreateBranch(branchName);
+                        Commands.Checkout(repo, localBranch);
+                    }
+                    else
+                    {
+                        Commands.Checkout(repo, localBranch);
+                    }
+
+                    // ========== DEĞİŞİKLİKLERİ COMMIT ET ==========
+                    Commands.Stage(repo, "*");
+                    var status = repo.RetrieveStatus();
+                    string commitSha = null;
+                    
+                    if (status.IsDirty)
+                    {
+                        var commit = repo.Commit($"Gheetah Push: {branchName}", author, author);
+                        commitSha = commit.Id.Sha;
+                        await AddToPushHistory(projectId, branchName, baseBranchName, commitSha, currentUser);
+                    }
+                    else
+                    {
+                        commitSha = repo.Head.Tip?.Id.Sha;
+                        if (!string.IsNullOrEmpty(commitSha))
+                        {
+                            await AddToPushHistory(projectId, branchName, baseBranchName, commitSha, currentUser);
+                        }
+                    }
+
+                    // ========== REMOTE PUSH (TEK BİR PUSH, API YOK) ==========
+                    string remoteMessage = "";
+                    
+                    if (remote != null && repoInfo != null && !string.IsNullOrEmpty(repoInfo.AccessToken))
+                    {
+                        try
+                        {
+                            var credentials = GetRemoteCredentials(repoInfo);
+                            
+                            // Fetch (güncel remote referansları için)
+                            var fetchOptions = new FetchOptions
+                            {
+                                CredentialsProvider = (url, user, cred) => credentials
+                            };
+                            Commands.Fetch(repo, remote.Name, new string[0], fetchOptions, null);
+
+                            // Push - Branch remote'da yoksa otomatik oluşur!
+                            string pushRefSpec = $"refs/heads/{branchName}:refs/heads/{branchName}";
+                            var pushOptions = new PushOptions
+                            {
+                                CredentialsProvider = (url, user, cred) => credentials
+                            };
+
+                            repo.Network.Push(remote, pushRefSpec, pushOptions);
+
+                            // Tracked branch ayarla
+                            repo.Branches.Update(localBranch, b =>
+                            {
+                                b.TrackedBranch = remoteTrackingRef;
+                            });
+
+                            // Push sonucu mesajı
+                            if (!remoteBranchExists && !string.IsNullOrEmpty(commitSha))
+                            {
+                                remoteMessage = " Remote branch created and changes pushed successfully.";
+                            }
+                            else
+                            {
+                                remoteMessage = " Changes pushed to remote branch successfully.";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Remote push failed: {ex.Message}");
+                            remoteMessage = $" Remote push failed: {ex.Message}";
+                        }
+                    }
+                    else if (remote != null && repoInfo == null)
+                    {
+                        remoteMessage = $" Remote provider '{remoteProviderType}' not found in settings.";
+                    }
+                    else
+                    {
+                        remoteMessage = " No remote configured or missing credentials.";
+                    }
 
                     return Ok(new
                     {
                         success = true,
-                        message = $"Successfully pushed to '{branchName}'. History recorded.",
+                        message = $"Successfully processed branch '{branchName}'.{remoteMessage}",
                         currentBranch = branchName,
-                        commitHash = commit.Id.Sha.Substring(0, 7)
+                        commitHash = repo.Head.Tip?.Id.Sha?.Substring(0, 7) ?? "unknown"
                     });
                 }
             }
@@ -193,7 +393,7 @@ namespace Gheetah.Controllers
                 return StatusCode(500, $"An error occurred during the Git operation: {ex.Message}");
             }
         }
-
+        
         [HttpPost]
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> PullLatest([FromForm] string projectId)
@@ -633,6 +833,7 @@ namespace Gheetah.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> ReactivateComment(string commentId)
         {
             var path = "internal-pr-comments.json";
@@ -747,6 +948,7 @@ namespace Gheetah.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> AddPRComment([FromBody] PRComment comment)
         {
             var userEmail = User.Identity?.Name;
@@ -774,6 +976,7 @@ namespace Gheetah.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> ResolveComment(string commentId)
         {
             var path = "internal-pr-comments.json";
@@ -814,6 +1017,7 @@ namespace Gheetah.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> StartMergeAndBuild(string prId)
         {
             var userEmail = User.Identity?.Name;
@@ -869,6 +1073,7 @@ namespace Gheetah.Controllers
         }
 
         [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
         public async Task<IActionResult> RetryBuild(string prId)
         {
             var userEmail = User.Identity?.Name;
@@ -1423,6 +1628,396 @@ namespace Gheetah.Controllers
             return Ok(result);
         }
 
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> PushToRemote([FromForm] string projectId, [FromForm] string branchName = null)
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
+
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound("Project not found.");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Repository.IsValid(projectPath))
+                return BadRequest(new { success = false, message = "Repository not valid." });
+
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+
+            using (var repo = new Repository(projectPath))
+            {
+                var remote = repo.Network.Remotes["origin"];
+                if (remote == null)
+                    return BadRequest(new { success = false, message = "No remote configured. Please connect to a remote first." });
+
+                var pushBranch = string.IsNullOrEmpty(branchName) ? repo.Head : repo.Branches[branchName];
+                if (pushBranch == null)
+                    return BadRequest(new { success = false, message = $"Branch '{branchName}' not found." });
+
+                try
+                {
+                    var repoInfo = repoSettings.FirstOrDefault();
+                    var credentials = GetRemoteCredentials(repoInfo);
+
+                    var pushOptions = new PushOptions
+                    {
+                        CredentialsProvider = (url, user, cred) => credentials
+                    };
+
+                    repo.Network.Push(pushBranch, pushOptions);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = $"Successfully pushed to remote. Branch: {pushBranch.FriendlyName}"
+                    });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { success = false, message = $"Push failed: {ex.Message}" });
+                }
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> PullFromRemote([FromForm] string projectId)
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
+
+            var currentUser = await _userService.GetUserByEmail(userEmail);
+            if (currentUser == null) return NotFound("User not found.");
+
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound("Project not found.");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Repository.IsValid(projectPath))
+                return BadRequest(new { success = false, message = "Repository not valid." });
+
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+
+            using (var repo = new Repository(projectPath))
+            {
+                var remote = repo.Network.Remotes["origin"];
+                if (remote == null)
+                    return BadRequest(new { success = false, message = "No remote configured. Please connect to a remote first." });
+
+                try
+                {
+                    var repoInfo = repoSettings.FirstOrDefault();
+                    var credentials = GetRemoteCredentials(repoInfo);
+
+                    var fetchOptions = new FetchOptions
+                    {
+                        CredentialsProvider = (url, user, cred) => credentials
+                    };
+                    // Fetch
+                    Commands.Fetch(repo, remote.Name, new string[0], fetchOptions, null);
+
+                    var upstreamBranch = repo.Head.TrackedBranch;
+                    if (upstreamBranch != null)
+                    {
+                        var signature = new Signature(currentUser.FullName, currentUser.Email, DateTimeOffset.Now);
+                        var mergeResult = repo.Merge(upstreamBranch, signature);
+
+                        if (mergeResult.Status == MergeStatus.Conflicts)
+                        {
+                            return Conflict(new { success = false, message = "Merge conflicts detected! Please resolve them in the Conflicts tab." });
+                        }
+
+                        return Ok(new
+                        {
+                            success = true,
+                            message = $"Pulled and merged successfully. Merge status: {mergeResult.Status}"
+                        });
+                    }
+
+                    return Ok(new { success = true, message = "Fetched from remote. No upstream branch to merge." });
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, new { success = false, message = $"Pull failed: {ex.Message}" });
+                }
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> ConnectToRemote([FromForm] string projectId, [FromForm] string providerId, [FromForm] string remoteUrl)
+        {
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound(new { success = false, message = "Project not found." });
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Directory.Exists(projectPath))
+                return BadRequest(new { success = false, message = "Project folder not found." });
+
+            if (!Repository.IsValid(projectPath))
+            {
+                Repository.Init(projectPath);
+            }
+
+            using (var repo = new Repository(projectPath))
+            {
+                var existingRemote = repo.Network.Remotes["origin"];
+                if (existingRemote != null)
+                {
+                    repo.Network.Remotes.Remove("origin");
+                }
+
+                repo.Network.Remotes.Add("origin", remoteUrl);
+                
+                // Fetch remote branches
+                var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+                var repoInfo = repoSettings.FirstOrDefault(r => r.Id == providerId);
+                
+                if (repoInfo != null && !string.IsNullOrEmpty(repoInfo.AccessToken))
+                {
+                    try
+                    {
+                        var credentials = GetRemoteCredentials(repoInfo);
+                        var fetchOptions = new FetchOptions
+                        {
+                            CredentialsProvider = (url, user, cred) => credentials
+                        };
+                        Commands.Fetch(repo, "origin", new string[0], fetchOptions, null);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Fetch after connect failed: {ex.Message}");
+                        // Fetch başarısız olsa bile bağlantı kuruldu, devam et
+                    }
+                }
+            }
+
+            // projects.json'u güncelle
+            var allProjects = await _fileService.LoadConfigAsync<List<Project>>("projects.json") ?? new List<Project>();
+            var projectToUpdate = allProjects.FirstOrDefault(p => p.Id == projectId);
+            if (projectToUpdate != null)
+            {
+                projectToUpdate.RepoUrl = remoteUrl;
+                await _fileService.SaveConfigAsync("projects.json", allProjects);
+            }
+
+            return Ok(new
+            {
+                success = true,
+                message = "Connected to remote repository successfully.",
+                remoteUrl = remoteUrl
+            });
+        }
+
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> DisconnectRemote([FromForm] string projectId)
+        {
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound("Project not found.");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Repository.IsValid(projectPath))
+                return BadRequest(new { success = false, message = "Repository not valid." });
+
+            using (var repo = new Repository(projectPath))
+            {
+                var remote = repo.Network.Remotes["origin"];
+                if (remote != null)
+                {
+                    repo.Network.Remotes.Remove("origin");
+                }
+            }
+
+            return Ok(new { success = true, message = "Disconnected from remote repository." });
+        }
+
+        private async Task<bool> RemoteBranchExistsAsync(Repository repo, Remote remote, string branchName, RepoSettingsVm repoInfo)
+        {
+            try
+            {
+                // Önce credentials'i al
+                var credentials = GetRemoteCredentials(repoInfo);
+        
+                // Fetch options ile kullan
+                var fetchOptions = new FetchOptions
+                {
+                    CredentialsProvider = (url, user, cred) => credentials
+                };
+                Commands.Fetch(repo, remote.Name, new string[0], fetchOptions, null);
+
+                // Remote branch kontrolü
+                var remoteBranchName = $"refs/remotes/origin/{branchName}";
+                return repo.Branches.Any(b => b.CanonicalName == remoteBranchName);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private UsernamePasswordCredentials GetRemoteCredentials(RepoSettingsVm repoInfo)
+        {
+            if (repoInfo == null)
+                throw new UnauthorizedAccessException("No remote repository settings found.");
+
+            if (string.IsNullOrEmpty(repoInfo.AccessToken))
+                throw new UnauthorizedAccessException("Access token is missing for remote repository.");
+
+            // GitHub için: Token username, password "x-oauth-basic"
+            if (repoInfo.RepoType?.Equals("GitHub", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return new UsernamePasswordCredentials
+                {
+                    Username = repoInfo.AccessToken,
+                    Password = "x-oauth-basic"
+                };
+            }
+            // Azure DevOps için
+            else if (repoInfo.RepoType?.Equals("Azure", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                return new UsernamePasswordCredentials
+                {
+                    Username = repoInfo.Username ?? "",
+                    Password = repoInfo.AccessToken
+                };
+            }
+            // GitLab, Bitbucket vs. için
+            else
+            {
+                return new UsernamePasswordCredentials
+                {
+                    Username = repoInfo.Username ?? "oauth2",
+                    Password = repoInfo.AccessToken
+                };
+            }
+        }
+
+        [HttpPost]
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        public async Task<IActionResult> CreateRemoteRepo([FromForm] string projectId, [FromForm] string providerId)
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail)) return Unauthorized();
+
+            var currentUser = await _userService.GetUserByEmail(userEmail);
+            if (currentUser == null) return NotFound("User not found.");
+
+            var projects = await _projectService.GetProjectsAsync();
+            var project = projects.FirstOrDefault(p => p.Id == projectId);
+            if (project == null) return NotFound("Project not found.");
+
+            var clonesRoot = await _fileService.LoadConfigAsync<string>("project-folder.json");
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+
+            if (!Directory.Exists(projectPath))
+                return NotFound("Project folder not found.");
+
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+            var repoInfo = repoSettings.FirstOrDefault(r => r.Id == providerId);
+            
+            if (repoInfo == null)
+                return BadRequest(new { success = false, message = "Provider not found." });
+
+            try
+            {
+                var service = _repoServices.FirstOrDefault(s => s.IsMatch(repoInfo.RepoType));
+                if (service == null)
+                    return BadRequest(new { success = false, message = $"No service available for provider type: {repoInfo.RepoType}" });
+
+                var remoteUrl = await service.CreateRepositoryAsync(repoInfo, project.Name);
+                
+                if (string.IsNullOrEmpty(remoteUrl))
+                    return StatusCode(500, new { success = false, message = "Failed to create remote repository." });
+
+                if (!Repository.IsValid(projectPath))
+                {
+                    Repository.Init(projectPath);
+                    
+                    var gitignorePath = Path.Combine(projectPath, ".gitignore");
+                    if (!System.IO.File.Exists(gitignorePath))
+                    {
+                        await System.IO.File.WriteAllTextAsync(gitignorePath, @"bin/
+        obj/
+        .vs/
+        *.user
+        *.suo
+        packages/
+        node_modules/
+        .DS_Store
+        ");
+                    }
+                    
+                    using (var repo = new Repository(projectPath))
+                    {
+                        Commands.Stage(repo, "*");
+                        var author = new Signature(currentUser.FullName, currentUser.Email, DateTimeOffset.Now);
+                        repo.Commit("Initial commit from Gheetah IDE", author, author);
+                    }
+                }
+
+                using (var repo = new Repository(projectPath))
+                {
+                    var existingRemote = repo.Network.Remotes["origin"];
+                    if (existingRemote != null)
+                        repo.Network.Remotes.Remove("origin");
+            
+                    repo.Network.Remotes.Add("origin", remoteUrl);
+
+                    var currentBranch = repo.Head;
+                    var credentials = GetRemoteCredentials(repoInfo);
+            
+                    var pushRefSpec = $"+{currentBranch.CanonicalName}:refs/heads/{currentBranch.FriendlyName}";
+            
+                    repo.Network.Push(repo.Network.Remotes["origin"], pushRefSpec, new PushOptions
+                    {
+                        CredentialsProvider = (url, user, cred) => credentials
+                    });
+            
+                    repo.Branches.Update(currentBranch, b =>
+                    {
+                        b.TrackedBranch = $"refs/remotes/origin/{currentBranch.FriendlyName}";
+                    });
+                }
+
+                var allProjects = await _fileService.LoadConfigAsync<List<Project>>("projects.json") ?? new List<Project>();
+                var projectToUpdate = allProjects.FirstOrDefault(p => p.Id == projectId);
+                if (projectToUpdate != null)
+                {
+                    projectToUpdate.RepoUrl = remoteUrl;
+                    await _fileService.SaveConfigAsync("projects.json", allProjects);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Remote repository created and connected successfully!",
+                    remoteUrl = remoteUrl,
+                    providerType = repoInfo.RepoType
+                });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized(new { success = false, message = "Authentication failed. Check your credentials." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Failed: {ex.Message}" });
+            }
+        }
+
         private bool StepTextsMatch(string gherkinStep, string stepDefPattern)
         {
             gherkinStep = gherkinStep.Trim();
@@ -1697,6 +2292,9 @@ namespace Gheetah.Controllers
                     pr.Status = "Merged";
                     await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
                     await AddActivity(prId, "Merged", userEmail, $"PR merged into '{pr.TargetBranch}' and branch '{pr.SourceBranch}' deleted.");
+
+                    await SyncRemoteAfterMerge(repo, pr, prId, userEmail);
+
                     return (true, "Merge completed successfully", null);
                 }
 
@@ -1713,6 +2311,9 @@ namespace Gheetah.Controllers
                     pr.Status = "Merged";
                     await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
                     await AddActivity(prId, "Merged", userEmail, $"PR merged (already up-to-date). Branch '{pr.SourceBranch}' deleted.");
+                    
+                    await SyncRemoteAfterMerge(repo, pr, prId, userEmail);
+
                     return (true, "Already up-to-date, merge not needed.", null);
                 }
 
@@ -1720,11 +2321,101 @@ namespace Gheetah.Controllers
                 pr.Status = "Merged";
                 await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
                 await AddActivity(prId, "Merged", userEmail, $"PR merged into '{pr.TargetBranch}' and branch '{pr.SourceBranch}' deleted.");
+
+                await SyncRemoteAfterMerge(repo, pr, prId, userEmail);
+
                 return (true, "Merge completed successfully", null);
             }
             catch (Exception ex)
             {
                 return (false, null, $"Merge failed: {ex.Message}");
+            }
+        }
+
+        private async Task SyncRemoteAfterMerge(Repository repo, InternalPR pr, string prId, string userEmail)
+        {
+            try
+            {
+                var origin = repo.Network.Remotes["origin"];
+                if (origin == null) return;
+
+                var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+                var repoInfo = repoSettings.FirstOrDefault();
+                
+                if (repoInfo == null || string.IsNullOrEmpty(repoInfo.AccessToken)) return;
+
+                var credentials = GetRemoteCredentials(repoInfo);
+
+                try
+                {
+                    var pushRefSpec = $"+refs/heads/{pr.TargetBranch}:refs/heads/{pr.TargetBranch}";
+                    repo.Network.Push(origin, pushRefSpec, new PushOptions
+                    {
+                        CredentialsProvider = (url, user, cred) => credentials
+                    });
+
+                    try
+                    {
+                        var deleteRefSpec = $":refs/heads/{pr.SourceBranch}";
+                        repo.Network.Push(origin, deleteRefSpec, new PushOptions
+                        {
+                            CredentialsProvider = (url, user, cred) => credentials
+                        });
+                        
+                        await AddActivity(prId, "RemoteBranchDeleted", userEmail, 
+                            $"Remote branch '{pr.SourceBranch}' deleted after merge.");
+                    }
+                    catch (Exception branchEx)
+                    {
+                        Console.WriteLine($"Remote branch delete failed for '{pr.SourceBranch}': {branchEx.Message}");
+                    }
+
+                    await AddActivity(prId, "RemoteSync", userEmail, 
+                        $"Remote repository '{pr.TargetBranch}' updated automatically.");
+                }
+                catch (NonFastForwardException)
+                {
+                    Console.WriteLine($"Direct push to remote failed (branch protection). Creating PR instead.");
+                    
+                    var service = _repoServices.FirstOrDefault(s => s.IsMatch(repoInfo.RepoType));
+                    if (service != null)
+                    {
+                        try
+                        {
+                            var prUrl = await service.CreatePullRequestAsync(repoInfo, 
+                                pr.SourceBranch, pr.TargetBranch,
+                                $"Auto-merge from Gheetah: {pr.Title}",
+                                $"Automatically created from Gheetah IDE PR #{pr.PR_Id}. Original PR by {pr.CreatedBy}.");
+
+                            if (!string.IsNullOrEmpty(prUrl))
+                            {
+                                await AddActivity(prId, "RemotePR", userEmail, 
+                                    $"Auto-created PR on remote provider: {prUrl}");
+                            }
+                            else
+                            {
+                                await AddActivity(prId, "RemotePR", userEmail, 
+                                    "PR already exists on remote provider. Manual review may be required.");
+                            }
+                        }
+                        catch (Exception prEx)
+                        {
+                            Console.WriteLine($"Remote PR creation failed: {prEx.Message}");
+                            await AddActivity(prId, "RemotePRFailed", userEmail, 
+                                $"Failed to create PR on remote: {prEx.Message}");
+                        }
+                    }
+                }
+                catch (Exception pushEx)
+                {
+                    Console.WriteLine($"Remote push failed: {pushEx.Message}");
+                    await AddActivity(prId, "RemoteSyncFailed", userEmail, 
+                        $"Remote sync failed: {pushEx.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Remote sync failed after merge: {ex.Message}");
             }
         }
 

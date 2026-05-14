@@ -1,6 +1,7 @@
 ﻿using Gheetah.Interfaces;
 using Gheetah.Models.ProjectModel;
 using Gheetah.Models.RepoSettingsModel;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace Gheetah.Services.GitLab
@@ -14,6 +15,17 @@ namespace Gheetah.Services.GitLab
             _httpClient = httpClient;
         }
 
+        public async Task<string> CreateRepositoryAsync(RepoSettingsVm settings, string repoName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<string> CreatePullRequestAsync(RepoSettingsVm settings, string sourceBranch, string targetBranch, string title,
+            string description)
+        {
+            throw new NotImplementedException();
+        }
+        
         public bool IsMatch(string providerType) => providerType.Equals("GitLab", StringComparison.OrdinalIgnoreCase);
 
         public async Task<List<GitRepoVm>> GetReposAsync(RepoSettingsVm setting)

@@ -257,6 +257,9 @@
                 <div id="tab-git" class="explorer-tab-item" onclick="switchSidebar('git')">
                     <i class="ti ti-git-pull-request me-1"></i> Git
                 </div>
+                <div id="tab-remote" class="explorer-tab-item" onclick="switchSidebar('remote')">
+                    <i class="ti ti-cloud-upload me-1"></i> Remote
+                </div>
             </div>
 
             <div id="panel-solution" class="panel-content">
@@ -283,13 +286,62 @@
                     <select id="branch-dropdown" class="form-select form-select-sm mb-2" onchange="handleBranchChange(this.value)"></select>
                     <div class="d-flex gap-1">
                         <button class="btn btn-sm btn-primary w-50" onclick="window.pullLatest()"><i class="ti ti-download me-1"></i> Pull</button>
-                        <button id="btn-git-push" class="btn btn-sm btn-success w-50" onclick="handlePushAction()"><i class="ti ti-upload me-1"></i> Push</button>
+                        <button id="btn-git-push" class="btn btn-sm btn-success w-50" onclick="handlePushAction()"><i class="ti ti-upload me-1"></i> Commit</button>
                     </div>
                 </div>
                 <div class="p-2 small fw-bold text-muted border-bottom bg-white">CHANGES</div>
                 <div id="git-changes-treeview" class="p-1"></div>
             </div>
+            <div id="panel-remote" class="panel-content d-none">
+                <div class="p-2 bg-light border-bottom">
+                    <strong class="small text-muted">REMOTE REPOSITORY</strong>
+                </div>
+                <div class="p-3">
+                    <div id="remote-status-container" class="mb-3">
+                        <div class="text-center py-3 text-muted">
+                            <i class="ti ti-loader fs-2"></i>
+                            <p class="small mt-1">Loading remote status...</p>
+                        </div>
+                    </div>
 
+                    <div id="remote-setup" style="display:none;">
+                        <div class="alert alert-warning mb-3">
+                            <i class="ti ti-alert-triangle me-1"></i>
+                            This project is not connected to a remote repository.
+                        </div>
+                        <label class="form-label">Select Provider</label>
+                        <select id="remote-provider" class="form-select form-select-sm mb-2">
+                            <option value="">Loading providers...</option>
+                        </select>
+                        <button class="btn btn-sm btn-primary w-100" onclick="connectToRemote()">
+                            <i class="ti ti-link me-1"></i> Connect to Remote
+                        </button>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-success w-100" onclick="createRemoteRepo()">
+                                <i class="ti ti-plus me-1"></i> Create New Remote Repository
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="remote-actions" style="display:none;">
+                        <div class="mb-3">
+                            <label class="form-label small">Remote URL</label>
+                            <code id="remote-url-display" class="d-block p-2 bg-light rounded small text-truncate"></code>
+                        </div>
+                        <div class="d-flex gap-1 mb-2">
+                            <button class="btn btn-sm btn-primary w-50" onclick="pushToRemote()">
+                                <i class="ti ti-upload me-1"></i> Push
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary w-50" onclick="pullFromRemote()">
+                                <i class="ti ti-download me-1"></i> Pull
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger w-100" onclick="disconnectRemote()">
+                            <i class="ti ti-trash me-1"></i> Disconnect Remote
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="push-history-panel">
                 <div class="p-2 bg-light border-bottom d-flex justify-content-between align-items-center">
                     <strong class="small text-muted">PUSH HISTORY</strong>
@@ -339,8 +391,26 @@
                 <i class="ti ti-link"></i>
                 <span><b>Ctrl+Click:</b> Go to Definition</span>
             </div>
-            <div class="ms-auto d-flex align-items-center gap-2">
-                <div class="status-item text-primary">
+
+            <div class="ms-auto d-flex align-items-center gap-2" id="status-right-group">
+                @if (ViewBag.HasRemote)
+                {
+                    <div class="status-item text-success remote-indicator" title="Connected to @ViewBag.RemoteProviderType: @ViewBag.RemoteUrl">
+                        <i class="ti ti-cloud-check"></i>
+                        <span>@ViewBag.RemoteProviderType</span>
+                    </div>
+                    <div class="status-divider remote-indicator"></div>
+                }
+                else
+                {
+                    <div class="status-item text-warning remote-indicator" title="No remote connection. Click to connect."
+                         onclick="$('#tab-remote').trigger('click')" style="cursor:pointer;">
+                        <i class="ti ti-cloud-off"></i>
+                        <span>Local Only</span>
+                    </div>
+                    <div class="status-divider remote-indicator"></div>
+                }
+                <div class="status-item text-primary" id="status-branch-item">
                     <i class="ti ti-git-branch"></i>
                     <span id="status-branch" class="fw-bold">@ViewBag.CurrentBranch</span>
                 </div>
@@ -429,6 +499,83 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
                 <button type="button" class="btn btn-primary" onclick="createNewFile()">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- CONNECT TO REMOTE MODAL -->
+<div class="modal modal-blur fade" id="modal-connect-remote" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ti ti-cloud-upload me-1"></i> Connect to Remote Repository
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" data-bs-toggle="tabs">
+                    <li class="nav-item">
+                        <a href="#tab-matching-repos" class="nav-link active" data-bs-toggle="tab">
+                            <i class="ti ti-list-search me-1"></i> Matching Repositories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#tab-manual-url" class="nav-link" data-bs-toggle="tab">
+                            <i class="ti ti-link me-1"></i> Manual URL
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tab-matching-repos">
+                        <div class="mb-3">
+                            <label class="form-label">Provider</label>
+                            <select id="connect-provider" class="form-select" onchange="loadMatchingRepos()">
+                                <option value="">Select Provider...</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info mb-3">
+                            <i class="ti ti-search me-1"></i>
+                            Searching repositories matching: <strong id="matching-project-name">@ViewBag.ProjectName</strong>
+                        </div>
+                        <div id="repo-list-container" class="overflow-auto" style="max-height: 250px;">
+                            <div class="text-center py-4 text-muted">
+                                <i class="ti ti-cloud-search fs-2"></i>
+                                <p class="mt-2">Select a provider to find matching repositories</p>
+                            </div>
+                        </div>
+                        <div id="no-repo-suggestion" class="text-center py-4" style="display:none;">
+                            <i class="ti ti-git-fork fs-2 text-muted mb-2"></i>
+                            <p class="text-muted">No repository found with name <strong>"@ViewBag.ProjectName"</strong></p>
+                            <button class="btn btn-outline-success mt-2" onclick="createRemoteRepo()">
+                                <i class="ti ti-plus me-1"></i> Create New Remote Repository
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="tab-pane fade" id="tab-manual-url">
+                        <div class="mb-3">
+                            <label class="form-label">Repository URL</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <i class="ti ti-git-branch"></i>
+                                </span>
+                                <input type="text" id="manual-remote-url" class="form-control"
+                                       placeholder="https://github.com/username/repo.git">
+                            </div>
+                            <small class="text-muted">
+                                Enter the full Git URL of your repository. Use this if you already created a remote repo manually.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-connect-confirm" onclick="confirmConnectRemote()">
+                    <i class="ti ti-link me-1"></i> Connect
+                </button>
             </div>
         </div>
     </div>
@@ -1355,17 +1502,278 @@
             $('.explorer-tab-item').removeClass('active');
             $(`#tab-${type}`).addClass('active');
 
-            if (type === 'solution') {
-                $('#panel-solution').removeClass('d-none');
-                $('#panel-git').addClass('d-none');
-            } else {
-                $('#panel-solution').addClass('d-none');
-                $('#panel-git').removeClass('d-none');
-                refreshGitChanges();
-            }
+            $('#panel-solution').toggleClass('d-none', type !== 'solution');
+            $('#panel-git').toggleClass('d-none', type !== 'git');
+            $('#panel-remote').toggleClass('d-none', type !== 'remote');
+
+            if (type === 'git') refreshGitChanges();
+            if (type === 'remote') loadRemoteStatus();
+
             setTimeout(() => { if(editor) editor.layout(); }, 50);
         }
 
+        function loadRemoteStatus() {
+            $('#remote-status-container').html(`
+                <div class="text-center py-3 text-muted">
+                    <i class="ti ti-loader fs-2"></i>
+                    <p class="small mt-1">Loading remote status...</p>
+                </div>
+            `);
+
+            $.get('/Editor/GetRemoteStatus', { projectId: projectId }, function(data) {
+                if (data.connected) {
+                    $('#remote-status-container').html(`
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-success-lt fs-4">
+                                <i class="ti ti-cloud-check me-1"></i> Connected
+                            </span>
+                            <span class="badge bg-blue-lt">${data.providerType}</span>
+                        </div>
+                        <div class="small text-muted mb-1">Branch: <strong>${data.currentBranch}</strong></div>
+                        <div class="small text-muted">Project Origin: <strong>${data.projectOrigin === 'cloned' ? 'Remote Clone' : 'Local Creation'}</strong></div>
+                    `);
+                    $('#remote-url-display').text(data.remoteUrl);
+                    $('#remote-setup').hide();
+                    $('#remote-actions').show();
+
+                    updateStatusBarRemote(true, data.providerType, data.remoteUrl);
+                } else {
+                    $('#remote-status-container').html(`
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-warning-lt fs-4">
+                                <i class="ti ti-cloud-off me-1"></i> Not Connected
+                            </span>
+                        </div>
+                        <div class="small text-muted">Project Origin: <strong>${data.projectOrigin === 'cloned' ? 'Remote Clone' : 'Local Creation'}</strong></div>
+                    `);
+                    $('#remote-setup').show();
+                    $('#remote-actions').hide();
+
+                    updateStatusBarRemote(false);
+                }
+
+                loadRemoteProviders();
+            }).fail(function() {
+                $('#remote-status-container').html(`
+                    <div class="text-center py-3 text-danger">
+                        <i class="ti ti-alert-circle fs-2"></i>
+                        <p class="small mt-1">Failed to load remote status.</p>
+                    </div>
+                `);
+            });
+        }
+
+        function updateStatusBarRemote(connected, providerType, remoteUrl) {
+            var $statusRightGroup = $('#status-right-group');
+    
+            $statusRightGroup.find('.remote-indicator').remove();
+    
+            var $branchItem = $statusRightGroup.find('#status-branch-item');
+    
+            if (connected) {
+                $branchItem.before(`
+                    <div class="status-item text-success remote-indicator" title="Connected to ${providerType}: ${remoteUrl}">
+                        <i class="ti ti-cloud-check"></i>
+                        <span>${providerType}</span>
+                    </div>
+                    <div class="status-divider remote-indicator"></div>
+                `);
+            } else {
+                $branchItem.before(`
+                    <div class="status-item text-warning remote-indicator" title="No remote connection" 
+                         onclick="$('#tab-remote').trigger('click')" style="cursor:pointer;">
+                        <i class="ti ti-cloud-off"></i>
+                        <span>Local Only</span>
+                    </div>
+                    <div class="status-divider remote-indicator"></div>
+                `);
+            }
+        }
+
+        function loadRemoteProviders() {
+            $.get('/Projects/GetRemoteProviders', function(data) {
+                var html = '<option value="">Select Provider...</option>';
+                if (data && data.length > 0) {
+                    data.forEach(function(p) {
+                        html += `<option value="${p.id}">${p.name} (${p.type})</option>`;
+                    });
+                } else {
+                    html += '<option value="" disabled>No providers configured</option>';
+                }
+                $('#remote-provider').html(html);
+            }).fail(function() {
+                $('#remote-provider').html('<option value="">Failed to load providers</option>');
+            });
+        }
+
+
+        // Remote repo oluştur
+        function createRemoteRepo(providerIdFromModal) {
+            var providerId = providerIdFromModal || $('#connect-provider').val() || $('#remote-provider').val();
+            if (!providerId) {
+                showCustomToast('warning', 'Please select a provider first.');
+                return;
+            }
+
+            // Modal'dan çağrıldıysa modal'ı kapat
+            if ($('#modal-connect-remote').hasClass('show')) {
+                $('#modal-connect-remote').modal('hide');
+            }
+
+            showConfirm("Create Remote Repository",
+                `Create a new remote repository named <strong>"${projectName}"</strong>?<br><br>
+                 <small class="text-muted">This will:
+                 <ul>
+                     <li>Create the repository on the selected provider</li>
+                     <li>Initialize Git (if not already)</li>
+                     <li>Push your local project to the remote</li>
+                 </ul></small>`,
+                function() {
+                    // Yükleniyor göster
+                    showCustomToast('info', 'Creating remote repository... This may take a moment.');
+
+                    $.ajax({
+                        url: '/Editor/CreateRemoteRepo',
+                        type: 'POST',
+                        data: {
+                            projectId: projectId,
+                            providerId: providerId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                showCustomToast('success', response.message);
+                                // Remote panelini yenile
+                                setTimeout(function() {
+                                    loadRemoteStatus();
+                                }, 500);
+                            } else {
+                                showAlert("Error", response.message, "danger");
+                            }
+                        },
+                        error: function(err) {
+                            var errorMsg = err.responseText || "Failed to create remote repository.";
+
+                            if (err.status === 401) {
+                                showAlert("Authentication Error",
+                                    "Invalid credentials. Please check your remote repository settings in Gheetah Admin.",
+                                    "warning");
+                            } else if (err.status === 409) {
+                                showAlert("Already Exists",
+                                    "A repository with this name already exists on the provider. Please use 'Connect to Remote' to connect to it.",
+                                    "warning");
+                            } else {
+                                showAlert("Error", errorMsg, "danger");
+                            }
+                        }
+                    });
+                },
+                true
+            );
+        }
+
+        function pushToRemote() {
+            var branchName = $('#status-branch').text().trim();
+
+            if (branchName === "main" || branchName === "master") {
+                showAlert("Protected Branch",
+                    "Direct push to <strong>" + branchName + "</strong> is not allowed.<br><br>" +
+                    "<strong>To update the main branch:</strong><br>" +
+                    "1. Create a Pull Request from a feature branch<br>" +
+                    "2. Complete the merge in Gheetah<br>" +
+                    "3. The remote will be updated automatically",
+                    "warning");
+                return;
+            }
+
+            showConfirm("Push to Remote",
+                "Push all local commits to the remote repository?",
+                function() {
+                    $.ajax({
+                        url: '/Editor/PushToRemote',
+                        type: 'POST',
+                        data: {
+                            projectId: projectId,
+                            branchName: branchName
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                showCustomToast('success', response.message);
+                            } else {
+                                showAlert("Error", response.message, "danger");
+                            }
+                        },
+                        error: function(err) {
+                            var errorMsg = err.responseText || "Push failed.";
+                            if (err.status === 401 || errorMsg.includes("credentials")) {
+                                showAlert("Authentication Error",
+                                    "No valid credentials found. Please configure your remote repository settings in Gheetah Admin.",
+                                    "warning");
+                            } else {
+                                showAlert("Error", errorMsg, "danger");
+                            }
+                        }
+                    });
+                }
+            );
+        }
+
+        function pullFromRemote() {
+            showConfirm("Pull from Remote",
+                "Fetch and merge changes from the remote repository?",
+                function() {
+                    $.ajax({
+                        url: '/Editor/PullFromRemote',
+                        type: 'POST',
+                        data: { projectId: projectId },
+                        success: function(response) {
+                            if (response.success) {
+                                showCustomToast('success', response.message);
+                                refreshTree(); // Ağacı yenile
+                                if ($('#tab-git').hasClass('active')) {
+                                    refreshGitChanges();
+                                }
+                            } else {
+                                showAlert("Error", response.message, "danger");
+                            }
+                        },
+                        error: function(err) {
+                            if (err.status === 409) {
+                                // Conflict durumu
+                                showAlert("Merge Conflicts",
+                                    "Conflicts detected during pull. Please resolve them before continuing.",
+                                    "warning");
+                            } else {
+                                showAlert("Error", err.responseText || "Pull failed.", "danger");
+                            }
+                        }
+                    });
+                }
+            );
+        }
+
+        function disconnectRemote() {
+            showConfirm("Disconnect Remote",
+                "Are you sure you want to disconnect from the remote repository? This will not delete the remote repo, only the local connection.",
+                function() {
+                    $.ajax({
+                        url: '/Editor/DisconnectRemote',
+                        type: 'POST',
+                        data: { projectId: projectId },
+                        success: function(response) {
+                            if (response.success) {
+                                showCustomToast('success', response.message);
+                                loadRemoteStatus(); // Remote panelini yenile
+                            } else {
+                                showAlert("Error", response.message, "danger");
+                            }
+                        },
+                        error: function(err) {
+                            showAlert("Error", err.responseText || "Failed to disconnect.", "danger");
+                        }
+                    });
+                }
+            );
+        }
 
         function addTabUI(path, fileName) {
             $('#no-file-msg').hide();
@@ -1701,15 +2109,16 @@
 
         window.commitAndPush = function() {
             var newBranchName = $('#input-branch-name').val();
-    
-            if (!newBranchName) { 
-                showAlert("Missed Information", "Please enter a branch name!", "warning"); 
-                return; 
+
+            if (!newBranchName) {
+                showAlert("Missed Information", "Please enter a branch name!", "warning");
+                return;
             }
 
-            executePush(newBranchName);
             $('#modal-branch').modal('hide');
             $('#input-branch-name').val('');
+
+            executePush(newBranchName);
         };
 
         function openHistoryModal() {
@@ -1927,9 +2336,223 @@
             });
         }
 
-        function showConfirm(title, message, onConfirm) {
+
+                // ==================== CONNECT TO REMOTE - AKILLI EŞLEŞTİRME ====================
+
+        var selectedRemoteUrl = null;
+        var projectName = "@ViewBag.ProjectName";
+
+        // Ana fonksiyon - modal'ı açar
+        function connectToRemote() {
+            var providerId = $('#remote-provider').val();
+            if (!providerId) {
+                showCustomToast('warning', 'Please select a provider first.');
+                return;
+            }
+
+            $('#matching-project-name').text(projectName);
+
+            // Modal açıldığında Connect butonunu devre dışı bırak
+            $('#btn-connect-confirm').prop('disabled', true);
+            selectedRemoteUrl = null;
+            $('#manual-remote-url').val('');
+
+            loadConnectModalProviders(providerId);
+            $('#modal-connect-remote').modal('show');
+        }
+
+        // Modal içindeki provider dropdown'ını doldur
+        function loadConnectModalProviders(selectedId) {
+            $.get('/Projects/GetRemoteProviders', function(data) {
+                var html = '<option value="">Select Provider...</option>';
+                if (data && data.length > 0) {
+                    data.forEach(function(p) {
+                        var selected = p.id === selectedId ? 'selected' : '';
+                        html += `<option value="${p.id}" ${selected}>${p.name} (${p.type})</option>`;
+                    });
+                }
+                $('#connect-provider').html(html);
+
+                // Provider seçiliyse eşleşen repoları yükle
+                if (selectedId) {
+                    loadMatchingRepos();
+                }
+            });
+        }
+
+        // Proje adıyla eşleşen repoları yükle
+        function loadMatchingRepos() {
+            var providerId = $('#connect-provider').val();
+            if (!providerId) {
+                $('#repo-list-container').html(`
+                    <div class="text-center py-4 text-muted">
+                        <i class="ti ti-cloud-search fs-2"></i>
+                        <p class="mt-2">Select a provider to find matching repositories</p>
+                    </div>
+                `);
+                $('#no-repo-suggestion').hide();
+                $('#btn-connect-confirm').prop('disabled', true);
+                return;
+            }
+
+            $('#repo-list-container').html(`
+                <div class="text-center py-4">
+                    <span class="spinner-border spinner-border-sm me-2"></span> Searching repositories...
+                </div>
+            `);
+            $('#no-repo-suggestion').hide();
+            $('#btn-connect-confirm').prop('disabled', true);
+
+            $.get('/Projects/GetMatchingRepos', {
+                providerId: providerId,
+                projectName: projectName
+            }, function(data) {
+                if (!data || data.length === 0) {
+                    $('#repo-list-container').html(`
+                        <div class="text-center py-4 text-muted">
+                            <i class="ti ti-folder-off fs-2"></i>
+                            <p class="mt-2">No matching repositories found</p>
+                        </div>
+                    `);
+                    $('#no-repo-suggestion').show();
+                    $('#btn-connect-confirm').prop('disabled', true); // ❌ Repo yok → disabled
+                    return;
+                }
+
+                $('#no-repo-suggestion').hide();
+
+                var html = '<div class="list-group list-group-flush">';
+                data.forEach(function(repo) {
+                    html += `
+                        <a href="javascript:void(0)"
+                           class="list-group-item list-group-item-action d-flex align-items-center"
+                           onclick="selectRepo('${repo.url.replace(/'/g, "\\'")}', '${repo.name.replace(/'/g, "\\'")}', this)">
+                            <div class="me-3">
+                                <i class="ti ti-git-fork fs-3 text-blue"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold">${repo.name}</div>
+                                <small class="text-muted text-truncate d-block" style="max-width: 400px;">${repo.url}</small>
+                                ${repo.isExactMatch ? '<span class="badge bg-green-lt mt-1">Exact Match</span>' : '<span class="badge bg-blue-lt mt-1">Similar</span>'}
+                            </div>
+                            <div class="ms-2">
+                                <i class="ti ti-check text-success d-none selected-icon"></i>
+                            </div>
+                        </a>
+                    `;
+                });
+                html += '</div>';
+                $('#repo-list-container').html(html);
+                // ✅ Repo listesi yüklendi ama henüz seçim yok → disabled
+                $('#btn-connect-confirm').prop('disabled', true);
+            }).fail(function() {
+                $('#repo-list-container').html(`
+                    <div class="text-center py-4 text-danger">
+                        <i class="ti ti-alert-circle fs-2"></i>
+                        <p class="mt-2">Failed to load repositories</p>
+                    </div>
+                `);
+                $('#btn-connect-confirm').prop('disabled', true);
+            });
+        }
+
+        // Repo seçimi
+        function selectRepo(url, name, element) {
+            $('#repo-list-container .list-group-item').removeClass('active');
+            $('#repo-list-container .selected-icon').addClass('d-none');
+
+            $(element).addClass('active');
+            $(element).find('.selected-icon').removeClass('d-none');
+
+            selectedRemoteUrl = url;
+            $('#manual-remote-url').val(url);
+
+            // ✅ Repo seçildi → Connect butonunu aktif et!
+            $('#btn-connect-confirm').prop('disabled', false);
+        }
+
+        // Manuel URL sekmesine geçildiğinde input kontrolü
+        $('#manual-remote-url').on('input', function() {
+            var url = $(this).val().trim();
+            // URL varsa Connect'i aktif et, yoksa devre dışı bırak
+            $('#btn-connect-confirm').prop('disabled', !url);
+        });
+
+        // Modal kapandığında sıfırla
+        $('#modal-connect-remote').on('hidden.bs.modal', function() {
+            selectedRemoteUrl = null;
+            $('#manual-remote-url').val('');
+            $('#btn-connect-confirm').prop('disabled', true);
+            $('#repo-list-container').html(`
+                <div class="text-center py-4 text-muted">
+                    <i class="ti ti-cloud-search fs-2"></i>
+                    <p class="mt-2">Select a provider to find matching repositories</p>
+                </div>
+            `);
+            $('#no-repo-suggestion').hide();
+        });
+
+                // ==================== CONFIRM CONNECT TO REMOTE ====================
+        function confirmConnectRemote() {
+            var providerId = $('#connect-provider').val();
+            var remoteUrl = selectedRemoteUrl || $('#manual-remote-url').val().trim();
+
+            if (!providerId) {
+                showCustomToast('warning', 'Please select a provider.');
+                return;
+            }
+
+            if (!remoteUrl) {
+                showCustomToast('warning', 'Please select or enter a remote repository URL.');
+                return;
+            }
+
+            showConfirm("Connect to Remote Repository",
+                `Connect to repository:<br><strong>${remoteUrl}</strong>?<br><br>
+                 <small class="text-muted">This will:
+                 <ul>
+                     <li>Add the remote origin to your local Git repository</li>
+                     <li>Fetch all remote branches</li>
+                     <li>Set up tracking for your current branch</li>
+                 </ul></small>`,
+                function() {
+                    $.ajax({
+                        url: '/Editor/ConnectToRemote',
+                        type: 'POST',
+                        data: {
+                            projectId: projectId,
+                            providerId: providerId,
+                            remoteUrl: remoteUrl
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                showCustomToast('success', response.message);
+                                $('#modal-connect-remote').modal('hide');
+                                loadRemoteStatus(); // Remote panelini yenile
+                                refreshBranchList(); // Branch listesini yenile
+                            } else {
+                                showAlert("Error", response.message, "danger");
+                            }
+                        },
+                        error: function(err) {
+                            var errorMsg = err.responseText || "Failed to connect to remote.";
+                            showAlert("Connection Failed", errorMsg, "danger");
+                        }
+                    });
+                },
+                true
+            );
+        }
+
+        function showConfirm(title, message, onConfirm, isHtml = false) {
             $('#confirm-title').text(title);
-            $('#confirm-text').text(message);
+
+            if (isHtml) {
+                $('#confirm-text').html(message);
+            } else {
+                $('#confirm-text').text(message);
+            }
+
             $('#confirm-yes-btn').off('click').one('click', function() {
                 onConfirm();
             });
