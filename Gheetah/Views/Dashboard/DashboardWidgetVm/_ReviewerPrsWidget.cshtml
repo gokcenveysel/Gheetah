@@ -1,0 +1,157 @@
+﻿@model Gheetah.Models.ViewModels.Dashboard.ReviewerPrsWidgetVm
+@{
+    var pageSize = 10;
+    var page = 1;
+    var totalItems = Model.Prs.Count;
+    var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+    var pagedPrs = Model.Prs.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+}
+
+<div class="table-responsive">
+    <table class="table table-vcenter table-hover card-table">
+        <thead>
+            <tr>
+                <th class="w-10">PR ID</th>
+                <th>Title</th>
+                <th class="w-10">Status</th>
+                <th class="w-10">My Review</th>
+                <th class="w-15">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var pr in pagedPrs)
+            {
+                <tr data-pr-id="@pr.PR_Id">
+                    <td>
+                        <a href="/Editor/PRDetails?id=@pr.PR_Id" target="_blank" class="text-primary fw-bold">#@pr.PR_Id</a>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="me-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon text-muted" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                                    <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" />
+                                    <path d="M9 12l2 2l4-4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="fw-bold">@pr.Title</div>
+                                <div class="text-muted small">by @pr.CreatedBy to @pr.TargetBranch</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge @GetPrStatusBadge(pr.Status)">
+                            @pr.Status
+                        </span>
+                    </td>
+                    <td>
+                        @if (pr.ReviewStatus == "approved")
+                        {
+                            <span class="badge bg-green-lt">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Approved
+                            </span>
+                        }
+                        else if (pr.ReviewStatus == "rejected")
+                        {
+                            <span class="badge bg-red-lt">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M18 6l-12 12" />
+                                    <path d="M6 6l12 12" />
+                                </svg>
+                                Rejected
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-yellow-lt">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M12 8v4l3 3" />
+                                    <path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+                                </svg>
+                                Pending
+                            </span>
+                        }
+                    </td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-success approve-pr" data-id="@pr.PR_Id" title="Approve">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M5 12l5 5l10 -10" />
+                                </svg>
+                                Approve
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger reject-pr" data-id="@pr.PR_Id" title="Reject">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M18 6l-12 12" />
+                                    <path d="M6 6l12 12" />
+                                </svg>
+                                Reject
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+            @if (!pagedPrs.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <div class="empty">
+                            <div class="empty-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                                    <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" />
+                                </svg>
+                            </div>
+                            <p class="empty-title">No PRs for review</p>
+                            <p class="empty-subtitle text-muted">You don't have any pull requests assigned for review.</p>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (totalPages > 1)
+{
+    <div class="card-footer d-flex align-items-center justify-content-between">
+        <div class="text-muted small">
+            Showing <span class="fw-bold">@((page - 1) * pageSize + 1)</span> to <span class="fw-bold">@Math.Min(page * pageSize, totalItems)</span> of <span class="fw-bold">@totalItems</span> PRs
+        </div>
+        <ul class="pagination m-0 ms-auto" data-page-size="@pageSize" data-total-items="@totalItems" data-widget-type="reviewerprs">
+            <li class="page-item @(page == 1 ? "disabled" : "")" data-page="@(page - 1)"><a class="page-link" href="#">Prev</a></li>
+            @for (int i = 1; i <= totalPages && i <= 5; i++)
+            {
+                <li class="page-item @(i == page ? "active" : "")" data-page="@i"><a class="page-link" href="#">@i</a></li>
+            }
+            @if (totalPages > 5)
+            {
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+                <li class="page-item" data-page="@totalPages"><a class="page-link" href="#">@totalPages</a></li>
+            }
+            <li class="page-item @(page == totalPages ? "disabled" : "")" data-page="@(page + 1)"><a class="page-link" href="#">Next</a></li>
+        </ul>
+    </div>
+}
+
+@functions {
+    public static string GetPrStatusBadge(string status) => status?.ToLower() switch
+    {
+        "open" => "bg-blue-lt",
+        "approved" => "bg-green-lt",
+        "rejected" => "bg-red-lt",
+        "merged" => "bg-purple-lt",
+        _ => "bg-secondary-lt"
+    };
+}

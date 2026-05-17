@@ -244,6 +244,69 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="ReviewerPrs">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-users" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"></path>
+                                        <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                        <path d="M21 21v-2a4 4 0 0 0 -3 -3.85"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">PRs Awaiting My Review</h4>
+                                    <p class="text-muted mb-0">PRs where you are a reviewer, with approve/reject buttons.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="MyPrs">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-git-pull-request" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                                        <path d="M6 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                                        <path d="M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"></path>
+                                        <path d="M6 8l0 8"></path>
+                                        <path d="M11 6h5a2 2 0 0 1 2 2v8"></path>
+                                        <path d="M14 9l-3 -3l3 -3"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">My Pull Requests</h4>
+                                    <p class="text-muted mb-0">PRs you have created, click to go to details.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card widget-selector" data-widget-type="PushHistory">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-history" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                        <path d="M12 8v4l2 2"></path>
+                                        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">My Push History</h4>
+                                    <p class="text-muted mb-0">Shows your commit history across projects.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -499,7 +562,6 @@
 
             // 4. EVENT HANDLERS
             function setupEventListeners() {
-                // Overlay controls
                 if (elements.settingsBtn) {
                     elements.settingsBtn.addEventListener('click', () => toggleOverlay(true));
                 }
@@ -510,7 +572,6 @@
                     elements.closeSettingsBtn.addEventListener('click', () => toggleOverlay(false));
                 }
 
-                // Widget Selection
                 if (elements.availableWidgets) {
                     elements.availableWidgets.addEventListener('click', function(e) {
                         const widgetSelector = e.target.closest('.widget-selector');
@@ -521,23 +582,18 @@
                     });
                 }
 
-                // Save Widget Config
                 elements.saveWidgetConfig.addEventListener('click', saveWidget);
 
-                // Widget Search
                 if (elements.widgetSearch) {
                     elements.widgetSearch.addEventListener('input', handleWidgetSearch);
                 }
 
-                // Delegated events for dynamic elements
                 document.addEventListener('click', function(e) {
-                    // Edit button
                     if (e.target.closest('.btn-edit-widget')) {
                         const widgetId = e.target.closest('.btn-edit-widget').dataset.id;
                         editWidget(widgetId);
                     }
 
-                    // Delete button
                     if (e.target.closest('.btn-delete-widget')) {
                         const widgetId = e.target.closest('.btn-delete-widget').dataset.id;
                         deleteWidget(widgetId);
@@ -552,7 +608,6 @@
                 const emptyState = elements.dashboardContainer.querySelector('.empty');
                 if (emptyState) emptyState.remove();
 
-                // Widget HTML'i oluştur
                 const widgetHtml = `
                     <div class="col-md-${widgetData.columnSize}" data-widget-id="${widgetData.id}">
                         <div class="card widget-card">
@@ -567,8 +622,25 @@
                     </div>
                 `;
 
-                // DOM'a ekle
                 elements.dashboardContainer.insertAdjacentHTML('beforeend', widgetHtml);
+            }
+
+            function renderReviewerPrsWidget(widgetData) {
+                return `<div class="reviewer-prs-container" data-widget-id="${widgetData.id}">
+                    <div class="text-center py-4"><div class="spinner-border"></div> Loading PRs...</div>
+                </div>`;
+            }
+
+            function renderMyPrsWidget(widgetData) {
+                return `<div class="my-prs-container" data-widget-id="${widgetData.id}">
+                    <div class="text-center py-4"><div class="spinner-border"></div> Loading your PRs...</div>
+                </div>`;
+            }
+
+            function renderPushHistoryWidget(widgetData) {
+                return `<div class="push-history-container" data-widget-id="${widgetData.id}">
+                    <div class="text-center py-4"><div class="spinner-border"></div> Loading push history...</div>
+                </div>`;
             }
 
             function renderWidgetActions(widgetId) {
@@ -608,12 +680,20 @@
                 } else if (widgetData.type === 'RecentJobs') {
                     return renderRecentJobsWidget(widgetData);
                 }
+                else if (widgetData.type === 'ReviewerPrs') {
+                    return renderReviewerPrsWidget(widgetData);
+                } else if (widgetData.type === 'MyPrs') {
+                    return renderMyPrsWidget(widgetData);
+                } else if (widgetData.type === 'PushHistory') {
+                    return renderPushHistoryWidget(widgetData);
+                }
                 return `<div class="text-muted">Unknown widget type for ${CICDToolType[widgetData.cicdToolType] || 'Unknown'} CI/CD</div>`;
             }
 
             function saveWidget() {
                 const widgetType = document.querySelector('#widgetConfigModal input[name="widgetType"]').value;
-                console.log(widgetType);
+                console.log("Saving widget type:", widgetType);
+
                 const formData = {
                     id: state.currentEditId || 'widget-' + Date.now() + '-' + (++state.widgetCounter),
                     type: widgetType,
@@ -621,20 +701,33 @@
                     columnSize: document.querySelector('#widgetConfigModal select[name="columnSize"]').value
                 };
 
-                // Sadece CI/CD widget'ları için ek alanları ekleyelim
-                const isGeneralWidget = ['RecentExecutions', 'RecentJobs'].includes(widgetType);
-                if (!isGeneralWidget) {
-                    const pipelineSelect = document.getElementById('pipelineSelect');
-                    const selectedPipelineOption = pipelineSelect.options[pipelineSelect.selectedIndex];
+                const noCicdNeededWidgets = ['RecentExecutions', 'RecentJobs', 'ReviewerPrs', 'MyPrs', 'PushHistory'];
+                const isNoCicdNeeded = noCicdNeededWidgets.includes(widgetType);
 
-                    formData.cicdToolId = document.getElementById('cicdToolSelect').value;
-                    formData.cicdToolType = parseInt(document.getElementById('cicdToolSelect').options[document.getElementById('cicdToolSelect').selectedIndex].dataset.tooltype);
-                    formData.project = document.getElementById('projectSelect').value;
-                    formData.pipelineId = pipelineSelect.value ? parseInt(pipelineSelect.value) : null;
-                    formData.pipelineName = selectedPipelineOption ? selectedPipelineOption.text : null;
+                if (!isNoCicdNeeded) {
+                    const cicdToolSelect = document.getElementById('cicdToolSelect');
+                    const projectSelect = document.getElementById('projectSelect');
+                    const pipelineSelect = document.getElementById('pipelineSelect');
+
+                    if (cicdToolSelect && cicdToolSelect.selectedIndex !== -1) {
+                        formData.cicdToolId = cicdToolSelect.value;
+                        const selectedOption = cicdToolSelect.options[cicdToolSelect.selectedIndex];
+                        if (selectedOption && selectedOption.dataset) {
+                            formData.cicdToolType = parseInt(selectedOption.dataset.tooltype);
+                        }
+                    }
+
+                    if (projectSelect) {
+                        formData.project = projectSelect.value;
+                    }
+
+                    if (pipelineSelect && pipelineSelect.selectedIndex !== -1) {
+                        const selectedPipelineOption = pipelineSelect.options[pipelineSelect.selectedIndex];
+                        formData.pipelineId = pipelineSelect.value ? parseInt(pipelineSelect.value) : null;
+                        formData.pipelineName = selectedPipelineOption ? selectedPipelineOption.text : null;
+                    }
                 }
 
-                // Mevcut widget'ı güncelle veya yeni ekle
                 const index = state.currentEditId
                     ? state.widgets.findIndex(w => w.id === state.currentEditId)
                     : -1;
@@ -645,7 +738,6 @@
                     state.widgets.push(formData);
                 }
 
-                // Sunucuya kaydet
                 saveToServer();
                 elements.widgetConfigModal.hide();
             }
@@ -656,13 +748,11 @@
                     state.currentEditId = widgetId;
                     openConfigModal(widget.type, widgetId);
 
-                    // Widget verilerini modal açıldıktan sonra yükle
                     setTimeout(() => {
                         if (widget.cicdToolId) {
                             document.getElementById('cicdToolSelect').value = widget.cicdToolId;
                             document.getElementById('cicdToolSelect').dispatchEvent(new Event('change'));
 
-                            // Proje ve pipeline yüklendikten sonra değerleri set et
                             setTimeout(() => {
                                 if (widget.project) {
                                     document.getElementById('projectSelect').value = widget.project;
@@ -761,7 +851,7 @@
                         showEmptyState();
                     } else {
                         state.widgets.forEach(widget => renderWidget(widget));
-                        loadWidgetData(); // Widget verilerini yükle
+                        loadWidgetData();
                     }
                 })
                 .catch(error => {
@@ -778,6 +868,15 @@
                     else if (widget.type === 'RecentJobs') {
                         fetchWidgetData(widget.id, widget.type, null, null, null);
                     }
+                    else if (widget.type === 'ReviewerPrs') {
+                        fetchWidgetData(widget.id, widget.type, null, null, null);
+                    }
+                    else if (widget.type === 'MyPrs') {
+                        fetchWidgetData(widget.id, widget.type, null, null, null);
+                    }
+                    else if (widget.type === 'PushHistory') {
+                        fetchWidgetData(widget.id, widget.type, null, null, null);
+                    }
                     else if (widget.cicdToolId && widget.project && widget.pipelineId !== null) {
                         fetchWidgetData(
                             widget.id,
@@ -786,7 +885,7 @@
                             widget.project,
                             widget.pipelineId
                         );
-                    } 
+                    }
                     else {
                         const widgetElement = document.querySelector(`[data-widget-id="${widget.id}"] .card-body`);
                         if (widgetElement) {
@@ -975,18 +1074,16 @@
                 });
             }
 
-            // 8. CONFIG MODAL - GÜNCELLENMİŞ VERSİYON
             function openConfigModal(widgetType, widgetId = null) {
                 const isEdit = !!widgetId;
                 const widget = isEdit ? state.widgets.find(w => w.id === widgetId) : null;
+                let formHtml = "";
 
-                // RecentExecutions widget'ı için özel form
                 if (widgetType === 'RecentExecutions') {
-                    let formHtml = `
+                    formHtml = `
                         <div class="mb-3">
                             <label class="form-label">Widget Title</label>
-                            <input type="text" class="form-control" name="widgetTitle"
-                                   value="${isEdit ? widget.title : 'Recent Executions'}">
+                            <input type="text" class="form-control" name="widgetTitle" value="${isEdit ? widget.title : 'Recent Executions'}">
                             <input type="hidden" name="widgetType" value="${widgetType}">
                         </div>
                         <div class="mb-3">
@@ -996,21 +1093,13 @@
                                 <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
                             </select>
                         </div>
-                        <div class="alert alert-info">
-                            This widget shows your recent test executions. No additional configuration needed.
-                        </div>
-                    `;
-
-                    elements.widgetConfigContent.innerHTML = formHtml;
-                    elements.widgetConfigModal.show();
-                    return;
+                        <div class="alert alert-info">Shows your recent test executions. No additional config.</div>`;
                 }
-                if (widgetType === 'RecentJobs') {
-                    let formHtml = `
+                else if (widgetType === 'RecentJobs') {
+                    formHtml = `
                         <div class="mb-3">
                             <label class="form-label">Widget Title</label>
-                            <input type="text" class="form-control" name="widgetTitle"
-                                   value="${isEdit ? widget.title : 'Recent Jobs'}">
+                            <input type="text" class="form-control" name="widgetTitle" value="${isEdit ? widget.title : 'Recent Jobs'}">
                             <input type="hidden" name="widgetType" value="${widgetType}">
                         </div>
                         <div class="mb-3">
@@ -1020,131 +1109,123 @@
                                 <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
                             </select>
                         </div>
-                        <div class="alert alert-info">
-                            This widget shows recently executed Hangfire jobs. No additional configuration needed.
-                        </div>
-                    `;
-
-                    elements.widgetConfigContent.innerHTML = formHtml;
-                    elements.widgetConfigModal.show();
-                    return;
+                        <div class="alert alert-info">Shows recent Hangfire jobs. No additional config.</div>`;
                 }
-
-                // Diğer widget'lar için mevcut form
-                let formHtml = `
-                    <div class="mb-3">
-                        <label class="form-label">Widget Title</label>
-                        <input type="text" class="form-control" name="widgetTitle"
-                               value="${isEdit ? widget.title : widgetType === 'PipelineResultsTable' ? 'Pipeline Results' : 'Test Results'}">
-                        <input type="hidden" name="widgetType" value="${widgetType}">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Column Size</label>
-                        <select class="form-select" name="columnSize">
-                            <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
-                            <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">CI/CD Tool</label>
-                        <select class="form-select" name="cicdTool" id="cicdToolSelect">
-                            <option value="">Select CI/CD Tool</option>
-                            ${state.cicdSettings.map(setting =>
-                                `<option value="${setting.id}"
-                                    data-tooltype="${setting.toolType}"
-                                    data-apiurl="${setting.apiUrl}"
-                                    data-project="${setting.project}"
-                                    data-accesstoken="${setting.accessToken}"
-                                    ${(isEdit && widget.cicdToolId === setting.id) ? 'selected' : ''}>
-                                    ${setting.name} (${state.cicdToolTypes[setting.toolType]})
-                                </option>`
-                            ).join('')}
-                        </select>
-                    </div>
-                    <div class="mb-3 d-none" id="projectSelectContainer">
-                        <label class="form-label">Project</label>
-                        <select class="form-select" name="project" id="projectSelect" disabled>
-                            <option value="">Select a project</option>
-                        </select>
-                    </div>
-                    <div class="mb-3 d-none" id="pipelineSelectContainer">
-                        <label class="form-label">Pipeline</label>
-                        <select class="form-select" name="pipeline" id="pipelineSelect" disabled>
-                            <option value="">Select a pipeline</option>
-                        </select>
-                    </div>
-                `;
+                else if (widgetType === 'ReviewerPrs') {
+                    formHtml = `
+                        <div class="mb-3">
+                            <label class="form-label">Widget Title</label>
+                            <input type="text" class="form-control" name="widgetTitle" value="${isEdit ? widget.title : 'PRs Awaiting My Review'}">
+                            <input type="hidden" name="widgetType" value="${widgetType}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Column Size</label>
+                            <select class="form-select" name="columnSize">
+                                <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
+                                <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info">Shows PRs where you are a reviewer. Approve/Reject directly.</div>`;
+                }
+                else if (widgetType === 'MyPrs') {
+                    formHtml = `
+                        <div class="mb-3">
+                            <label class="form-label">Widget Title</label>
+                            <input type="text" class="form-control" name="widgetTitle" value="${isEdit ? widget.title : 'My Pull Requests'}">
+                            <input type="hidden" name="widgetType" value="${widgetType}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Column Size</label>
+                            <select class="form-select" name="columnSize">
+                                <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
+                                <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info">PRs you created. Click to go to details.</div>`;
+                }
+                else if (widgetType === 'PushHistory') {
+                    formHtml = `
+                        <div class="mb-3">
+                            <label class="form-label">Widget Title</label>
+                            <input type="text" class="form-control" name="widgetTitle" value="${isEdit ? widget.title : 'My Push History'}">
+                            <input type="hidden" name="widgetType" value="${widgetType}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Column Size</label>
+                            <select class="form-select" name="columnSize">
+                                <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
+                                <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
+                            </select>
+                        </div>
+                        <div class="alert alert-info">Shows your commit history across projects.</div>`;
+                }
+                else {
+                    formHtml = `
+                        <div class="mb-3">
+                            <label class="form-label">Widget Title</label>
+                            <input type="text" class="form-control" name="widgetTitle" value="${isEdit ? widget.title : (widgetType === 'PipelineResultsTable' ? 'Pipeline Results' : 'Test Results')}">
+                            <input type="hidden" name="widgetType" value="${widgetType}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Column Size</label>
+                            <select class="form-select" name="columnSize">
+                                <option value="6" ${(!isEdit || widget.columnSize === '6') ? 'selected' : ''}>Half width</option>
+                                <option value="12" ${(isEdit && widget.columnSize === '12') ? 'selected' : ''}>Full width</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">CI/CD Tool</label>
+                            <select class="form-select" name="cicdTool" id="cicdToolSelect">
+                                <option value="">Select CI/CD Tool</option>
+                                ${state.cicdSettings.map(setting =>
+                                    `<option value="${setting.id}" data-tooltype="${setting.toolType}" data-apiurl="${setting.apiUrl}" data-project="${setting.project}" data-accesstoken="${setting.accessToken}" ${(isEdit && widget.cicdToolId === setting.id) ? 'selected' : ''}>
+                                        ${setting.name} (${state.cicdToolTypes[setting.toolType]})
+                                    </option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="mb-3 d-none" id="projectSelectContainer">
+                            <label class="form-label">Project</label>
+                            <select class="form-select" name="project" id="projectSelect" disabled><option>Select a project</option></select>
+                        </div>
+                        <div class="mb-3 d-none" id="pipelineSelectContainer">
+                            <label class="form-label">Pipeline</label>
+                            <select class="form-select" name="pipeline" id="pipelineSelect" disabled><option>Select a pipeline</option></select>
+                        </div>`;
+                }
 
                 elements.widgetConfigContent.innerHTML = formHtml;
                 elements.widgetConfigModal.show();
-                if (widgetType !== 'RecentJobs') {
-                    // CI/CD tool seçimi için event listener'ları ekle
-                    document.getElementById('cicdToolSelect').addEventListener('change', function() {
-                        // Mevcut CI/CD tool seçim mantığı
+
+                if (!['RecentExecutions', 'RecentJobs', 'ReviewerPrs', 'MyPrs', 'PushHistory'].includes(widgetType)) {
+                    document.getElementById('cicdToolSelect')?.addEventListener('change', function() {
+                        const opt = this.options[this.selectedIndex];
+                        if (!opt.value) return;
+                        loadProjects(opt.dataset.tooltype, opt.dataset.apiurl, opt.dataset.project, opt.dataset.accesstoken);
+                    });
+                    document.getElementById('projectSelect')?.addEventListener('change', function() {
+                        const project = this.value;
+                        if (!project) return;
+                        const cicdSelect = document.getElementById('cicdToolSelect');
+                        const opt = cicdSelect.options[cicdSelect.selectedIndex];
+                        loadPipelines(opt.dataset.tooltype, opt.dataset.apiurl, project, opt.dataset.accesstoken);
                     });
                 }
-                // Sadece CI/CD widget'ları için dropdown event listeners ekleyelim
-                if (widgetType !== 'RecentExecutions') {
-                    document.getElementById('cicdToolSelect').addEventListener('change', function() {
-                        const selectedOption = this.options[this.selectedIndex];
-                        if (!selectedOption.value) return;
 
-                        const toolType = selectedOption.dataset.tooltype;
-                        const apiUrl = selectedOption.dataset.apiurl;
-                        const project = selectedOption.dataset.project;
-                        const accessToken = selectedOption.dataset.accesstoken;
-
-                        loadProjects(toolType, apiUrl, project, accessToken);
-                    });
-
-                    const projectSelect = document.getElementById('projectSelect');
-                    if (projectSelect) {
-                        projectSelect.addEventListener('change', function() {
-                            const project = this.value;
-                            if (!project) return;
-
-                            const cicdToolSelect = document.getElementById('cicdToolSelect');
-                            const selectedOption = cicdToolSelect.options[cicdToolSelect.selectedIndex];
-                            const toolType = selectedOption.dataset.tooltype;
-                            const apiUrl = selectedOption.dataset.apiurl;
-                            const accessToken = selectedOption.dataset.accesstoken;
-
-                            loadPipelines(toolType, apiUrl, project, accessToken);
-                        });
-                    }
-                }
-
-                // Eğer düzenleme modundaysak, önceki değerleri yükle
-                if (isEdit && widgetType !== 'RecentExecutions') {
-                    if (widget.cicdToolId) {
+                if (isEdit && !['RecentExecutions', 'RecentJobs', 'ReviewerPrs', 'MyPrs', 'PushHistory'].includes(widgetType) && widget.cicdToolId) {
+                    setTimeout(() => {
                         document.getElementById('cicdToolSelect').value = widget.cicdToolId;
-                        // ToolType'a göre uygun seçeneği işaretle
-                        const toolType = widget.cicdToolType;
-                        if (toolType) {
-                            const options = document.getElementById('cicdToolSelect').options;
-                            for (let i = 0; i < options.length; i++) {
-                                if (parseInt(options[i].dataset.tooltype) === toolType) {
-                                    options[i].selected = true;
-                                    break;
-                                }
-                            }
-                        }
                         document.getElementById('cicdToolSelect').dispatchEvent(new Event('change'));
-
-                        // Proje ve pipeline yüklendikten sonra değerleri set et
                         setTimeout(() => {
                             if (widget.project) {
                                 document.getElementById('projectSelect').value = widget.project;
                                 document.getElementById('projectSelect').dispatchEvent(new Event('change'));
-
                                 setTimeout(() => {
-                                    if (widget.pipelineId) {
-                                        document.getElementById('pipelineSelect').value = widget.pipelineId;
-                                    }
+                                    if (widget.pipelineId) document.getElementById('pipelineSelect').value = widget.pipelineId;
                                 }, 500);
                             }
                         }, 500);
-                    }
+                    }, 100);
                 }
             }
 
@@ -1160,8 +1241,7 @@
 
                 const toolTypeNum = parseInt(toolType);
 
-                // Azure için projeleri yükle
-                if (toolTypeNum === 3) { // Azure
+                if (toolTypeNum === 3) { 
                     fetch(`/Dashboard/GetAzureProjects?apiUrl=${encodeURIComponent(apiUrl)}&accessToken=${encodeURIComponent(accessToken)}`)
                         .then(response => {
                             if (!response.ok) throw new Error('Failed to load projects');
@@ -1182,14 +1262,13 @@
                             projectSelect.innerHTML = '<option value="">Error loading projects</option>';
                         });
                 }
-                // Jenkins için projeleri yükle
                 else if (toolTypeNum === 2) { // Jenkins
-                    // Jenkins için proje yükleme implementasyonu
+                    // Project loading implementation for Jenkins
                     projectSelect.innerHTML = '<option value="">Jenkins projects not implemented yet</option>';
                 }
                 // GitLab için projeleri yükle
                 else if (toolTypeNum === 1) { // GitLab
-                    // GitLab için proje yükleme implementasyonu
+                    // Project loading implementation for GitLab
                     projectSelect.innerHTML = '<option value="">GitLab projects not implemented yet</option>';
                 }
             }
@@ -1204,7 +1283,6 @@
 
                 const toolTypeNum = parseInt(toolType);
 
-                // Azure için pipeline'ları yükle
                 if (toolTypeNum === 3) { // Azure
                     fetch(`/Dashboard/GetAzurePipelines?apiUrl=${encodeURIComponent(apiUrl)}&project=${encodeURIComponent(project)}&accessToken=${encodeURIComponent(accessToken)}`)
                         .then(response => {
@@ -1221,14 +1299,12 @@
                             pipelineSelect.innerHTML = '<option value="">Error loading pipelines</option>';
                         });
                 }
-                // Jenkins için pipeline'ları yükle
                 else if (toolTypeNum === 2) { // Jenkins
-                    // Jenkins için pipeline yükleme implementasyonu
+                    // Pipeline loading implementation for Jenkins
                     pipelineSelect.innerHTML = '<option value="">Jenkins pipelines not implemented yet</option>';
                 }
-                // GitLab için pipeline'ları yükle
                 else if (toolTypeNum === 1) { // GitLab
-                    // GitLab için pipeline yükleme implementasyonu
+                    // Pipeline loading implementation for GitLab
                     pipelineSelect.innerHTML = '<option value="">GitLab pipelines not implemented yet</option>';
                 }
             }
@@ -1237,7 +1313,6 @@
             function saveToServer() {
                 const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
 
-                // DashboardVm formatında veri gönder
                 const requestData = {
                     DashboardWidgets: state.widgets
                 };
@@ -1349,6 +1424,21 @@
                             }
                         });
                 }
+                else if (widgetType === 'ReviewerPrs') {
+                    fetch('/Dashboard/GetReviewerPrs')
+                        .then(r => r.json())
+                        .then(data => updateReviewerPrsWidget(widgetId, data));
+                }
+                else if (widgetType === 'MyPrs') {
+                    fetch('/Dashboard/GetMyPrs')
+                        .then(r => r.json())
+                        .then(data => updateMyPrsWidget(widgetId, data));
+                }
+                else if (widgetType === 'PushHistory') {
+                    fetch('/Dashboard/GetMyPushHistory')
+                        .then(r => r.json())
+                        .then(data => updatePushHistoryWidget(widgetId, data));
+                }
                 else 
                 {
                     const endpoint = widgetType === 'PipelineResultsTable'
@@ -1381,9 +1471,6 @@
                 const widgetElement = document.querySelector(`[data-widget-id="${widgetId}"]`);
                 if (!widgetElement) return;
 
-                const widget = state.widgets.find(w => w.id === widgetId);
-                if (!widget) return;
-
                 if (widgetType === 'PipelineResultsTable') {
                     updatePipelineWidget(widgetElement, data);
                 } else if (widgetType === 'TestResultsChart') {
@@ -1392,13 +1479,18 @@
                     updateTestResultsTableWidget(widgetElement, data);
                 } else if (widgetType === 'RecentExecutions') {
                     updateRecentExecutionsWidget(widgetElement, data);
-                }else if (widgetType === 'RecentJobs') {
+                } else if (widgetType === 'RecentJobs') {
                     updateRecentJobsWidget(widgetElement, data);
-                }
-                else {
+                } else if (widgetType === 'ReviewerPrs') {
+                    updateReviewerPrsWidget(widgetId, data);
+                } else if (widgetType === 'MyPrs') {
+                    updateMyPrsWidget(widgetId, data);
+                } else if (widgetType === 'PushHistory') {
+                    updatePushHistoryWidget(widgetId, data);
+                } else {
                     const contentElement = widgetElement.querySelector('.card-body');
                     if (contentElement) {
-                        contentElement.innerHTML = `<div class="alert alert-warning">Unsupported widget type for ${CICDToolType[widget.cicdToolType] || 'Unknown'} CI/CD</div>`;
+                        contentElement.innerHTML = `<div class="alert alert-warning">Unsupported widget type</div>`;
                     }
                 }
             }
@@ -1527,6 +1619,388 @@
                     }
             }
 
+
+            function updateReviewerPrsWidget(widgetId, prs) {
+                const container = document.querySelector(`[data-widget-id="${widgetId}"] .reviewer-prs-container`);
+                if (!container) return;
+
+                container.dataset.fullData = JSON.stringify(prs);
+                container.dataset.currentPage = "1";
+                container.dataset.pageSize = "5";  // 5 kayıt
+
+                renderReviewerPrsPage(widgetId, 1);
+            }
+
+            function renderReviewerPrsPage(widgetId, page) {
+                const container = document.querySelector(`[data-widget-id="${widgetId}"] .reviewer-prs-container`);
+                if (!container) return;
+
+                const fullData = JSON.parse(container.dataset.fullData || "[]");
+                const pageSize = parseInt(container.dataset.pageSize);
+                const totalPages = Math.ceil(fullData.length / pageSize);
+                const start = (page - 1) * pageSize;
+                const pagedData = fullData.slice(start, start + pageSize);
+
+                let html = `<div class="table-responsive">
+                    <table class="table table-vcenter table-hover card-table">
+                        <thead>
+                            <tr>
+                                <th class="w-10">PR ID</th>
+                                <th>Title</th>
+                                <th class="w-10">Status</th>
+                                <th class="w-10">Review</th>
+                                <th class="w-15">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                pagedData.forEach(pr => {
+                    const reviewStatusBadge = pr.reviewStatus === 'approved'
+                        ? '<span class="badge bg-green-lt"><svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>Approved</span>'
+                        : pr.reviewStatus === 'rejected'
+                        ? '<span class="badge bg-red-lt"><svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>Rejected</span>'
+                        : '<span class="badge bg-yellow-lt"><svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 8v4l3 3"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0"/></svg>Pending</span>';
+
+                    html += `<tr data-pr-id="${pr.pR_Id}">
+                        <td>
+                            <a href="/Editor/PRDetails?id=${pr.pR_Id}" target="_blank" class="text-primary fw-bold">#${escapeHtml(pr.pR_Id)}</a>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">${getReviewerPrIcon()}</div>
+                                <div>
+                                    <div class="fw-bold">${escapeHtml(pr.title)}</div>
+                                    <div class="text-muted small">by ${escapeHtml(pr.createdBy)} to ${escapeHtml(pr.targetBranch)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge ${getPrStatusBadge(pr.status)}">${pr.status}</span>
+                        </td>
+                        <td>${reviewStatusBadge}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-success approve-pr" data-id="${pr.pR_Id}" title="Approve">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M5 12l5 5l10 -10"/>
+                                    </svg>
+                                    Approve
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger reject-pr" data-id="${pr.pR_Id}" title="Reject">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="16" height="16" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                        <path d="M18 6l-12 12"/>
+                                        <path d="M6 6l12 12"/>
+                                    </svg>
+                                    Reject
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+
+                if (pagedData.length === 0) {
+                    html += `<tr><td colspan="5" class="text-center text-muted py-4">
+                        <div class="empty">
+                            <div class="empty-icon">${getReviewerPrEmptyIcon()}</div>
+                            <p class="empty-title">No PRs for review</p>
+                            <p class="empty-subtitle text-muted">You don't have any pull requests assigned for review.</p>
+                        </div>
+                    </td></tr>`;
+                }
+
+                html += `</tbody><tr></div>`;
+
+                if (totalPages > 1) {
+                    html += renderPagination(page, totalPages, fullData.length, widgetId, 'reviewerprs');
+                }
+
+                container.innerHTML = html;
+
+                container.querySelectorAll('.approve-pr').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        updatePrStatus(btn.dataset.id, 'approved', widgetId);
+                    });
+                });
+                container.querySelectorAll('.reject-pr').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        updatePrStatus(btn.dataset.id, 'rejected', widgetId);
+                    });
+                });
+
+                attachPaginationEvents(container, widgetId, 'ReviewerPrs');
+            }
+
+            function updateMyPrsWidget(widgetId, prs) {
+                const container = document.querySelector(`[data-widget-id="${widgetId}"] .my-prs-container`);
+                if (!container) return;
+
+                container.dataset.fullData = JSON.stringify(prs);
+                container.dataset.currentPage = "1";
+                container.dataset.pageSize = "5"; 
+
+                renderMyPrsPage(widgetId, 1);
+            }
+
+            function renderMyPrsPage(widgetId, page) {
+                const container = document.querySelector(`[data-widget-id="${widgetId}"] .my-prs-container`);
+                if (!container) return;
+
+                const fullData = JSON.parse(container.dataset.fullData || "[]");
+                const pageSize = parseInt(container.dataset.pageSize);
+                const totalPages = Math.ceil(fullData.length / pageSize);
+                const start = (page - 1) * pageSize;
+                const pagedData = fullData.slice(start, start + pageSize);
+
+                let html = `<div class="table-responsive">
+                    <table class="table table-vcenter table-hover card-table">
+                        <thead>
+                            <tr>
+                                <th class="w-10">PR ID</th>
+                                <th>Title</th>
+                                <th class="w-15">Target Branch</th>
+                                <th class="w-10">Status</th>
+                                <th class="w-20">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                pagedData.forEach(pr => {
+                    html += `<tr class="cursor-pointer my-pr-row" data-href="/Editor/PRDetails?id=${pr.pR_Id}" style="cursor:pointer;">
+                        <td>
+                            <span class="text-primary fw-bold">#${escapeHtml(pr.pR_Id)}</span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">${getMyPrIcon()}</div>
+                                <div>
+                                    <div class="fw-bold">${escapeHtml(pr.title)}</div>
+                                    <div class="text-muted small">Created by ${escapeHtml(pr.createdBy)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-azure-lt">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 6l6 6l-6 6" />
+                                </svg>
+                                ${escapeHtml(pr.targetBranch)}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge ${getPrStatusBadge(pr.status)}">${pr.status}</span>
+                        </td>
+                        <td>
+                            <div class="text-muted small">${escapeHtml(pr.createdAt)}</div>
+                        </td>
+                     </tr>`;
+                });
+
+                if (pagedData.length === 0) {
+                    html += `<tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <div class="empty">
+                                <div class="empty-icon">${getMyPrEmptyIcon()}</div>
+                                <p class="empty-title">No pull requests</p>
+                                <p class="empty-subtitle text-muted">You haven't created any pull requests yet.</p>
+                            </div>
+                        </td>
+                    </tr>`;
+                }
+
+                html += `</tbody>
+                    </table>
+                </div>`;
+
+                if (totalPages > 1) {
+                    const startItem = ((page - 1) * pageSize) + 1;
+                    const endItem = Math.min(page * pageSize, fullData.length);
+                    html += `<div class="card-footer d-flex align-items-center justify-content-between">
+                        <div class="text-muted small">
+                            Showing <span class="fw-bold">${startItem}</span> to <span class="fw-bold">${endItem}</span> of <span class="fw-bold">${fullData.length}</span> PRs
+                        </div>
+                        <ul class="pagination m-0 ms-auto" data-widget-id="${widgetId}" data-widget-type="myprs">`;
+
+                    // Prev button
+                    html += `<li class="page-item ${page === 1 ? 'disabled' : ''}" data-page="${page - 1}">
+                        <a class="page-link" href="#">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M15 6l-6 6l6 6" />
+                            </svg>
+                            Prev
+                        </a>
+                    </li>`;
+
+                    // Page numbers (show up to 5)
+                    let startPage = Math.max(1, page - 2);
+                    let endPage = Math.min(totalPages, startPage + 4);
+                    if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+                    for (let i = startPage; i <= endPage; i++) {
+                        html += `<li class="page-item ${i === page ? 'active' : ''}" data-page="${i}">
+                            <a class="page-link" href="#">${i}</a>
+                        </li>`;
+                    }
+
+                    // Next button
+                    html += `<li class="page-item ${page === totalPages ? 'disabled' : ''}" data-page="${page + 1}">
+                        <a class="page-link" href="#">
+                            Next
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M9 6l6 6l-6 6" />
+                            </svg>
+                        </a>
+                    </li>`;
+
+                    html += `</ul></div>`;
+                }
+
+                container.innerHTML = html;
+
+                container.querySelectorAll('.my-pr-row').forEach(row => {
+                    row.addEventListener('click', () => {
+                        window.open(row.dataset.href, '_blank');
+                    });
+                });
+
+                attachMyPrsPaginationEvents(container, widgetId);
+            }
+
+            function attachMyPrsPaginationEvents(container, widgetId) {
+                const pagination = container.querySelector('.pagination');
+                if (!pagination) return;
+
+                pagination.querySelectorAll('.page-item:not(.disabled)').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const page = parseInt(this.dataset.page);
+                        if (isNaN(page)) return;
+                        renderMyPrsPage(widgetId, page);
+                    });
+                });
+            }
+
+            function updatePushHistoryWidget(widgetId, history) {
+                const container = document.querySelector(`[data-widget-id="${widgetId}"] .push-history-container`);
+                if (!container) return;
+
+                container.dataset.fullData = JSON.stringify(history);
+                container.dataset.currentPage = "1";
+                container.dataset.pageSize = "5";  // 5 kayıt
+
+                renderPushHistoryPage(widgetId, 1);
+            }
+
+            function renderPushHistoryPage(widgetId, page) {
+                const container = document.querySelector(`[data-widget-id="${widgetId}"] .push-history-container`);
+                if (!container) return;
+
+                const fullData = JSON.parse(container.dataset.fullData || "[]");
+                const pageSize = parseInt(container.dataset.pageSize);
+                const totalPages = Math.ceil(fullData.length / pageSize);
+                const start = (page - 1) * pageSize;
+                const pagedData = fullData.slice(start, start + pageSize);
+
+                let html = `<div class="table-responsive">
+                    <table class="table table-vcenter table-hover card-table">
+                        <thead>
+                            <tr>
+                                <th class="w-25">Project</th>
+                                <th class="w-20">Branch</th>
+                                <th class="w-20">Commit</th>
+                                <th class="w-25">Date</th>
+                                <th class="w-10">PR</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                pagedData.forEach(h => {
+                    html += `<tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">${getPushHistoryIcon()}</div>
+                                <div>
+                                    <div class="fw-bold">${escapeHtml(h.projectName)}</div>
+                                    <div class="text-muted small">by ${escapeHtml(h.pushedBy)}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-azure-lt">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                    <path d="M9 6l6 6l-6 6" />
+                                </svg>
+                                ${escapeHtml(h.branchName)}
+                            </span>
+                        </td>
+                        <td><code class="text-primary bg-light p-1 rounded">${escapeHtml(h.commitHash)}</code></td>
+                        <td><div class="text-muted small">${escapeHtml(h.pushedAt)}</div></td>
+                        <td>
+                            ${h.hasPR ?
+                                '<span class="badge bg-green-lt"><svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg>Yes</span>' :
+                                '<span class="badge bg-secondary-lt"><svg xmlns="http://www.w3.org/2000/svg" class="icon me-1" width="14" height="14" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg>No</span>'
+                            }
+                        </td>
+                    </tr>`;
+                });
+
+                if (pagedData.length === 0) {
+                    html += `<tr><td colspan="5" class="text-center text-muted py-4">
+                        <div class="empty">
+                            <div class="empty-icon">${getPushHistoryEmptyIcon()}</div>
+                            <p class="empty-title">No push history</p>
+                            <p class="empty-subtitle text-muted">You haven't pushed any commits yet.</p>
+                        </div>
+                    </td></tr>`;
+                }
+
+                html += `</tbody></tr></div>`;
+
+                if (totalPages > 1) {
+                    html += renderPagination(page, totalPages, fullData.length, widgetId, 'pushhistory');
+                }
+
+                container.innerHTML = html;
+                attachPaginationEvents(container, widgetId, 'PushHistory');
+            }
+
+            function updatePrStatus(prId, action, widgetId) {
+                fetch('/Dashboard/UpdatePrReviewStatus', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value },
+                    body: JSON.stringify({ prId, status: action })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.success) refreshWidget(widgetId);
+                    else alert('Failed: ' + (res.message || 'Unknown error'));
+                })
+                .catch(err => alert('Error: ' + err.message));
+            }
+
+            function getPrStatusBadge(status) {
+                const map = { 'Open': 'bg-blue-lt', 'Approved': 'bg-green-lt', 'Rejected': 'bg-red-lt', 'Merged': 'bg-purple-lt' };
+                return map[status] || 'bg-secondary-lt';
+            }
+
+            function getReviewStatusBadge(status) {
+                if (status === 'approved') return '<span class="badge bg-green-lt">Approved</span>';
+                if (status === 'rejected') return '<span class="badge bg-red-lt">Rejected</span>';
+                return '<span class="badge bg-yellow-lt">Pending</span>';
+            }
+
+            function refreshWidget(widgetId) {
+                const widget = state.widgets.find(w => w.id === widgetId);
+                if (widget) fetchWidgetData(widget.id, widget.type, null, null, null);
+            }
+
             function updateTestResultsTableWidget(widgetElement, data) {
                 const tableBody = widgetElement.querySelector('tbody');
                 if (!tableBody) return;
@@ -1539,7 +2013,6 @@
                     const passRateClass = passRate >= 80 ? 'pass-rate-high' :
                                         passRate >= 50 ? 'pass-rate-medium' : 'pass-rate-low';
 
-                    // Widget'in ait olduğu CI/CD tool bilgisini al
                     const widget = state.widgets.find(w => w.id === widgetElement.closest('[data-widget-id]').dataset.widgetId);
                     const cicdToolId = widget?.cicdToolId;
 
@@ -1588,7 +2061,6 @@
                     tableBody.appendChild(row);
                 });
 
-                // Tooltip'leri aktif et
                 const tooltipTriggerList = [].slice.call(widgetElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 tooltipTriggerList.map(function (tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -1635,7 +2107,6 @@
                     tableBody.appendChild(row);
                 });
 
-                // Tooltip'leri yeniden başlat
                 const tooltipTriggerList = [].slice.call(widgetElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 tooltipTriggerList.map(function (tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -1682,7 +2153,6 @@
                     tableBody.appendChild(row);
                 });
 
-                // Job detay butonları için event listener
                 widgetElement.querySelectorAll('.view-job-details').forEach(button => {
                     button.addEventListener('click', function(e) {
                         e.preventDefault();
@@ -1691,7 +2161,6 @@
                     });
                 });
 
-                // Tooltip'leri başlat
                 const tooltipTriggerList = [].slice.call(widgetElement.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 tooltipTriggerList.map(function(tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
@@ -1701,7 +2170,6 @@
             window.showJobDetails = function(jobId) {
                 const modalId = `job-modal-${jobId.replace(/[^a-z0-9]/gi, '')}`;
 
-                // Modal HTML'i
                 const modalHTML = `
                 <div class="modal fade" id="${modalId}" tabindex="-1">
                     <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -1723,17 +2191,14 @@
                     </div>
                 </div>`;
 
-                // Modalı DOM'a ekle
                 document.body.insertAdjacentHTML('beforeend', modalHTML);
                 const modalElement = document.getElementById(modalId);
                 const modal = new bootstrap.Modal(modalElement);
 
-                // Modal gösterildiğinde verileri yükle
                 modalElement.addEventListener('shown.bs.modal', () => {
                     window.loadJobDetails(jobId, modalId);
                 });
 
-                // Modal kapatıldığında temizle
                 modalElement.addEventListener('hidden.bs.modal', () => {
                     modal.dispose();
                     modalElement.remove();
@@ -1949,6 +2414,146 @@
                 return statusMap[status.toLowerCase()] || defaultIcon;
             }
 
+            function escapeHtml(str) {
+                if (!str) return '';
+                return str.replace(/[&<>]/g, function(m) {
+                    if (m === '&') return '&amp;';
+                    if (m === '<') return '&lt;';
+                    if (m === '>') return '&gt;';
+                    return m;
+                });
+            }
+
+            function getMyPrIcon() {
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="icon text-muted" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                    <path d="M6 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                    <path d="M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                    <path d="M6 8l0 8" />
+                    <path d="M11 6h5a2 2 0 0 1 2 2v8" />
+                    <path d="M14 9l-3 -3l3 -3" />
+                </svg>`;
+            }
+
+            function getPushHistoryIcon() {
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="icon text-muted" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M7 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M17 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M17 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M9 13l4 3" />
+                    <path d="M13 8l-4 3" />
+                </svg>`;
+            }
+
+            function getReviewerPrIcon() {
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="icon text-muted" width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                    <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" />
+                    <path d="M9 12l2 2l4-4" />
+                </svg>`;
+            }
+
+            function getPushHistoryEmptyIcon() {
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M7 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M17 6m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M17 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+                    <path d="M9 13l4 3" />
+                    <path d="M13 8l-4 3" />
+                </svg>`;
+            }
+
+            function getReviewerPrEmptyIcon() {
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+                    <path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" />
+                </svg>`;
+            }
+
+            function getMyPrEmptyIcon() {
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M6 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                    <path d="M6 6m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                    <path d="M18 18m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                    <path d="M6 8l0 8" />
+                    <path d="M11 6h5a2 2 0 0 1 2 2v8" />
+                </svg>`;
+            }
+
+            function renderPagination(currentPage, totalPages, totalItems, widgetId, type) {
+                const pageSize = 5;
+                const startItem = ((currentPage - 1) * pageSize) + 1;
+                const endItem = Math.min(currentPage * pageSize, totalItems);
+
+                let html = `<div class="card-footer d-flex align-items-center justify-content-between">
+                    <div class="text-muted small">
+                        Showing <span class="fw-bold">${startItem}</span> to <span class="fw-bold">${endItem}</span> of <span class="fw-bold">${totalItems}</span> pushes
+                    </div>
+                    <ul class="pagination m-0 ms-auto" data-widget-id="${widgetId}" data-widget-type="${type}">`;
+
+                // Prev button
+                html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}" data-page="${currentPage - 1}">
+                    <a class="page-link" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M15 6l-6 6l6 6" />
+                        </svg>
+                        Prev
+                    </a>
+                </li>`;
+
+                // Page numbers (show up to 5)
+                let startPage = Math.max(1, currentPage - 2);
+                let endPage = Math.min(totalPages, startPage + 4);
+                if (endPage - startPage < 4) startPage = Math.max(1, endPage - 4);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}" data-page="${i}">
+                        <a class="page-link" href="#">${i}</a>
+                    </li>`;
+                }
+
+                // Next button
+                html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}" data-page="${currentPage + 1}">
+                    <a class="page-link" href="#">
+                        Next
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                            <path d="M9 6l6 6l-6 6" />
+                        </svg>
+                    </a>
+                </li>`;
+
+                html += `</ul></div>`;
+                return html;
+            }
+
+            function attachPaginationEvents(container, widgetId, widgetType) {
+                const pagination = container.querySelector('.pagination');
+                if (!pagination) return;
+
+                pagination.querySelectorAll('.page-item:not(.disabled)').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const page = parseInt(this.dataset.page);
+                        if (isNaN(page)) return;
+
+                        if (widgetType === 'MyPrs') {
+                            renderMyPrsPage(widgetId, page);
+                        } else if (widgetType === 'PushHistory') {
+                            renderPushHistoryPage(widgetId, page);
+                        } else if (widgetType === 'ReviewerPrs') {
+                            renderReviewerPrsPage(widgetId, page);
+                        }
+                    });
+                });
+            }
 
             function formatDuration(minutes) {
                 if (minutes < 1) return '< 1m';
