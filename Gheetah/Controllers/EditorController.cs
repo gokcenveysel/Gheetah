@@ -1472,40 +1472,62 @@ namespace Gheetah.Controllers
                 return NotFound("Project folder not found.");
 
             stepText = stepText.Trim();
+            var language = project.LanguageType?.ToLower() ?? "c#";
 
             var csharpPatterns = new List<string>
             {
-                @"\[(Given|When|Then|And|But)\s*\(\s*@""(.+?)""\s*\)\]",
-                @"\[(Given|When|Then|And|But)\s*\(\s*""(.+?)""\s*\)\]",
-                @"\[(Given|When|Then|And|But)\s*\(\s*@'(.+?)'\s*\)\]",
-                @"\[(Given|When|Then|And|But)\s*\(\s*'(.+?)'\s*\)\]",
-                @"\[(Given|When|Then|And|But)\s*\(\s*name\s*:\s*""(.+?)""\s*\)\]",
+                @"\[Given\s*\(\s*@""([^""]+)""\s*\)\]",
+                @"\[When\s*\(\s*@""([^""]+)""\s*\)\]",
+                @"\[Then\s*\(\s*@""([^""]+)""\s*\)\]",
+                @"\[And\s*\(\s*@""([^""]+)""\s*\)\]",
+                @"\[But\s*\(\s*@""([^""]+)""\s*\)\]",
+                @"\[Given\s*\(\s*""([^""]+)""\s*\)\]",
+                @"\[When\s*\(\s*""([^""]+)""\s*\)\]",
+                @"\[Then\s*\(\s*""([^""]+)""\s*\)\]",
+                @"\[And\s*\(\s*""([^""]+)""\s*\)\]",
+                @"\[But\s*\(\s*""([^""]+)""\s*\)\]",
             };
 
             var javaPatterns = new List<string>
             {
-                @"@(Given|When|Then|And|But)\s*\(\s*""(.+?)""\s*\)",
-                @"@(Given|When|Then|And|But)\s*\(\s*'(.+?)'\s*\)",
-                @"@(Given|When|Then|And|But)\s*\(\s*value\s*=\s*""(.+?)""\s*\)",
+                @"@Given\s*\(\s*""([^""]+)""\s*\)",
+                @"@When\s*\(\s*""([^""]+)""\s*\)",
+                @"@Then\s*\(\s*""([^""]+)""\s*\)",
+                @"@And\s*\(\s*""([^""]+)""\s*\)",
+                @"@But\s*\(\s*""([^""]+)""\s*\)",
             };
 
-            var searchExtensions = project.LanguageType?.ToLower() switch
+            var patterns = language == "c#" ? csharpPatterns : javaPatterns;
+            var extensions = language == "c#" ? new[] { ".cs" } : new[] { ".java" };
+
+            var allCodeFiles = new List<string>();
+
+            if (language == "java")
             {
-                "c#" => new[] { ".cs" },
-                "java" => new[] { ".java" },
-                _ => new[] { ".cs", ".java" }
-            };
+                var javaSrcPaths = Directory.GetDirectories(projectPath, "java", SearchOption.AllDirectories)
+                    .Where(d => d.Contains("src\\test\\java") || d.Contains("src/test/java"))
+                    .ToList();
 
-            var patterns = project.LanguageType?.ToLower() switch
+                if (javaSrcPaths.Any())
+                {
+                    allCodeFiles = javaSrcPaths
+                        .SelectMany(javaPath => Directory.GetFiles(javaPath, "*.java", SearchOption.AllDirectories))
+                        .ToList();
+                }
+                else
+                {
+                    allCodeFiles = Directory.GetFiles(projectPath, "*.java", SearchOption.AllDirectories)
+                        .Where(f => !f.Contains("\\target\\") && !f.Contains("\\build\\") && !f.Contains("\\.git\\"))
+                        .ToList();
+                }
+            }
+            else
             {
-                "c#" => csharpPatterns,
-                "java" => javaPatterns,
-                _ => csharpPatterns.Concat(javaPatterns).ToList()
-            };
-
-            var allCodeFiles = Directory.GetFiles(projectPath, "*.*", SearchOption.AllDirectories)
-                .Where(f => searchExtensions.Contains(Path.GetExtension(f).ToLower()))
-                .Where(f => !f.Contains("\\bin\\") && !f.Contains("\\obj\\") && !f.Contains("\\.git\\"));
+                allCodeFiles = Directory.GetFiles(projectPath, "*.*", SearchOption.AllDirectories)
+                    .Where(f => extensions.Contains(Path.GetExtension(f).ToLower()))
+                    .Where(f => !f.Contains("\\bin\\") && !f.Contains("\\obj\\") && !f.Contains("\\.git\\"))
+                    .ToList();
+            }
 
             foreach (var filePath in allCodeFiles)
             {
@@ -1520,17 +1542,20 @@ namespace Gheetah.Controllers
                         var match = Regex.Match(line, pattern, RegexOptions.IgnoreCase);
                         if (match.Success)
                         {
-                            var capturedStepPattern = match.Groups[2].Value.Trim();
+                            var capturedStepPattern = match.Groups[1].Value.Trim();
                             
                             if (StepTextsMatch(stepText, capturedStepPattern))
                             {
+                                var methodName = ExtractMethodName(line);
+                                
                                 return Ok(new
                                 {
                                     success = true,
                                     filePath = filePath,
                                     lineNumber = lineIndex + 1,
                                     methodLine = lineIndex + 1,
-                                    matchedStep = capturedStepPattern
+                                    matchedStep = capturedStepPattern,
+                                    methodName = methodName
                                 });
                             }
                         }
@@ -1539,6 +1564,98 @@ namespace Gheetah.Controllers
             }
 
             return Ok(new { success = false, message = $"No step definition found for: '{stepText}'" });
+        }
+
+         private bool StepTextsMatch(string gherkinStep, string stepDefPattern)
+        {
+            gherkinStep = gherkinStep.Trim();
+            stepDefPattern = stepDefPattern.Trim();
+
+            if (string.Equals(gherkinStep, stepDefPattern, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (gherkinStep.Contains(stepDefPattern, StringComparison.OrdinalIgnoreCase) ||
+                stepDefPattern.Contains(gherkinStep, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            try
+            {
+                string regexPattern = stepDefPattern;
+                
+                regexPattern = Regex.Replace(regexPattern, @"\{int\}", @"(\d+)");
+                regexPattern = Regex.Replace(regexPattern, @"\{float\}", @"(\d+\.\d+)");
+                regexPattern = Regex.Replace(regexPattern, @"\{word\}", @"(\w+)");
+                regexPattern = Regex.Replace(regexPattern, @"\{string\}", @"(""[^""]*""|'[^']*')");
+                regexPattern = Regex.Replace(regexPattern, @"\{.*?\}", @"(.*?)");
+
+                regexPattern = regexPattern.Replace("(.*)", "(.*?)");
+                
+                var groups = new List<string>();
+                var tempPattern = regexPattern;
+                var groupMatches = Regex.Matches(tempPattern, @"\(.*?\)");
+                foreach (Match gm in groupMatches)
+                {
+                    var placeholder = $"__GROUP_{groups.Count}__";
+                    groups.Add(gm.Value);
+                    tempPattern = tempPattern.Replace(gm.Value, placeholder);
+                }
+                
+                var escaped = Regex.Escape(tempPattern);
+                for (int i = 0; i < groups.Count; i++)
+                {
+                    escaped = escaped.Replace(Regex.Escape($"__GROUP_{i}__"), groups[i]);
+                }
+                
+                escaped = escaped.Replace("\\ ", " ");
+                escaped = escaped.Replace("\\\"", "\"");
+                escaped = escaped.Replace("\\'", "'");
+                
+                if (!escaped.StartsWith("^")) escaped = "^" + escaped;
+                if (!escaped.EndsWith("$")) escaped = escaped + "$";
+                
+                var regex = new Regex(escaped, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                if (regex.IsMatch(gherkinStep))
+                    return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Regex conversion error: {ex.Message}");
+            }
+
+            try
+            {
+                if (stepDefPattern.StartsWith("^") || stepDefPattern.EndsWith("$") || 
+                    stepDefPattern.Contains("\\d") || stepDefPattern.Contains("\\w") ||
+                    stepDefPattern.Contains(".*") || stepDefPattern.Contains(".+"))
+                {
+                    var regex = new Regex(stepDefPattern, RegexOptions.IgnoreCase);
+                    if (regex.IsMatch(gherkinStep))
+                        return true;
+                }
+            }
+            catch { }
+
+            var cleanStep = Regex.Replace(gherkinStep, @"[^\w\s]", "");
+            var cleanPattern = Regex.Replace(stepDefPattern, @"[^\w\s]", "");
+            cleanStep = Regex.Replace(cleanStep, @"\s+", " ").Trim();
+            cleanPattern = Regex.Replace(cleanPattern, @"\s+", " ").Trim();
+            
+            if (string.Equals(cleanStep, cleanPattern, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return false;
+        }
+        private string ExtractMethodName(string line)
+        {
+            var javaMatch = Regex.Match(line, @"(?:public|private|protected)\s+\w+\s+(\w+)\s*\(");
+            if (javaMatch.Success)
+                return javaMatch.Groups[1].Value;
+            
+            var csharpMatch = Regex.Match(line, @"(?:public|private|protected|internal)\s+\w+\s+(\w+)\s*\(");
+            if (csharpMatch.Success)
+                return csharpMatch.Groups[1].Value;
+            
+            return "Unknown";
         }
 
         [HttpGet]
@@ -1969,58 +2086,6 @@ namespace Gheetah.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = $"Failed: {ex.Message}" });
-            }
-        }
-
-        private bool StepTextsMatch(string gherkinStep, string stepDefPattern)
-        {
-            gherkinStep = gherkinStep.Trim();
-            stepDefPattern = stepDefPattern.Trim();
-
-            if (string.Equals(gherkinStep, stepDefPattern, StringComparison.OrdinalIgnoreCase))
-                return true;
-
-            try
-            {
-                var escaped = Regex.Escape(stepDefPattern);
-                
-                escaped = Regex.Replace(escaped, @"\\\(\\\.\*\\\)", ".*?");
-                
-                escaped = Regex.Replace(escaped, @"\\\(\\\.\+\+\\\)", ".+?");
-                
-                escaped = Regex.Replace(escaped, @"\\\([^)]+\\\)", ".*?");
-                
-                escaped = escaped.Replace("\\{string\\}", ".*?");
-                escaped = escaped.Replace("\\{int\\}", "\\d+");
-                escaped = escaped.Replace("\\{word\\}", "\\w+");
-                escaped = escaped.Replace("\\{float\\}", "\\d+(\\.\\d+)?");
-                escaped = escaped.Replace("\\{.*?\\}", ".*?");
-                
-                escaped = escaped.Replace("\\\"\\\"", "\"");
-                escaped = escaped.Replace("\"\"", "\"");
-                
-                var regex = new Regex("^" + escaped + "$", RegexOptions.IgnoreCase | RegexOptions.Singleline);
-                return regex.IsMatch(gherkinStep);
-            }
-            catch
-            {
-                return WildcardMatch(gherkinStep, stepDefPattern);
-            }
-        }
-
-        private bool WildcardMatch(string text, string pattern)
-        {
-            var wildcardPattern = Regex.Replace(pattern, @"\([^)]+\)", "*");
-            wildcardPattern = Regex.Replace(wildcardPattern, @"\*+", "*");
-            var escaped = Regex.Escape(wildcardPattern).Replace("\\*", ".*?");
-            
-            try
-            {
-                return Regex.IsMatch(text, "^" + escaped + "$", RegexOptions.IgnoreCase);
-            }
-            catch
-            {
-                return false;
             }
         }
 
