@@ -1,0 +1,959 @@
+﻿@model Gheetah.Models.EditorModel.InternalPR
+@{
+    ViewData["Title"] = "PR Review #" + Model.PR_Id;
+    var userEmail = User.Identity?.Name;
+    bool isCreator = Model.CreatedByEmail == userEmail;
+    bool isReviewer = ViewBag.IsReviewer == true && Model.Status == "Open";
+}
+
+<style>
+    .steps-vertical .step-item {
+        margin-bottom: 1.75rem;
+    }
+
+    .step-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 40px;
+        flex-shrink: 0;
+    }
+
+    .timeline-content {
+        border-left: 2px solid #e9ecef;
+        padding-left: 1rem;
+    }
+
+    .step-title {
+        font-size: 0.9rem;
+    }
+
+    .pr-tabs .nav-link {
+        border: none;
+        color: #616e7e;
+        font-weight: 500;
+        padding: 12px 20px;
+        position: relative;
+    }
+
+        .pr-tabs .nav-link.active {
+            color: #206bc4;
+            background: transparent;
+            font-weight: 600;
+        }
+
+            .pr-tabs .nav-link.active::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: #206bc4;
+            }
+
+    .comment-hint-glyph {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23206bc4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        cursor: pointer;
+    }
+
+    .comment-zone-container {
+        background: #ffffff;
+        border: 1px solid #dce1e7;
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        margin: 5px 15px 5px 0px;
+        z-index: 2000 !important;
+        pointer-events: all !important;
+        overflow: hidden;
+        height: 130px !important;
+    }
+
+    #draft-text {
+        height: 75px !important;
+        font-size: 13px;
+        resize: none;
+    }
+
+    .comment-zone-container textarea {
+        background: white !important;
+        color: black !important;
+        cursor: text !important;
+    }
+
+    .comment-header {
+        background: #f6f8fa;
+        padding: 8px 12px;
+        border-bottom: 1px solid #e1e4e8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .list-group-item-action.active {
+        background-color: #e7f0fb !important;
+        color: #206bc4 !important;
+        border-right: 4px solid #206bc4 !important;
+        font-weight: 600;
+    }
+    #conflicts {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+        #conflicts > .conflicts-header {
+            flex-shrink: 0;
+        }
+
+        #conflicts > div:last-child {
+            flex: 1;
+            min-height: 0;
+        }
+
+    #conflict-diff-container {
+        min-height: 300px;
+    }
+
+    .monaco-diff-editor {
+        height: 100% !important;
+    }
+
+</style>
+
+<div class="page-wrapper">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center my-3 p-2 bg-white border rounded shadow-sm">
+            <div class="d-flex align-items-center">
+                <span class="avatar avatar-md me-3" style="background-image: url(https://ui-avatars.com/api/?name=@Model.CreatedByEmail&background=random)"></span>
+                <div>
+                    <h2 class="h2 mb-0">@Model.Title</h2>
+                    <div class="text-muted small">
+                        <span class="badge bg-blue-lt me-1">#@Model.PR_Id</span>
+                        <strong>@Model.CreatedBy</strong> wants to merge <code>@Model.SourceBranch</code> into <code>@Model.TargetBranch</code>
+                    </div>
+                </div>
+            </div>
+            <div id="pr-action-zone" class="d-flex gap-2">
+                @if (Model.Status == "Merged")
+                {
+                    <span class="badge bg-success fs-6 p-2">
+                        <i class="ti ti-check me-1"></i> Completed
+                    </span>
+                }
+                else
+                {
+                    @if (isReviewer)
+                    {
+                        <button class="btn btn-outline-success" onclick="updatePRStatus('Approved')">
+                            <i class="ti ti-check me-1"></i> Approve
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="updatePRStatus('Rejected')">
+                            <i class="ti ti-x me-1"></i> Reject
+                        </button>
+                    }
+                    @if (isCreator)
+                    {
+                        <button id="btn-complete-pr" class="btn btn-success" onclick="completePR()" disabled>
+                            <i class="ti ti-git-merge me-1"></i> Complete Merge
+                        </button>
+                    }
+                }
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs pr-tabs border-bottom mb-0">
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#overview">Overview</a></li>
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#files">Files</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#updates">Updates</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#conflicts">Conflicts</a></li>
+        </ul>
+
+        <div class="tab-content border border-top-0 bg-white" style="height: calc(100vh - 210px);">
+            <div class="tab-pane fade show active h-100" id="files">
+                <div class="row g-0 h-100">
+                    <div class="col-3 border-end overflow-auto h-100 bg-light">
+                        <div class="p-2 fw-bold text-muted small border-bottom bg-white d-flex justify-content-between">
+                            <span>CHANGED FILES</span>
+                            <span class="badge bg-blue-lt" id="file-count">0</span>
+                        </div>
+                        <div id="pr-file-list" class="list-group list-group-flush"></div>
+                    </div>
+                    <div class="col-9 h-100 position-relative">
+                        <div id="diff-container" style="height: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade h-100 overflow-auto" id="overview">
+                <div class="justify-content-between p-5">
+                    <!-- Pipeline Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Merge & Build Pipeline</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="steps steps-vertical">
+                                <!-- Source Build Step -->
+                                <div class="step-item" id="step-source-build">
+                                    <div class="step-icon bg-secondary-lt" id="step-source-build-icon">
+                                        <i class="ti ti-loader" id="step-source-build-spinner" style="display:none;"></i>
+                                        <i class="ti ti-brand-c-sharp" id="step-source-build-icon-static"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-title d-flex justify-content-between">
+                                            <span>Build (Source Branch)</span>
+                                            <span id="source-build-status-badge" class="badge bg-secondary">Pending</span>
+                                        </div>
+                                        <div id="source-build-message" class="text-secondary small"></div>
+                                    </div>
+                                </div>
+                                <!-- Merge Step -->
+                                <div class="step-item" id="step-merge">
+                                    <div class="step-icon bg-secondary-lt" id="step-merge-icon">
+                                        <i class="ti ti-loader" id="step-merge-spinner" style="display:none;"></i>
+                                        <i class="ti ti-git-merge" id="step-merge-icon-static"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-title d-flex justify-content-between">
+                                            <span>Merge</span>
+                                            <span id="merge-status-badge" class="badge bg-secondary">Pending</span>
+                                        </div>
+                                        <div id="merge-message" class="text-secondary small"></div>
+                                    </div>
+                                </div>
+                                <!-- Target Build Step -->
+                                <div class="step-item" id="step-target-build">
+                                    <div class="step-icon bg-secondary-lt" id="step-target-build-icon">
+                                        <i class="ti ti-loader" id="step-target-build-spinner" style="display:none;"></i>
+                                        <i class="ti ti-settings" id="step-target-build-icon-static"></i>
+                                    </div>
+                                    <div class="step-content">
+                                        <div class="step-title d-flex justify-content-between">
+                                            <span>Build (Target Branch)</span>
+                                            <span id="target-build-status-badge" class="badge bg-secondary">Pending</span>
+                                        </div>
+                                        <div id="target-build-message" class="text-secondary small"></div>
+                                        <div id="retry-build-btn-container" style="display:none;" class="mt-2">
+                                            <button class="btn btn-sm btn-outline-danger" onclick="retryBuild()">Retry Target Build</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Approvals Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Approvals</h3>
+                        </div>
+                        <div class="card-body" id="approvals-list">
+                            <div class="text-muted">Loading approvals...</div>
+                        </div>
+                    </div>
+
+                    <!-- Comments Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Latest Comments</h3>
+                        </div>
+                        <div class="card-body" id="comments-list">
+                            <div class="text-muted">Loading comments...</div>
+                        </div>
+                    </div>
+
+                    <!-- Last Commit Card -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h3 class="card-title">Last Commit</h3>
+                        </div>
+                        <div class="card-body" id="last-commit-info">
+                            <div class="text-muted">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade h-100 overflow-auto" id="updates">
+                <div class="justify-content-between p-5">
+                    <div id="activity-steps" class="steps-vertical">
+                        <div class="text-muted text-center py-5">Loading activities...</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade h-100 overflow-auto" id="conflicts">
+                <div class="conflicts-header bg-white border-bottom px-3 py-2 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="ti ti-git-merge fs-5 text-muted"></i>
+                        <span class="fw-semibold">Conflict Resolver</span>
+                        <span class="badge bg-red-lt" id="conflict-file-count-header">0 conflicts</span>
+                    </div>
+                    <div class="text-muted small">
+                        <i class="ti ti-info-circle me-1"></i> Resolve conflicts by choosing which version to keep
+                    </div>
+                </div>
+
+                <div style="display: flex; min-height: 400px; height: calc(100% - 50px);">
+                    <div class="col-3 border-end overflow-auto bg-light" style="height: 100%;">
+                        <div class="p-2 fw-bold text-muted small border-bottom bg-white d-flex justify-content-between">
+                            <span><i class="ti ti-file-diff me-1"></i> CONFLICTED FILES</span>
+                            <span class="badge bg-red-lt" id="conflict-file-count">0</span>
+                        </div>
+                        <div id="conflict-file-list" class="list-group list-group-flush"></div>
+                    </div>
+
+                    <div class="col-9" style="display: flex; flex-direction: column; height: 100%;">
+                        <div class="diff-toolbar bg-light px-3 py-2 border-bottom d-flex justify-content-end gap-2" id="resolve-toolbar" style="display: none;">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="resolveConflict('ours')">
+                                <i class="ti ti-folders me-1"></i> Accept OURS (Source)
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="resolveConflict('theirs')">
+                                <i class="ti ti-file-diff me-1"></i> Accept THEIRS (Target)
+                            </button>
+                        </div>
+                        <div id="conflict-diff-container" style="flex: 1; min-height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="modal-confirm" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <i class="ti ti-alert-triangle fs-1 text-warning mb-2"></i>
+                <h3 id="confirm-title">Are you sure?</h3>
+                <div id="confirm-text" class="text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary me-auto" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirm-yes-btn">Yes, proceed</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="modal-alert" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <i id="alert-icon" class="ti ti-info-circle fs-1 mb-2"></i>
+                <h3 id="alert-title">Notification</h3>
+                <div id="alert-text" class="text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var existingDefine = window.define;
+        window.define = null;
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+    <script>
+        var monacoRequire = window.require;
+        if (existingDefine) window.define = existingDefine;
+
+        monacoRequire.config({
+            paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' },
+            'vs/nls': { availableLanguages: { '*': '' } }
+        });
+    </script>
+
+    <script>
+        var projectId = "@Model.ProjectId";
+        var sourceBranch = "@Model.SourceBranch";
+        var targetBranch = "@Model.TargetBranch";
+        var prId = "@Model.PR_Id";
+        var diffEditor = null;
+        var currentFilePath = "";
+        var currentZoneIds = [];
+        var hoverDecorations = [];
+
+        var statusPollInterval = null;
+        var isPipelineRunning = false;
+
+        $(document).ready(function () {
+            monacoRequire(['vs/editor/editor.main'], function () {
+                initMonacoDiffEditor();
+                loadChangedFiles();
+            });
+            
+            if ("@Model.Status" === "Merged") {
+            showCompletedBadge();
+            } else {
+                loadPersistedPipelineStatus();
+            }
+        });
+
+        function initMonacoDiffEditor() {
+            diffEditor = monaco.editor.createDiffEditor(document.getElementById('diff-container'), {
+                theme: 'vs',
+                automaticLayout: true,
+                readOnly: true,
+                glyphMargin: true,
+                renderSideBySide: true
+            });
+
+            const modifiedEditor = diffEditor.getModifiedEditor();
+
+            modifiedEditor.onMouseMove(function (e) {
+                if (e.target.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS || e.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+                    const line = e.target.position.lineNumber;
+                    const newDecorations = [{
+                        range: new monaco.Range(line, 1, line, 1),
+                        options: { glyphMarginClassName: 'comment-hint-glyph' }
+                    }];
+                    hoverDecorations = modifiedEditor.deltaDecorations(hoverDecorations, newDecorations);
+                }
+            });
+
+            modifiedEditor.onMouseDown(function (e) {
+                if (e.target.element && e.target.element.className.includes('comment-hint-glyph')) {
+                    showCommentInput(e.target.position.lineNumber);
+                }
+            });
+        }
+
+        function loadChangedFiles() {
+            $.get('/Editor/GetFilesBetweenBranches', { projectId: projectId, source: sourceBranch, target: targetBranch, prId: prId }, function (files) {
+                $('#file-count').text(files.length);
+                let html = '';
+                files.forEach(file => {
+                    let safePath = file.replace(/\\/g, "/");
+                    html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="loadDiff('${safePath}', this)">
+                                <i class="ti ti-file-diff text-warning me-2"></i> ${safePath.split('/').pop()}
+                             </a>`;
+                });
+                $('#pr-file-list').html(html);
+                if (files.length > 0) loadDiff(files[0].replace(/\\/g, "/"), $('#pr-file-list a').first());
+            });
+        }
+
+        function loadDiff(filePath, element) {
+            $('.list-group-item').removeClass('active');
+            $(element).addClass('active');
+            currentFilePath = filePath;
+            $.get('/Editor/GetFileDiffBetweenBranches', { projectId: projectId, filePath: filePath, source: sourceBranch, target: targetBranch, prId: prId }, function (res) {
+
+                var fileName = filePath.split('/').pop();
+                var lang = getLanguageByExtension(fileName);
+
+                diffEditor.setModel({
+                    original: monaco.editor.createModel(res.originalContent, lang),
+                    modified: monaco.editor.createModel(res.modifiedContent, lang)
+                });
+                renderComments(filePath);
+            });
+        }
+
+        function renderComments(filePath) {
+            const editor = diffEditor.getModifiedEditor();
+            editor.changeViewZones(accessor => {
+                currentZoneIds.forEach(z => accessor.removeZone(z.id));
+                currentZoneIds = [];
+            });
+
+            $.get('/Editor/GetPRComments', { prId: prId, filePath: filePath }, function (comments) {
+                editor.changeViewZones(accessor => {
+                    comments.filter(c => !c.parentId).forEach(c => {
+                        const node = document.createElement('div');
+                        node.className = "comment-zone-container";
+                        node.innerHTML = `
+                            <div class="comment-header">
+                                <div><strong>${c.author}</strong></div>
+                                <select class="form-select form-select-sm w-auto py-0" onchange="resolveComment('${c.id}')">
+                                    <option value="0" ${c.status === 0 ? 'selected' : ''}>Active</option>
+                                    <option value="1" ${c.status === 1 ? 'selected' : ''}>Resolved</option>
+                                </select>
+                            </div>
+                            <div class="p-3">${c.content}</div>`;
+                        const zoneId = accessor.addZone({ afterLineNumber: c.lineNumber, heightInLines: 6, domNode: node });
+                        currentZoneIds.push({ id: zoneId });
+                    });
+                });
+                checkPRCompletionStatus(comments);
+            });
+        }
+
+        function showCommentInput(line) {
+            removeDraftZones();
+            const node = document.createElement('div');
+            node.className = "comment-zone-container p-2";
+            node.innerHTML = `
+                <div class="d-flex align-items-start">
+                    <span class="avatar avatar-sm me-2" style="background-image: url(https://ui-avatars.com/api/?name=@userEmail)"></span>
+                    <div class="flex-grow-1">
+                        <textarea id="draft-text" class="form-control mb-2" placeholder="Write a comment..."></textarea>
+                        <div class="d-flex justify-content-end gap-2 pb-1">
+                            <button class="btn btn-sm btn-link py-0" onclick="removeDraftZones()">Cancel</button>
+                            <button class="btn btn-sm btn-primary py-1" id="btn-submit-comment">Comment</button>
+                        </div>
+                    </div>
+                </div>`;
+            const textarea = node.querySelector('textarea');
+            textarea.addEventListener('mousedown', (e) => e.stopPropagation());
+            textarea.addEventListener('keydown', (e) => e.stopPropagation());
+            const submitBtn = node.querySelector('#btn-submit-comment');
+            submitBtn.onclick = function() { addComment(line); };
+
+            diffEditor.getModifiedEditor().changeViewZones(accessor => {
+                const zoneId = accessor.addZone({
+                    afterLineNumber: line,
+                    heightInLines: 12,
+                    domNode: node,
+                    suppressMouseDown: false
+                });
+                currentZoneIds.push({ id: zoneId, isDraft: true });
+            });
+            setTimeout(() => {
+                const viewZoneElement = node.closest('.view-zones');
+                if (viewZoneElement) viewZoneElement.removeAttribute('aria-hidden');
+                textarea.focus();
+            }, 50);
+        }
+
+        function addComment(line) {
+            const text = $('#draft-text').val();
+            if (!text) return;
+            $.ajax({
+                url: '/Editor/AddPRComment', type: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ PR_Id: prId, FilePath: currentFilePath, LineNumber: parseInt(line), Content: text }),
+                success: function() { renderComments(currentFilePath); }
+            });
+        }
+
+        function removeDraftZones() {
+            diffEditor.getModifiedEditor().changeViewZones(accessor => {
+                currentZoneIds.filter(z => z.isDraft).forEach(z => accessor.removeZone(z.id));
+            });
+            currentZoneIds = currentZoneIds.filter(z => !z.isDraft);
+        }
+
+        function resolveComment(id) {
+            $.post('/Editor/ResolveComment', { commentId: id }, function() { renderComments(currentFilePath); });
+        }
+
+        function checkPRCompletionStatus(comments) {
+            const btn = $('#btn-complete-pr');
+            if (btn.length === 0) return;
+
+            const prStatus = "@Model.Status";
+
+            if (prStatus === "ConflictsResolved" || prStatus === "Merged") {
+                btn.prop('disabled', true);
+                if (prStatus === "ConflictsResolved") {
+                    btn.html('<i class="ti ti-loader me-1"></i> Building Target...');
+                }
+                return;
+            }
+
+            const isApproved = prStatus === "Approved";
+            const hasReviewers = @(Model.Reviewers.Count > 0 ? "true" : "false");
+            const hasActive = comments.some(c => c.status === 0);
+            const shouldEnable = !hasActive && (!hasReviewers || isApproved);
+            btn.prop('disabled', !shouldEnable);
+        }
+
+        function loadActivities() {
+            $.get('/Editor/GetPRActivities', { prId: prId }, function (activities) {
+                const container = $('#activity-steps');
+                if (!activities || activities.length === 0) {
+                    container.html(`<div class="empty py-5"><div class="empty-icon text-muted mb-3"><i class="ti ti-message-circle-off fs-1"></i></div><p class="empty-title text-start">No activities yet</p><p class="empty-subtitle text-secondary text-start">When something happens on this pull request, it will appear here.</p></div>`);
+                    return;
+                }
+                let html = `<div class="row"><div class="col-md-9 col-lg-7"><ul class="steps steps-vertical">`;
+                activities.forEach(act => {
+                    const { icon, color } = getActivityTheme(act.actionType);
+                    const actorName = act.actor.split('@@')[0];
+                    const formattedDate = new Date(act.timestamp).toLocaleString([], { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    html += `<li class="step-item"><div class="step-icon bg-${color}-lt"><i class="ti ${icon} text-${color}"></i></div><div class="step-content"><div class="d-flex align-items-center justify-content-between mb-1"><h4 class="step-title mb-0"><span class="text-dark fw-bold">${escapeHtml(actorName)}</span><small class="text-muted ms-2 fw-normal">${formattedDate}</small></h4><span class="badge badge-outline text-${color} fw-medium border-${color}-subtle px-2" style="font-size: 0.7rem;">${act.actionType}</span></div><div class="text-secondary small" style="line-height: 1.4;">${escapeHtml(act.details)}</div></div></li>`;
+                });
+                html += `</ul></div></div>`;
+                container.html(html);
+            });
+        }
+
+        function getActivityTheme(type) {
+            const themes = {
+                'Created':   { icon: 'ti-git-pull-request', color: 'blue' },
+                'Approved':  { icon: 'ti-circle-check',     color: 'green' },
+                'Rejected':  { icon: 'ti-circle-x',         color: 'red' },
+                'Merged':    { icon: 'ti-git-merge',       color: 'purple' },
+                'Commented': { icon: 'ti-message-dots',    color: 'orange' },
+                'Open':      { icon: 'ti-eye',             color: 'azure' }
+            };
+            return themes[type] || { icon: 'ti-dots-circle-horizontal', color: 'secondary' };
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        $('a[data-bs-toggle="tab"][href="#updates"]').on('shown.bs.tab', function () { loadActivities(); });
+
+        window.completePR = function() {
+            showConfirm("Complete Merge", "Start merge and build process?", function() {
+                $.post('/Editor/StartMergeAndBuild', { prId: prId }, function(response) {
+                    if (response.success) {
+                        $('a[data-bs-toggle="tab"][href="#overview"]').tab('show');
+                        startPolling();
+                    } else {
+                        showAlert("Error", response.message || "Could not start merge/build process", "danger");
+                    }
+                }).fail(function(err) {
+                    showAlert("Error", err.responseText || "Unknown error", "danger");
+                });
+            });
+        };
+
+        function startPolling() {
+            if (statusPollInterval) clearInterval(statusPollInterval);
+            isPipelineRunning = true;
+
+            const prStatus = "@Model.Status";
+            if (prStatus === "ConflictsResolved") {
+                updateStepUI('source-build', 'success', 'Source branch build succeeded');
+                updateStepUI('merge', 'success', 'Merge completed after conflict resolution');
+                updateStepUI('target-build', 'running');
+            } else {
+                updateStepUI('source-build', 'pending');
+                updateStepUI('merge', 'pending');
+                updateStepUI('target-build', 'pending');
+            }
+
+            $('#retry-build-btn-container').hide();
+
+            statusPollInterval = setInterval(function() {
+                $.get('/Editor/GetMergeBuildStatus', { prId: prId }, function(status) {
+                    updateStepUI('source-build', status.sourceBuildStatus, status.sourceBuildMessage);
+                    updateStepUI('merge', status.mergeStatus, status.mergeMessage);
+                    updateStepUI('target-build', status.targetBuildStatus, status.targetBuildMessage);
+
+                    if (status.targetBuildStatus === 'failed' && status.mergeStatus === 'success') {
+                        $('#retry-build-btn-container').show();
+                    } else {
+                        $('#retry-build-btn-container').hide();
+                    }
+
+                    if (status.isCompleted) {
+                        clearInterval(statusPollInterval);
+                        isPipelineRunning = false;
+                        showCompletedBadge();
+                        showAlert("Success", "Source build, merge, and target build completed successfully!", "success");
+                        setTimeout(() => location.reload(), 2000);
+                    } else if (status.hasError && status.targetBuildStatus === 'failed') {
+                        clearInterval(statusPollInterval);
+                        isPipelineRunning = false;
+                        showCompletedBadge();
+                    }
+                }).fail(function() {});
+            }, 1500);
+        }
+
+        function updateStepUI(step, status, message) {
+            let stepId, badgeId, msgId, spinnerId, staticIconId, iconClass;
+            if (step === 'source-build') {
+                stepId = '#step-source-build';
+                badgeId = '#source-build-status-badge';
+                msgId = '#source-build-message';
+                spinnerId = '#step-source-build-spinner';
+                staticIconId = '#step-source-build-icon-static';
+                iconClass = 'ti ti-brand-c-sharp';
+            } else if (step === 'merge') {
+                stepId = '#step-merge';
+                badgeId = '#merge-status-badge';
+                msgId = '#merge-message';
+                spinnerId = '#step-merge-spinner';
+                staticIconId = '#step-merge-icon-static';
+                iconClass = 'ti ti-git-merge';
+            } else {
+                stepId = '#step-target-build';
+                badgeId = '#target-build-status-badge';
+                msgId = '#target-build-message';
+                spinnerId = '#step-target-build-spinner';
+                staticIconId = '#step-target-build-icon-static';
+                iconClass = 'ti ti-settings';
+            }
+
+            const badgeElem = $(badgeId);
+            const msgElem = $(msgId);
+            const iconDiv = $(`${stepId} .step-icon`);
+            const spinner = $(spinnerId);
+            const staticIcon = $(staticIconId);
+
+            badgeElem.removeClass('bg-secondary bg-warning bg-success bg-danger');
+            iconDiv.removeClass('bg-secondary-lt bg-warning-lt bg-success-lt bg-danger-lt');
+            spinner.hide();
+            staticIcon.show();
+
+            if (status === 'pending') {
+                badgeElem.addClass('badge bg-azure text-azure-fg').text('Pending');
+                iconDiv.addClass('bg-secondary-lt');
+                staticIcon.attr('class', iconClass);
+            } else if (status === 'running') {
+                badgeElem.addClass('badge bg-yellow text-yellow-fg').text('Running');
+                iconDiv.addClass('bg-warning-lt');
+                staticIcon.hide();
+                spinner.show();
+            } else if (status === 'success') {
+                badgeElem.addClass('badge bg-green text-green-fg').text('Success');
+                iconDiv.addClass('bg-success-lt');
+                staticIcon.attr('class', 'ti ti-check');
+            } else if (status === 'failed') {
+                badgeElem.addClass('badge bg-red text-red-fg').text('Failed');
+                iconDiv.addClass('bg-danger-lt');
+                staticIcon.attr('class', 'ti ti-x');
+            }
+            if (message) msgElem.html(message);
+        }
+
+        function retryBuild() {
+            $.post('/Editor/RetryBuild', { prId: prId }, function(response) {
+                if (response.success) {
+                    startPolling();
+                } else {
+                    showAlert("Error", response.message || "Could not retry build", "danger");
+                }
+            });
+        }
+
+        function showCompletedBadge() {
+            const prStatus = "@Model.Status";
+            if (prStatus === "Merged") {
+                $('#pr-action-zone').html('<span class="badge badge-sm bg-green-lt text-uppercase ms-auto"><i class="ti ti-check me-1"></i> Completed</span>');
+            } else if (prStatus === "ConflictsResolved") {
+                $('#pr-action-zone').html('<span class="badge badge-sm bg-yellow-lt text-uppercase ms-auto"><i class="ti ti-loader me-1"></i> Building...</span>');
+            } else if (prStatus === "BuildFailed") {
+                $('#pr-action-zone').html('<span class="badge badge-sm bg-red-lt text-uppercase ms-auto"><i class="ti ti-x me-1"></i> Build Failed</span>');
+            }
+        }
+
+        function loadPersistedPipelineStatus() {
+            $.get('/Editor/GetMergeBuildStatus', { prId: prId }, function(status) {
+                if (status && status.sourceBuildStatus) {
+                    updateStepUI('source-build', status.sourceBuildStatus, status.sourceBuildMessage);
+                    updateStepUI('merge', status.mergeStatus, status.mergeMessage);
+                    updateStepUI('target-build', status.targetBuildStatus, status.targetBuildMessage);
+
+                    if (status.isCompleted) {
+                        isPipelineRunning = false;
+                        if (statusPollInterval) clearInterval(statusPollInterval);
+                        showCompletedBadge();
+                    }
+                }
+            });
+        }
+
+        function loadOverviewData() {
+            loadPersistedPipelineStatus();
+            $.get('/Editor/GetPRActivities', { prId: prId }, function(activities) {
+                const approvals = activities.filter(a => a.actionType === 'Approved');
+                let approvalsHtml = '';
+                if (approvals.length === 0) {
+                    approvalsHtml = '<div class="text-muted">No approvals yet.</div>';
+                } else {
+                    approvals.forEach(app => {
+                        const actor = app.actor.split('@@')[0];
+                        approvalsHtml += `<div class="d-flex mb-2"><i class="ti ti-circle-check text-success me-2"></i> <strong>${escapeHtml(actor)}</strong> approved on ${new Date(app.timestamp).toLocaleString()}</div>`;
+                    });
+                }
+                $('#approvals-list').html(approvalsHtml);
+
+                const comments = activities.filter(a => a.actionType === 'Commented').slice(-5);
+                let commentsHtml = '';
+                if (comments.length === 0) {
+                    commentsHtml = '<div class="text-muted">No comments yet.</div>';
+                } else {
+                    comments.forEach(comm => {
+                        const actor = comm.actor.split('@@')[0];
+                        commentsHtml += `<div class="d-flex mb-2"><i class="ti ti-message-dots text-info me-2"></i> <strong>${escapeHtml(actor)}</strong>: ${escapeHtml(comm.details)}<br/><small class="text-muted">${new Date(comm.timestamp).toLocaleString()}</small></div>`;
+                    });
+                }
+                $('#comments-list').html(commentsHtml);
+            });
+
+            $.get('/Editor/GetPushHistory', { projectId: projectId }, function(history) {
+                const related = history.find(h => h.branchName === sourceBranch);
+                if (related) {
+                    $('#last-commit-info').html(`<div><i class="ti ti-code"></i> Commit: <code>${related.commitHash?.substring(0,7)}</code><br/><strong>${escapeHtml(related.pushedBy)}</strong> pushed on ${related.pushedAt}<br/></div>`);
+                } else {
+                    $('#last-commit-info').html('<div class="text-muted">No commit information found for this branch.</div>');
+                }
+            });
+        }
+
+        $('a[data-bs-toggle="tab"][href="#overview"]').on('shown.bs.tab', function() {
+            loadOverviewData();
+            if (isPipelineRunning) startPolling();
+        });
+
+        function showConfirm(title, message, onConfirm) {
+            $('#confirm-title').text(title); $('#confirm-text').text(message);
+            const modal = new bootstrap.Modal(document.getElementById('modal-confirm'));
+            $('#confirm-yes-btn').off('click').one('click', function() { modal.hide(); onConfirm(); });
+            modal.show();
+        }
+
+        var conflictDiffEditor = null;
+        var activeConflictFile = "";
+        var allConflictedFiles = [];
+
+        $('a[data-bs-toggle="tab"][href="#conflicts"]').on('shown.bs.tab', function() {
+            loadConflictedFiles();
+        });
+
+        function loadConflictedFiles() {
+            $.get('/Editor/GetConflictedFiles', { prId: prId }, function(files) {
+                allConflictedFiles = files;
+                $('#conflict-file-count').text(files.length);
+                $('#conflict-file-count-header').text(files.length + ' conflict' + (files.length !== 1 ? 's' : ''));
+
+                let html = '';
+                if (files.length === 0) {
+                    html = '<div class="text-muted text-center py-4">No conflicts detected</div>';
+                    if (conflictDiffEditor) {
+                        conflictDiffEditor.setModel({
+                            original: monaco.editor.createModel('', 'plaintext'),
+                            modified: monaco.editor.createModel('', 'plaintext')
+                        });
+                    }
+                    $('#resolve-toolbar').hide();
+                    checkPRCompletionStatus([]);
+                } else {
+                    files.forEach(file => {
+                        let safePath = file.replace(/\\/g, "/");
+                        let fileName = safePath.split('/').pop();
+                        html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick="openConflictFile('${safePath}', this)">
+                                    <i class="ti ti-alert-triangle text-danger me-2"></i> ${fileName}
+                                 </a>`;
+                    });
+                }
+
+                $('#conflict-file-list').html(html);
+
+                if (files.length > 0) {
+                    $('#conflict-file-list a').first().click();
+                }
+            });
+        }
+
+        function openConflictFile(filePath, element) {
+            $('.list-group-item').removeClass('active');
+            $(element).addClass('active');
+            activeConflictFile = filePath;
+
+            $.get('/Editor/GetConflictContent', { prId: prId, filePath: filePath }, function(data) {
+                if (!conflictDiffEditor) {
+                    conflictDiffEditor = monaco.editor.createDiffEditor(document.getElementById('conflict-diff-container'), {
+                        theme: 'vs',
+                        automaticLayout: true,
+                        readOnly: true,
+                        renderSideBySide: true
+                    });
+                }
+
+                var fileName = filePath.split('/').pop();
+                var lang = getLanguageByExtension(fileName);
+
+                conflictDiffEditor.setModel({
+                    original: monaco.editor.createModel(data.theirsContent, lang),
+                    modified: monaco.editor.createModel(data.oursContent, lang)
+                });
+                $('#resolve-toolbar').show();
+            });
+        }
+
+        function resolveConflict(resolution) {
+            if (!activeConflictFile) return;
+
+            var resolutionText = resolution === 'ours' ? 'OURS (Source Branch)' : 'THEIRS (Target Branch)';
+            showConfirm("Confirm Resolution", `Accept ${resolutionText} version for this file?`, function() {
+                $.post('/Editor/ResolveConflict', {
+                    prId: prId,
+                    filePath: activeConflictFile,
+                    resolution: resolution
+                }, function(res) {
+                    if (res.success) {
+                        if (res.allResolved) {
+                            showAlert("Success", "All conflicts resolved! Target build started in background.", "success", function() {
+                                $('a[data-bs-toggle="tab"][href="#overview"]').tab('show');
+                                startPolling();
+                            });
+                        } else {
+                            showAlert("Success", "Conflict resolved for " + activeConflictFile.split('/').pop(), "success");
+                            loadConflictedFiles();
+                        }
+                    } else {
+                        showAlert("Error", "Failed to resolve conflict.", "danger");
+                    }
+                }).fail(function(err) {
+                    showAlert("Error", err.responseText || "Unknown error", "danger");
+                });
+            });
+        }
+
+        function alertInfo(msg) {
+            showAlert("Info", msg, "info");
+        }
+
+        function showAlert(title, message, type, onClose) {
+            $('#alert-title').text(title);
+            $('#alert-text').text(message);
+
+            let iconClass = 'ti ti-info-circle fs-1 text-info';
+            if (type === 'success') {
+                iconClass = 'ti ti-check fs-1 text-success';
+            } else if (type === 'danger') {
+                iconClass = 'ti ti-alert-circle fs-1 text-danger';
+            } else if (type === 'warning') {
+                iconClass = 'ti ti-alert-triangle fs-1 text-warning';
+            }
+
+            $('#alert-icon').attr('class', iconClass);
+
+            const modalEl = document.getElementById('modal-alert');
+            const modal = new bootstrap.Modal(modalEl);
+            if (onClose) $(modalEl).off('hidden.bs.modal').one('hidden.bs.modal', onClose);
+            modal.show();
+        }
+
+        window.updatePRStatus = function(s) {
+            $.post('/Editor/UpdatePRStatus', { prId: prId, status: s }, () => location.reload());
+        };
+        
+        function getLanguageByExtension(fileName) {
+            var ext = fileName.split('.').pop().toLowerCase();
+            var map = {
+                'cs': 'csharp',
+                'java': 'java',
+                'feature': 'gherkin',
+                'json': 'json',
+                'csproj': 'xml',
+                'xml': 'xml',
+                'js': 'javascript',
+                'ts': 'typescript',
+                'html': 'html',
+                'css': 'css',
+                'py': 'python',
+                'rb': 'ruby',
+                'md': 'markdown'
+            };
+            return map[ext] || 'plaintext';
+        }
+    </script>
+}

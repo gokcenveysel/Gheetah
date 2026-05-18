@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<OutputType>Library</OutputType>
+		<IsTestProject>true</IsTestProject>
+		<IsPackable>false</IsPackable>
+
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>annotations</Nullable>
+		<GenerateProgramFile>true</GenerateProgramFile>
+
+		<RootNamespace>{{ProjectName}}</RootNamespace>
+		<AssemblyName>{{ProjectName}}</AssemblyName>
+
+		<NoWarn>$(NoWarn);NU1902;CS8618;CS8602;CS8604;CS4033;CS5001</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Reqnroll" Version="2.1.0" />
+		{{AdapterDependencies}}
+		<PackageReference Include="Appium.WebDriver" Version="5.1.0" />
+		<PackageReference Include="FluentAssertions" Version="6.12.1" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+		{{AddonDependencies}}
+	</ItemGroup>
+</Project>

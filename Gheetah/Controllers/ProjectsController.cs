@@ -4,6 +4,11 @@ using Gheetah.Models.RepoSettingsModel;
 using Gheetah.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+using LibGit2Sharp;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Gheetah.Controllers
 {
@@ -16,6 +21,7 @@ namespace Gheetah.Controllers
         private readonly IFileService _fileService;
         private readonly IEnumerable<IGitRepoService> _repoServices;
         private readonly IWebHostEnvironment _env;
+        private readonly string _rootPath = Directory.GetCurrentDirectory();
 
         public ProjectsController(IProjectService projectService, IDynamicAuthService dynamicAuthService, ILogService logService, IFileService fileService, IEnumerable<IGitRepoService> repoServices, IWebHostEnvironment env)
         {
@@ -49,6 +55,21 @@ namespace Gheetah.Controllers
             }
     
             return View(projects);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetRemoteProviders()
+        {
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+    
+            var result = repoSettings.Select(r => new
+            {
+                id = r.Id,
+                name = r.DisplayName ?? r.RepoType,
+                type = r.RepoType
+            }).ToList();
+    
+            return Json(result);
         }
 
         [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
@@ -263,39 +284,41 @@ namespace Gheetah.Controllers
         [Produces("application/json")]
         public async Task<IActionResult> UploadProject(IFormFile archiveFile, string language)
         {
-            object ErrorResponse(string message) => new {
-                success = false,
-                message = message,
-                redirectUrl = Url.Action("ManageProjects")
-            };
+            if (archiveFile == null || archiveFile.Length == 0)
+                return Json(new { success = false, message = "Please select a file to upload" });
+
+            if (archiveFile.Length > 50 * 1024 * 1024)
+                return Json(new { success = false, message = "File size exceeds 50MB" });
+
+            var extension = Path.GetExtension(archiveFile.FileName).ToLower();
+            if (!new[] { ".zip", ".rar", ".7z" }.Contains(extension))
+                return Json(new { success = false, message = "Only .zip, .rar and .7z files are accepted" });
 
             try
             {
-                if (archiveFile == null || archiveFile.Length == 0)
-                    return Json(ErrorResponse("Please select a file to upload"));
-
-                if (archiveFile.Length > 50 * 1024 * 1024)
-                    return Json(ErrorResponse("File size exceeds 50MB"));
-
-                var extension = Path.GetExtension(archiveFile.FileName).ToLower();
-                if (!new[] { ".zip", ".rar", ".7z" }.Contains(extension))
-                    return Json(ErrorResponse("Only .zip, .rar and .7z files are accepted"));
-
                 var projectFolder = await _fileService.LoadConfigAsync<string>("project-folder.json")
                                     ?? Path.Combine(_env.ContentRootPath, "ClonedProjects");
 
                 await _projectService.UploadLocalProjectAsync(archiveFile, language, projectFolder);
 
+                string folderName = Path.GetFileNameWithoutExtension(archiveFile.FileName);
+                string uploadedPath = Path.Combine(projectFolder, folderName);
+
+                if (Directory.Exists(uploadedPath) && !LibGit2Sharp.Repository.IsValid(uploadedPath))
+                {
+                    InitializeGitRepository(uploadedPath, folderName);
+                }
+
                 return Json(new {
                     success = true,
-                    message = "Project uploaded successfully!",
+                    message = "Project uploaded and Git initialized successfully!",
                     redirectUrl = Url.Action("ProjectList")
                 });
             }
             catch (Exception ex)
             {
                 var cleanError = ex.Message.Replace(Environment.NewLine, " ");
-                return Json(ErrorResponse($"Installation error: {cleanError}"));
+                return Json(new { success = false, message = $"Installation error: {cleanError}" });
             }
         }
 
@@ -341,6 +364,386 @@ namespace Gheetah.Controllers
                 });
             }
         }
+
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        [HttpGet]
+        public IActionResult CreateProject()
+        {
+            return View();
+        }
+
+        [Authorize(Policy = "Dynamic_admin-perm,Dynamic_lead-perm")]
+        [HttpPost]
+        public async Task<IActionResult> GenerateProject([FromBody] ProjectCreateViewModel model)
+        {
+            try
+            {
+                string rootDir = _env.ContentRootPath;
+                string dataFolderPath = Path.Combine(rootDir, "Data");
+                string configFilePath = Path.Combine(dataFolderPath, "project-folder.json");
+
+                if (!System.IO.File.Exists(configFilePath))
+                {
+                    return Json(new { success = false, type = "config_error", message = "Configuration file not found." });
+                }
+
+                var configContent = (await System.IO.File.ReadAllTextAsync(configFilePath)).Trim();
+                string targetBaseDir = string.Empty;
+
+                if (configContent.StartsWith("{"))
+                {
+                    using var doc = JsonDocument.Parse(configContent);
+                    if (doc.RootElement.TryGetProperty("ProjectFolderPath", out var pathProp))
+                    {
+                        targetBaseDir = pathProp.GetString();
+                    }
+                }
+                else
+                {
+                    targetBaseDir = configContent.Replace("\"", "");
+                }
+
+                if (string.IsNullOrEmpty(targetBaseDir) || !Directory.Exists(targetBaseDir))
+                {
+                    return Json(new { success = false, type = "config_error", message = $"Target directory invalid or not found: {targetBaseDir}" });
+                }
+
+                string projectFolderPath = Path.Combine(targetBaseDir, model.ProjectName);
+                if (Directory.Exists(projectFolderPath))
+                {
+                    return Json(new { success = false, message = "A folder with this name already exists!" });
+                }
+
+                string sourcePath = Path.Combine(rootDir, "Templates", model.Language, $"Base_{model.ProjectType}");
+                CopyAndProcessFiles(sourcePath, projectFolderPath, model);
+                ProcessAddons(model, projectFolderPath, rootDir);
+                HandlePackageManagement(projectFolderPath, model);
+                
+                await UpdateProjectsJson(model, projectFolderPath, rootDir);
+
+                InitializeGitRepository(projectFolderPath, model.ProjectName);
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Backend Error: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetReposForProvider(string providerId)
+        {
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+            var repoInfo = repoSettings.FirstOrDefault(r => r.Id == providerId);
+    
+            if (repoInfo == null)
+                return Json(new List<object>());
+    
+            var service = _repoServices.FirstOrDefault(s => s.IsMatch(repoInfo.RepoType));
+            if (service == null)
+                return Json(new List<object>());
+    
+            try
+            {
+                var repos = await service.GetReposAsync(repoInfo);
         
+                var result = repos.Select(r => new
+                {
+                    name = r.Name ?? "Unknown",
+                    url = r.RemoteUrl ?? "",  // GitRepoVm'de RemoteUrl var
+                    description = ""          // GitRepoVm'de Description yok
+                }).ToList();
+        
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<object>());
+            }
+        }
+
+        /// <summary>
+        /// Proje adıyla eşleşen repoları döndürür (akıllı filtreleme)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetMatchingRepos(string providerId, string projectName)
+        {
+            var repoSettings = await _fileService.LoadConfigAsync<List<RepoSettingsVm>>("remote-repos-settings.json") ?? new();
+            var repoInfo = repoSettings.FirstOrDefault(r => r.Id == providerId);
+            
+            if (repoInfo == null)
+                return Json(new List<object>());
+            
+            var service = _repoServices.FirstOrDefault(s => s.IsMatch(repoInfo.RepoType));
+            if (service == null)
+                return Json(new List<object>());
+            
+            try
+            {
+                var repos = await service.GetReposAsync(repoInfo);
+                
+                // Proje adıyla eşleşen repoları filtrele (case-insensitive)
+                var matchingRepos = repos
+                    .Where(r => 
+                    {
+                        var repoName = r.Name ?? "";
+                        if (string.IsNullOrWhiteSpace(repoName)) return false;
+                        
+                        // Tam eşleşme
+                        if (string.Equals(repoName, projectName, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                        
+                        // İçerme eşleşmesi
+                        if (repoName.Contains(projectName, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                        
+                        if (projectName.Contains(repoName, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                        
+                        // Normalize edilmiş eşleşme (tire, alt çizgi, nokta, boşluk kaldır)
+                        var normalizedRepo = repoName
+                            .Replace("-", "")
+                            .Replace("_", "")
+                            .Replace(".", "")
+                            .Replace(" ", "");
+                        var normalizedProject = projectName
+                            .Replace("-", "")
+                            .Replace("_", "")
+                            .Replace(".", "")
+                            .Replace(" ", "");
+                        
+                        return normalizedRepo.Contains(normalizedProject, StringComparison.OrdinalIgnoreCase) ||
+                               normalizedProject.Contains(normalizedRepo, StringComparison.OrdinalIgnoreCase);
+                    })
+                    .Select(r => new
+                    {
+                        name = r.Name ?? "Unknown",
+                        url = r.RemoteUrl ?? "",  // GitRepoVm'de RemoteUrl var
+                        description = "",          // GitRepoVm'de Description yok
+                        isExactMatch = string.Equals(r.Name, projectName, StringComparison.OrdinalIgnoreCase)
+                    })
+                    .OrderByDescending(r => r.isExactMatch) // Tam eşleşmeler önce gelsin
+                    .ThenBy(r => r.name)
+                    .ToList();
+                
+                return Json(matchingRepos);
+            }
+            catch (Exception ex)
+            {
+                return Json(new List<object>());
+            }
+        }
+
+        private void CopyAndProcessFiles(string sourceDir, string targetDir, ProjectCreateViewModel model)
+        {
+            Directory.CreateDirectory(targetDir);
+
+            string rootDir = _env.ContentRootPath;
+            string mapPath = Path.Combine(rootDir, "Templates", model.Language, "dependency_map.json");
+            string adapterDeps = "";
+            string addonDeps = "";
+
+            if (System.IO.File.Exists(mapPath))
+            {
+                var mapJson = System.IO.File.ReadAllText(mapPath);
+                using var doc = JsonDocument.Parse(mapJson);
+                var root = doc.RootElement;
+
+                if (root.TryGetProperty("Adapters", out var adapters) && 
+                    adapters.TryGetProperty(model.TestAdapter, out var adapterValue))
+                {
+                    adapterDeps = adapterValue.GetString();
+                }
+
+                if (root.TryGetProperty("Addons", out var addons))
+                {
+                    foreach (var selectedAddon in model.Addons ?? new List<string>())
+                    {
+                        string addonKey = selectedAddon == "DB" ? "Database" : selectedAddon;
+                        
+                        if (addons.TryGetProperty(addonKey, out var addonValue))
+                        {
+                            addonDeps += addonValue.GetString() + "\n";
+                        }
+                    }
+                }
+            }
+
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                string fileName = Path.GetFileName(file);
+                
+                if (model.Language == "C#" && fileName.EndsWith(".csproj"))
+                    fileName = $"{model.ProjectName}.csproj";
+
+                string destFile = Path.Combine(targetDir, fileName);
+                string content = System.IO.File.ReadAllText(file);
+
+                content = content.Replace("{{ProjectName}}", model.ProjectName)
+                                 .Replace("{{TestAdapter}}", model.TestAdapter)
+                                 .Replace("{{AdapterDependencies}}", adapterDeps)
+                                 .Replace("{{AddonDependencies}}", addonDeps);
+
+                System.IO.File.WriteAllText(destFile, content);
+            }
+
+            foreach (var directory in Directory.GetDirectories(sourceDir))
+            {
+                string dirName = Path.GetFileName(directory);
+                if (dirName == "{{ProjectName}}") dirName = model.ProjectName;
+                CopyAndProcessFiles(directory, Path.Combine(targetDir, dirName), model);
+            }
+        }
+
+        private void ProcessAddons(ProjectCreateViewModel model, string projectPath, string rootDir)
+        {
+            if (model.Addons == null || !model.Addons.Any()) return;
+
+            string extension = model.Language == "C#" ? "cs" : "java";
+            string stepFolder = model.Language == "C#" 
+                ? Path.Combine(projectPath, "StepDefinitions") 
+                : Path.Combine(projectPath, "src", "test", "java", model.ProjectName, "stepdefinitions");
+
+            string addonSourceBase = Path.Combine(rootDir, "Templates", model.Language, "Addons");
+
+            foreach (var addon in model.Addons)
+            {
+                string addonFileName = addon == "API" ? $"ApiSteps.{extension}" : $"DbSteps.{extension}";
+                string sourceFile = Path.Combine(addonSourceBase, addonFileName);
+
+                if (System.IO.File.Exists(sourceFile))
+                {
+                    if (!Directory.Exists(stepFolder)) Directory.CreateDirectory(stepFolder);
+            
+                    string content = System.IO.File.ReadAllText(sourceFile).Replace("{{ProjectName}}", model.ProjectName);
+                    System.IO.File.WriteAllText(Path.Combine(stepFolder, addonFileName), content);
+                }
+            }
+        }
+
+        private async Task UpdateProjectsJson(ProjectCreateViewModel model, string fullPath, string rootDir)
+        {
+            string jsonPath = Path.Combine(rootDir, "Data", "projects.json");
+            List<Project> projects = new List<Project>();
+
+            if (System.IO.File.Exists(jsonPath))
+            {
+                var existingJson = await System.IO.File.ReadAllTextAsync(jsonPath);
+                projects = JsonSerializer.Deserialize<List<Project>>(existingJson) ?? new List<Project>();
+            }
+
+            string buildFileName = model.Language == "C#" ? $"{model.ProjectName}.csproj" : "pom.xml";
+
+            var newProject = new Project
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = model.ProjectName,
+                RepoUrl = "Local Project",
+                LanguageType = model.Language,
+                UserId = User.Identity?.Name ?? "SYSTEM",
+                IsBuilt = false,
+                ClonedDate = DateTime.Now,
+                FeatureFileCount = 1,
+                ScenarioCount = 1,
+                ProjectInfos = new List<ProjectInfo>
+                {
+                    new ProjectInfo
+                    {
+                        ProjectName = model.ProjectName,
+                        BuildInfoFileName = buildFileName,
+                        BuildInfoFileFullPath = Path.Combine(fullPath, buildFileName),
+                        FeatureFilesPath = model.Language == "C#" 
+                            ? Path.Combine(fullPath, "Features") 
+                            : Path.Combine(fullPath, "src/test/resources/features"),
+                        BuildedTestFileName = "Not Built Yet",
+                        BuildedTestFileFullPath = "Pending",
+                        Scenarios = new List<FeatureScenarioInfo>() 
+                    }
+                }
+            };
+
+            projects.Add(newProject);
+    
+            var options = new JsonSerializerOptions { WriteIndented = true };
+            await System.IO.File.WriteAllTextAsync(jsonPath, JsonSerializer.Serialize(projects, options));
+        }
+
+        private void HandlePackageManagement(string targetDir, ProjectCreateViewModel model)
+        {
+            if (model.Language == "C#")
+            {
+                string sourceUrl = string.IsNullOrWhiteSpace(model.CustomSourceUrl) 
+                    ? "https://api.nuget.org/v3/index.json" 
+                    : model.CustomSourceUrl;
+
+                string nugetConfig = $@"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key=""GheetahSource"" value=""{sourceUrl}"" />
+  </packageSources>
+</configuration>";
+
+                System.IO.File.WriteAllText(Path.Combine(targetDir, "nuget.config"), nugetConfig);
+            }
+            else if (model.Language == "Java")
+            {
+                string pomPath = Path.Combine(targetDir, "pom.xml");
+                if (System.IO.File.Exists(pomPath))
+                {
+                    string customRepoXml = "";
+                    if (!string.IsNullOrWhiteSpace(model.CustomSourceUrl))
+                    {
+                        customRepoXml = $@"
+    <repositories>
+        <repository>
+            <id>gheetah-custom-repo</id>
+            <url>{model.CustomSourceUrl}</url>
+        </repository>
+    </repositories>";
+                    }
+
+                    string content = System.IO.File.ReadAllText(pomPath);
+                    content = content.Replace("{{CustomRepo}}", customRepoXml);
+                    System.IO.File.WriteAllText(pomPath, content);
+                }
+            }
+        }
+        
+        private void InitializeGitRepository(string path, string projectName)
+        {
+            var user = User.Identity?.Name ?? "system@gheetah.com";
+            try
+            {
+                string gitIgnorePath = Path.Combine(path, ".gitignore");
+                if (!System.IO.File.Exists(gitIgnorePath))
+                {
+                    string ignoreContent = @"
+bin/
+obj/
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store";
+                    System.IO.File.WriteAllText(gitIgnorePath, ignoreContent);
+                }
+
+                LibGit2Sharp.Repository.Init(path);
+
+                using (var repo = new LibGit2Sharp.Repository(path))
+                {
+                    LibGit2Sharp.Commands.Stage(repo, "*");
+
+                    var author = new Signature(user, user, DateTimeOffset.Now);
+                    repo.Commit($"Gheetah IDE: Initial repository setup for {projectName}", author, author);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logService.LogAsync(User.Identity?.Name ?? "SYSTEM", "Git Init Error", $"Project: {projectName}, Error: {ex.Message}");
+            }
+        }
     }
 }

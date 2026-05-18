@@ -192,13 +192,53 @@
 						</a>
 					</div>
 				</li>
+				
+				<!-- Gheetah IDE -->
+				<li>
+					<div class="nav-item-header" data-target="ide-menu">
+						<span>Gheetah IDE</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="ide-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="ide-usage">
+							<i class="ti ti-code"></i> Using the IDE
+						</a>
+					</div>
+				</li>
+
+				<!-- Project Scaffolding -->
+				<li>
+					<div class="nav-item-header" data-target="scaffold-menu">
+						<span>Project Scaffolding</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="scaffold-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="create-project">
+							<i class="ti ti-file-plus"></i> Create New Project
+						</a>
+					</div>
+				</li>
+
+				<!-- Pull Requests -->
+				<li>
+					<div class="nav-item-header" data-target="pr-menu">
+						<span>Pull Requests</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="pr-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="pull-requests">
+							<i class="ti ti-git-pull-request"></i> PR & Code Review
+						</a>
+					</div>
+				</li>
+			
 			</ul>
 		</div>
 	</div>
 
         <!-- CONTENT -->
         <div class="content">
-		            <!-- ADMIN -->
+		    <!-- ADMIN -->
 			<div id="cicd-integration" class="content-section">
 				<h2>CI/CD Integration</h2>
 				<div class="mt-4 p-4 rounded">
@@ -2424,7 +2464,166 @@
 				</div>
 			</div>
 
-            <!-- DEFAULT PLACEHOLDER -->
+			<!-- IDE USAGE -->
+			<div id="ide-usage" class="content-section">
+				<h2>Using Gheetah IDE</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Professional-Grade Editor</h5>
+						<p>Gheetah includes the Monaco editor (same as VS Code) with full BDD support, IntelliSense, and smart navigation.</p>
+					</div>
+					
+					<h4>Opening and Editing Files</h4>
+					<ol>
+						<li>Navigate to your project in the <strong>Solution Explorer</strong> (left sidebar).</li>
+						<li>Click any <code>.feature</code>, <code>.cs</code>, or <code>.java</code> file to open it in the editor.</li>
+						<li>Edit the content with full syntax highlighting and auto-completion.</li>
+						<li>Press <kbd>Ctrl+S</kbd> to save the current file.</li>
+						<li>Press <kbd>Ctrl+Shift+N</kbd> to create a new file in the selected folder.</li>
+						<li>Press <kbd>Ctrl+Q</kbd> to close the current tab.</li>
+					</ol>
+					<div style="margin-top: 10px;">
+						<img src="img/editor.jpg" alt="IDE Editor" style="max-width: 100%;">
+					</div>
+					
+					<h4 class="mt-4">IntelliSense and Code Snippets</h4>
+					<p>Gheetah provides intelligent code completion for:</p>
+					<ul>
+						<li><strong>C#:</strong> Classes, interfaces, properties, methods, test methods, step definitions</li>
+						<li><strong>Gherkin:</strong> Feature, Scenario, Given, When, Then, And templates</li>
+						<li><strong>Java:</strong> Classes, methods, main method</li>
+					</ul>
+					<p>Start typing and press <kbd>Tab</kbd> or <kbd>Enter</kbd> to insert snippets.</p>
+					
+					<h4 class="mt-4">Step Definition Navigation (Ctrl+Click)</h4>
+					<div class="alert alert-success">
+						<i class="ti ti-link me-1"></i> <strong>Pro Tip:</strong> Hold <kbd>Ctrl</kbd> and click on any Given/When/Then step in a <code>.feature</code> file to instantly jump to its implementation!
+					</div>
+					<p>This feature works for both C# (SpecFlow/Reqnroll) and Java (Cucumber) projects.</p>
+					<div style="margin-top: 10px;">
+						<img src="img/editor.jpg" alt="Step Navigation" style="max-width: 100%;">
+					</div>
+				</div>
+			</div>
+
+			<!-- CREATE NEW PROJECT -->
+			<div id="create-project" class="content-section">
+				<h2>Creating New BDD Projects from Scratch</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Zero to BDD in Minutes</h5>
+						<p>Gheetah allows you to scaffold complete BDD test automation projects directly from the UI.</p>
+					</div>
+					
+					<h4>Supported Project Types</h4>
+					<div class="row">
+						<div class="col-md-6">
+							<div class="feature-card p-3 mb-3 border rounded">
+								<h5><i class="ti ti-brand-csharp me-2 text-primary"></i> C# / .NET</h5>
+								<ul>
+									<li><strong>SpecFlow</strong> with xUnit/NUnit/MSTest</li>
+									<li><strong>Reqnroll</strong> with xUnit/NUnit/MSTest</li>
+									<li>API Testing (RestSharp)</li>
+									<li>Web Testing (Selenium/Playwright)</li>
+									<li>Mobile Testing (Appium)</li>
+									<li>Desktop Testing (WinAppDriver)</li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-md-6">
+							<div class="feature-card p-3 mb-3 border rounded">
+								<h5><i class="ti ti-brand-java me-2 text-primary"></i> Java</h5>
+								<ul>
+									<li><strong>Cucumber-JVM</strong> with JUnit/TestNG</li>
+									<li>API Testing (RestAssured)</li>
+									<li>Web Testing (Selenium)</li>
+									<li>Mobile Testing (Appium)</li>
+									<li>Desktop Testing (WinAppDriver)</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+					
+					<h4>Step-by-Step: Creating a New Project</h4>
+					<ol>
+						<li>Navigate to <strong>Projects → Add Project</strong> from the top navigation bar.</li>
+						<li>Select the <strong>"Create New"</strong> tab.</li>
+						<li>Choose your <strong>Language</strong> (C# or Java).</li>
+						<li>Select a <strong>Project Template</strong> (API, Web, Mobile, Desktop).</li>
+						<li>Enter a <strong>Project Name</strong> and optional <strong>Description</strong>.</li>
+						<li>Click <strong>"Create Project"</strong>.</li>
+					</ol>
+					<div style="margin-top: 10px;">
+						<img src="img/create_projects.jpg" alt="Create New Project" style="max-width: 100%;">
+					</div>
+					
+					<div class="alert alert-info mt-3">
+						<i class="ti ti-info-circle me-1"></i> The generated project includes:
+						<ul class="mb-0 mt-2">
+							<li>Pre-configured package references (SpecFlow/Reqnroll for C#, Cucumber for Java)</li>
+							<li>Sample feature file with example scenario</li>
+							<li>Sample step definition class</li>
+							<li>Build configuration ready for Gheetah execution</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<!-- PULL REQUEST MANAGEMENT -->
+			<div id="pull-requests" class="content-section">
+				<h2>Pull Request Management</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Collaborative Code Review</h5>
+						<p>Gheetah provides a full-featured PR system similar to GitHub/GitLab, with conflict resolution and CI/CD pipeline integration.</p>
+					</div>
+					
+					<h4>Creating a Pull Request</h4>
+					<ol>
+						<li>Push your changes to a <strong>feature branch</strong> (not main/master).</li>
+						<li>In the Push History panel, find your push and click <strong>"PR"</strong>.</li>
+						<li>Select the <strong>Target Branch</strong> (e.g., main, develop).</li>
+						<li>Add <strong>Reviewers</strong> (Admin or Lead users).</li>
+						<li>Write a <strong>Description</strong> explaining your changes.</li>
+						<li>Click <strong>"Create Pull Request"</strong>.</li>
+					</ol>
+					<div style="margin-top: 10px;">
+						<img src="img/local-git-integration.jpg" alt="Create Pull Request" style="max-width: 100%;">
+					</div>
+					
+					<h4 class="mt-4">Reviewing a Pull Request</h4>
+					<ul>
+						<li>Navigate to the PR from the Push History or direct link.</li>
+						<li>Go to the <strong>"Files"</strong> tab to see changed files.</li>
+						<li>Click a file to view the diff side-by-side.</li>
+						<li>Click the <strong>gutter area</strong> (left of line numbers) to add inline comments.</li>
+						<li>Resolve comments by changing their status from "Active" to "Resolved".</li>
+						<li>Approve or reject the PR using the buttons in the top-right.</li>
+					</ul>
+					
+					<h4 class="mt-4">Merge & Build Pipeline</h4>
+					<div class="alert alert-warning">
+						<i class="ti ti-settings me-1"></i> <strong>How it works:</strong>
+						<ol class="mb-0 mt-2">
+							<li>Creator clicks <strong>"Complete Merge"</strong> → Build Source Branch</li>
+							<li>If source build succeeds → Merge branches</li>
+							<li>If merge succeeds → Build Target Branch</li>
+							<li>All steps are visualized in real-time on the Overview tab</li>
+						</ol>
+					</div>
+					
+					<h4 class="mt-4">Resolving Merge Conflicts</h4>
+					<ol>
+						<li>If conflicts are detected, go to the <strong>"Conflicts"</strong> tab.</li>
+						<li>Select a conflicted file from the list.</li>
+						<li>Choose <strong>"Accept OURS (Source)"</strong> or <strong>"Accept THEIRS (Target)"</strong>.</li>
+						<li>Repeat for all conflicted files.</li>
+						<li>Once all conflicts are resolved, the pipeline automatically continues.</li>
+					</ol>
+				</div>
+			</div>
+            
+			<!-- DEFAULT PLACEHOLDER -->
 			<div id="no-content" class="content-section active">
 				<div class="text-center mt-3">
 					<i class="ti ti-info-circle mb-3" style="font-size: 3rem; color: var(--gh-primary);"></i>

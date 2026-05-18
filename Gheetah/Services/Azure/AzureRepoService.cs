@@ -10,6 +10,123 @@ namespace Gheetah.Services.Azure
     public class AzureRepoService : IGitRepoService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        public async Task<string> CreateRepositoryAsync(RepoSettingsVm settings, string repoName)
+        {
+            var client = _httpClientFactory.CreateClient();
+            var byteArray = Encoding.ASCII.GetBytes($"{settings.Username}:{settings.AccessToken}");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
+            var createUrl = $"https://dev.azure.com/{settings.DomainName}/{settings.ProjectName}/_apis/git/repositories?api-version=7.0";
+    
+            var payload = new
+            {
+                name = repoName,
+                project = new
+                {
+                    id = settings.ProjectName
+                }
+            };
+    
+            var json = JsonSerializer.Serialize(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+    
+            var response = await client.PostAsync(createUrl, content);
+    
+            if (response.IsSuccessStatusCode)
+            {
+                var result = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                var remoteUrl = result.RootElement.GetProperty("remoteUrl").GetString();
+                return remoteUrl;
+            }
+    
+            var errorContent = await response.Content.ReadAsStringAsync();
+    
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                throw new Exception($"A repository named '{repoName}' already exists in this Azure DevOps project.");
+            }
+    
+            throw new Exception($"Azure DevOps API error ({response.StatusCode}): {errorContent}");
+        }
+
+        public async Task<string> CreatePullRequestAsync(RepoSettingsVm settings, string sourceBranch, string targetBranch, string title, string description)
+        {
+            try
+            {
+                var client = _httpClientFactory.CreateClient();
+                var byteArray = Encoding.ASCII.GetBytes($"{settings.Username}:{settings.AccessToken}");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(byteArray));
+
+                var repoListUrl = $"https://dev.azure.com/{settings.DomainName}/{settings.ProjectName}/_apis/git/repositories?api-version=7.0";
+                var repoListResponse = await client.GetAsync(repoListUrl);
+                
+                if (!repoListResponse.IsSuccessStatusCode)
+                {
+                    var errorBody = await repoListResponse.Content.ReadAsStringAsync();
+                    throw new Exception($"Failed to list Azure DevOps repositories: {repoListResponse.StatusCode}");
+                }
+                
+                var repoListContent = await repoListResponse.Content.ReadAsStringAsync();
+                using var repoListJson = JsonDocument.Parse(repoListContent);
+                
+                string repoId = null;
+                
+                foreach (var repo in repoListJson.RootElement.GetProperty("value").EnumerateArray())
+                {
+                    var name = repo.GetProperty("name").GetString();
+                    if (name.Equals(settings.DisplayName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        repoId = repo.GetProperty("id").GetString();
+                        break;
+                    }
+                }
+                
+                if (string.IsNullOrEmpty(repoId))
+                {
+                    throw new Exception($"Repository '{settings.DisplayName}' not found in Azure DevOps project '{settings.ProjectName}'. " +
+                                      "Please ensure the remote repository exists and matches the project name.");
+                }
+
+                var prUrl = $"https://dev.azure.com/{settings.DomainName}/{settings.ProjectName}/_apis/git/repositories/{repoId}/pullrequests?api-version=7.0";
+                
+                var payload = new
+                {
+                    sourceRefName = $"refs/heads/{sourceBranch}",
+                    targetRefName = $"refs/heads/{targetBranch}",
+                    title = title,
+                    description = description
+                };
+                
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(prUrl, content);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var resultContent = await response.Content.ReadAsStringAsync();
+                    using var resultJson = JsonDocument.Parse(resultContent);
+                    
+                    var pullRequestId = resultJson.RootElement.GetProperty("pullRequestId").GetInt32();
+                    var repositoryName = resultJson.RootElement.GetProperty("repository").GetProperty("name").GetString();
+                    
+                    return $"https://dev.azure.com/{settings.DomainName}/{settings.ProjectName}/_git/{repositoryName}/pullrequest/{pullRequestId}";
+                }
+                
+                var errorContent = await response.Content.ReadAsStringAsync();
+                
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    return null;
+                }
+                
+                throw new Exception($"Azure DevOps PR creation failed ({response.StatusCode}): {errorContent}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"CreatePullRequestAsync error: {ex.Message}");
+                throw;
+            }
+        }
+        
         public bool IsMatch(string repoType) => repoType == "Azure";
 
         public AzureRepoService(IHttpClientFactory httpClientFactory)

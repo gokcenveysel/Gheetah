@@ -1,7 +1,9 @@
 ﻿using Gheetah.Interfaces;
 using Gheetah.Models.CICDModel;
+using Gheetah.Models.EditorModel;
 using Gheetah.Models.Hangfire;
 using Gheetah.Models.ViewModels.Dashboard;
+using Gheetah.Services;
 using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,15 +19,24 @@ namespace Gheetah.Controllers
         private readonly IDashboardService _dashboardService;
         private readonly IAzureDevopsService _azureDevopsService;
         private readonly ILogger<DashboardController> _logger;
+        private readonly IFileService _fileService;
+        private readonly IUserService _userService;
+        private readonly IProjectService _projectService;
 
         public DashboardController(
             IDashboardService dashboardService,
             IAzureDevopsService azureDevopsService,
-            ILogger<DashboardController> logger)
+            ILogger<DashboardController> logger,
+            IFileService fileService,
+            IUserService userService,
+            IProjectService projectService)
         {
             _dashboardService = dashboardService;
             _azureDevopsService = azureDevopsService;
             _logger = logger;
+            _fileService = fileService;
+            _userService = userService;
+            _projectService = projectService;
         }
 
         public async Task<IActionResult> Index()
@@ -364,6 +375,148 @@ namespace Gheetah.Controllers
                     Error = ex.Message
                 });
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetReviewerPrs()
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail))
+                return Unauthorized();
+
+            var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+            var activities = await _fileService.LoadConfigAsync<List<PRActivity>>("internal-pr-activities.json") ?? new();
+    
+            var reviewerPrs = allPrs
+                .Where(pr => pr.Reviewers != null && pr.Reviewers.Contains(userEmail, StringComparer.OrdinalIgnoreCase))
+                .Select(pr => new UserPrItem
+                {
+                    PR_Id = pr.PR_Id,
+                    Title = pr.Title,
+                    SourceBranch = pr.SourceBranch,
+                    TargetBranch = pr.TargetBranch,
+                    Status = pr.Status,
+                    CreatedBy = pr.CreatedBy,
+                    CreatedAt = pr.CreatedAt,
+                    ReviewStatus = GetUserReviewStatus(pr.PR_Id, userEmail, activities)
+                })
+                .OrderByDescending(pr => pr.CreatedAt)
+                .ToList();
+
+            return Ok(reviewerPrs);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMyPrs()
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail))
+                return Unauthorized();
+
+            var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+
+            var myPrs = allPrs
+                .Where(pr => pr.CreatedByEmail != null && pr.CreatedByEmail.Equals(userEmail, StringComparison.OrdinalIgnoreCase))
+                .Select(pr => new UserPrItem
+                {
+                    PR_Id = pr.PR_Id,
+                    Title = pr.Title,
+                    SourceBranch = pr.SourceBranch,
+                    TargetBranch = pr.TargetBranch,
+                    Status = pr.Status,
+                    CreatedBy = pr.CreatedBy,
+                    CreatedAt = pr.CreatedAt,
+                    ReviewStatus = "owner"
+                })
+                .OrderByDescending(pr => pr.CreatedAt)
+                .ToList();
+
+            return Ok(myPrs);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMyPushHistory()
+        {
+            var userEmail = User.Identity?.Name;
+            if (string.IsNullOrEmpty(userEmail))
+                return Unauthorized();
+
+            var currentUser = await _userService.GetUserByEmail(userEmail);
+            if (currentUser == null)
+                return Unauthorized();
+
+            var allHistory = await _fileService.LoadConfigAsync<List<PushHistory>>("internal-push-history.json") ?? new();
+            var projects = await _projectService.GetProjectsAsync();
+
+            var myHistory = allHistory
+                .Where(h => h.PushedBy != null && h.PushedBy.Equals(currentUser.FullName, StringComparison.OrdinalIgnoreCase))
+                .Select(h => new PushHistoryItem
+                {
+                    ProjectName = projects?.FirstOrDefault(p => p.Id == h.ProjectId)?.Name ?? h.ProjectId,
+                    BranchName = h.BranchName,
+                    CommitHash = h.CommitHash?.Length > 7 ? h.CommitHash.Substring(0, 7) : h.CommitHash,
+                    PushedBy = h.PushedBy,
+                    PushedAt = h.PushedAt,
+                    HasPR = h.HasPR
+                })
+                .OrderByDescending(h => h.PushedAt)
+                .ToList();
+
+            return Ok(myHistory);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdatePrReviewStatus(string prId, string status)
+        {
+            var userEmail = User.Identity?.Name;
+                    if (string.IsNullOrEmpty(userEmail))
+                        return Unauthorized();
+
+            var allPrs = await _fileService.LoadConfigAsync<List<InternalPR>>("internal-pull-requests.json") ?? new();
+            var pr = allPrs.FirstOrDefault(p => p.PR_Id == prId);
+            if (pr == null)
+                return NotFound("PR not found");
+
+            if (pr.Reviewers == null || !pr.Reviewers.Contains(userEmail, StringComparer.OrdinalIgnoreCase))
+                return Forbid("You are not a reviewer of this PR");
+
+            if (status == "approved")
+                        pr.Status = "Approved";
+            else if (status == "rejected")
+                pr.Status = "Rejected";
+
+            await _fileService.SaveConfigAsync("internal-pull-requests.json", allPrs);
+
+            await AddPrActivity(prId, status == "approved" ? "Approved" : "Rejected", userEmail, $"PR {status} by reviewer");
+
+            return Ok(new { success = true });
+        }
+
+        private string GetUserReviewStatus(string prId, string userEmail, List<PRActivity> activities)
+        {
+            var lastAction = activities
+                .Where(a => a.PR_Id == prId && a.Actor != null && a.Actor.Equals(userEmail, StringComparison.OrdinalIgnoreCase)
+                            && (a.ActionType == "Approved" || a.ActionType == "Rejected"))
+                .OrderByDescending(a => a.Timestamp)
+                .FirstOrDefault();
+
+            return lastAction?.ActionType?.ToLower() ?? "pending";
+        }
+
+        private async Task AddPrActivity(string prId, string actionType, string actorEmail, string details)
+                {
+            var path = "internal-pr-activities.json";
+            var activities = await _fileService.LoadConfigAsync<List<PRActivity>>(path) ?? new();
+            activities.Add(new PRActivity
+            {
+                PR_Id = prId,
+                ActionType = actionType,
+                Actor = actorEmail,
+                Details = details,
+                Timestamp = DateTime.UtcNow
+            });
+            await _fileService.SaveConfigAsync(path, activities);
         }
 
     }

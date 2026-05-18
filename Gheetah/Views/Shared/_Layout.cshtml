@@ -13,6 +13,7 @@
 
     <!-- Tabler Core CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/core@1.1.1/dist/css/tabler.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@tabler/icons-webfont@latest/tabler-icons.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs.min.css">
 
@@ -320,11 +321,12 @@
                         <ul class="navbar-nav">
                             <li class="nav-item @(Context.Request.Path.StartsWithSegments("/Dashboard") ? "active" : "")">
                                 <a class="nav-link" asp-controller="Dashboard" asp-action="Index">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-layout-dashboard">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
-                                        <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
-                                        <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                                        <path d="M5 4h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1" />
+                                        <path d="M5 16h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1" />
+                                        <path d="M15 12h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1" />
+                                        <path d="M15 4h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1" />
                                     </svg>
                                     Dashboard
                                 </a>
@@ -343,32 +345,50 @@
                                 </a>
                                 <div class="dropdown-menu">
                                     <a class="dropdown-item @(Context.Request.Path.StartsWithSegments("/Projects/ProjectList") ? "active" : "")" href="/Projects/ProjectList">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-files">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M9 5l-7 7l7 7" />
-                                            <path d="M22 12l-7 -7" />
-                                            <path d="M2 12l7 -7" />
+                                            <path d="M15 3v4a1 1 0 0 0 1 1h4" />
+                                            <path d="M18 17h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h4l5 5v7a2 2 0 0 1 -2 2" />
+                                            <path d="M16 17v2a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2" />
                                         </svg>
-                                        Project List
+                                        <span>Project List</span>
                                     </a>
+
                                     <a class="dropdown-item @(Context.Request.Path.StartsWithSegments("/Projects/ManageProjects") ? "active" : "")" href="/Projects/ManageProjects">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="nav-icon" width="24" height="24" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-arrow-left">
                                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M12 5l0 14" />
-                                            <path d="M5 12l14 0" />
+                                            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
+                                            <path d="M15 15h-6" />
+                                            <path d="M11.5 17.5l-2.5 -2.5l2.5 -2.5" />
                                         </svg>
-                                        Add Project
+                                        <span>Add / Import Project</span>
                                     </a>
+
+                                    @if (hasAdminPerm || hasLeadPerm)
+                                    {
+                                        <a class="dropdown-item" href="/Projects/CreateProject">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-file-plus">
+                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                                <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
+                                                <path d="M12 11l0 6" />
+                                                <path d="M9 14l6 0" />
+                                            </svg>
+                                            <span>Create Project</span>
+                                        </a>
+                                    }
                                 </div>
                             </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-sitemap">
                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                        <path d="M4 4h6v6h-6z" />
-                                        <path d="M14 4h6v6h-6z" />
-                                        <path d="M4 14h6v6h-6z" />
-                                        <path d="M14 14h6v6h-6z" />
+                                        <path d="M3 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" />
+                                        <path d="M15 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" />
+                                        <path d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" />
+                                        <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" />
+                                        <path d="M12 9l0 3" />
                                     </svg>
                                     Agents
                                 </a>
@@ -489,7 +509,6 @@
         </footer>
     </div>
 
-    <!-- Tabler Core JS -->
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@@tabler/core@1.1.1/dist/js/tabler.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -500,7 +519,11 @@
     <script src="~/js/loader.js"></script>
     <script src="~/js/toast-utils.js"></script>
     <script>
-    // Smooth dropdown behavior
+    $(document).ajaxError(function(event, jqXHR, ajaxSettings, thrownError) {
+        if (jqXHR.status === 403) {
+            showCustomToast('danger', "Security Alert: Access denied. Your account lacks the necessary permissions for this action.");
+        }
+    });
     document.addEventListener("DOMContentLoaded", function() {
         // Dropdown hover effect
         $('.dropdown-toggle').on('mouseenter', function() {

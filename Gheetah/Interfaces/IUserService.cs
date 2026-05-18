@@ -44,5 +44,7 @@ namespace Gheetah.Interfaces
         Task<List<string>> GetEffectivePermissions(User user);
 
         Task<bool> VerifyPassword(string userId, string password);
+
+        Task<List<User>> GetAdminsAndLeadUsers();
     }
 }

@@ -449,6 +449,20 @@ namespace Gheetah.Services
             }
         }
 
+        public async Task<List<User>> GetAdminsAndLeadUsers()
+        {
+            try
+            {
+                var allUsers = await GetAllUsers();
+                return allUsers.Where(u => u.Roles.Contains("Admin") || u.Roles.Contains("Lead")).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"GetAdminsAndLeadUsers Issue: {ex.Message}");
+                throw;
+            }
+        }
+
         private async Task<List<User>> LoadUsersAsync()
         {
             try

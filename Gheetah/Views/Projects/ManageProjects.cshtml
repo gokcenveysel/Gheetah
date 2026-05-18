@@ -171,7 +171,7 @@
                 const uploadButton = document.getElementById('uploadButton');
                 try {
                     if (!cleanFileInput.files?.length) {
-                        showCustomToast('danger', 'Lütfen bir dosya seçin');
+                        showCustomToast('danger', 'Please select a file.');
                         return;
                     }
 
@@ -214,12 +214,12 @@
                     }
                 } catch (error) {
                     console.error('Upload error:', error);
-                    showCustomToast('danger', error.message || 'Dosya yükleme başarısız oldu');
+                    showCustomToast('danger', error.message || 'File upload failed.');
                 } finally {
                     this.dataset.submitting = 'false';
                     if (uploadButton) {
                         uploadButton.disabled = false;
-                        uploadButton.innerHTML = `Proje Yükle`;
+                        uploadButton.innerHTML = `Upload Project`;
                     }
                 }
             });
@@ -447,7 +447,7 @@
                 if (!contentType?.includes('application/json')) {
                     const text = await response.text();
                     if (text.includes('<!DOCTYPE html>')) {
-                        throw new Error('saçma bir mesaj gösterelim');
+                        throw new Error(`Expected TEXT but got ${contentType}`);
                     }
                     throw new Error(`Expected JSON but got ${contentType}`);
                 }
