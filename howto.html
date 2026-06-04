@@ -1,19 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gheetah Documentation</title>
+    <meta name="description" content="Gheetah Documentation - How to use the open source test orchestration platform">
+    <title>Gheetah | Documentation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/css/tabler.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
-	    <link rel="stylesheet" href="style/style.css">
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style/style.css">
 </head>
 <body>
     <!-- NAVBAR -->
     <header class="navbar navbar-expand-md">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
+        <div class="container-xl">
+            <a class="navbar-brand" href="index.html">
                 <img src="Gheetah/wwwroot/img/gheetah_icon.png" alt="Gheetah" class="navbar-brand-image me-2">
                 <span class="fw-bold">Gheetah</span>
             </a>
@@ -27,6 +30,11 @@
                             <i class="ti ti-home me-1"></i> Home
                         </a>
                     </div>
+                </div>
+                <div class="d-none d-md-flex align-items-center">
+                    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                        <i class="ti ti-moon" id="theme-icon"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -231,7 +239,23 @@
 						</a>
 					</div>
 				</li>
-			
+
+				<!-- Playwright -->
+				<li>
+					<div class="nav-item-header" data-target="playwright-menu">
+						<span>Playwright</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="playwright-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="playwright-setup">
+							<i class="ti ti-brand-typescript"></i> Setup & Requirements
+						</a>
+						<a class="nav-link" href="#" data-section="playwright-execution">
+							<i class="ti ti-player-play"></i> Running Tests
+						</a>
+					</div>
+				</li>
+
 			</ul>
 		</div>
 	</div>
@@ -680,12 +704,12 @@
                 <h2>What is Gheetah?</h2>
                 <div class="mt-4 p-4 rounded">
                     <p class="lead">Gheetah is a powerful <strong>Test Orchestration Platform</strong> designed to streamline the execution and management of BDD (Behavior-Driven Development) test automation projects. Built as a <strong>cross-platform</strong> solution with a <strong>.NET 8.0 MVC backend</strong>, it features a modern and intuitive frontend designed using <strong>Tabler.io</strong>.</p>
-                    
+
                     <h5 class="mt-4 mb-3">Key Features & Capabilities:</h5>
                     <ul class="list-unstyled">
                         <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Seamless Test Execution:</strong>
                             <ul class="mt-2">
-                                <li>Supports <strong>BDD test projects</strong> in <strong>C# (Reqnroll/SpecFlow)</strong> or <strong>Java (TestNG-Cucumber/JUnit-Cucumber)</strong>.</li>
+                                <li>Supports <strong>BDD test projects</strong> in <strong>C# (Reqnroll/SpecFlow)</strong>, <strong>Java (TestNG-Cucumber/JUnit-Cucumber)</strong>, or <strong>TypeScript (Playwright)</strong>.</li>
                                 <li>Run tests <strong>remotely</strong> via <strong>Gheetah Agent</strong> or directly on the <strong>Gheetah Server</strong>.</li>
                                 <li>Target specific scenarios using <strong>TAG filtering</strong>.</li>
                                 <li>View <strong>real-time test results</strong> with structured reporting.</li>
@@ -1617,18 +1641,25 @@
 						<h5 class="alert-heading"><i class="ti ti-alert-triangle me-1"></i> Critical Project Requirements</h5>
 						<p>As a BDD Test Orchestration platform, Gheetah requires specific project formats:</p>
 						<div class="row">
-							<div class="col-md-6">
+							<div class="col-md-4">
 								<h6 class="mt-2">Java Projects</h6>
 								<ul>
 									<li>TestNG with Cucumber</li>
 									<li>JUnit with Cucumber</li>
 								</ul>
 							</div>
-							<div class="col-md-6">
+							<div class="col-md-4">
 								<h6 class="mt-2">.NET Projects</h6>
 								<ul>
 									<li>xUnit with Reqnroll</li>
 									<li>xUnit with SpecFlow</li>
+								</ul>
+							</div>
+							<div class="col-md-4">
+								<h6 class="mt-2">TypeScript Projects</h6>
+								<ul>
+									<li>Playwright BDD tests</li>
+									<li>npm/package.json based</li>
 								</ul>
 							</div>
 						</div>
@@ -2517,7 +2548,7 @@
 					
 					<h4>Supported Project Types</h4>
 					<div class="row">
-						<div class="col-md-6">
+						<div class="col-md-4">
 							<div class="feature-card p-3 mb-3 border rounded">
 								<h5><i class="ti ti-brand-csharp me-2 text-primary"></i> C# / .NET</h5>
 								<ul>
@@ -2530,7 +2561,7 @@
 								</ul>
 							</div>
 						</div>
-						<div class="col-md-6">
+						<div class="col-md-4">
 							<div class="feature-card p-3 mb-3 border rounded">
 								<h5><i class="ti ti-brand-java me-2 text-primary"></i> Java</h5>
 								<ul>
@@ -2539,6 +2570,18 @@
 									<li>Web Testing (Selenium)</li>
 									<li>Mobile Testing (Appium)</li>
 									<li>Desktop Testing (WinAppDriver)</li>
+								</ul>
+							</div>
+						</div>
+						<div class="col-md-4">
+							<div class="feature-card p-3 mb-3 border rounded">
+								<h5><i class="ti ti-brand-typescript me-2 text-primary"></i> TypeScript</h5>
+								<ul>
+									<li><strong>Playwright</strong> BDD tests</li>
+									<li>Web Testing (Playwright)</li>
+									<li>API Testing</li>
+									<li>npm / package.json based</li>
+									<li>JSON report generation</li>
 								</ul>
 							</div>
 						</div>
@@ -2566,6 +2609,137 @@
 							<li>Build configuration ready for Gheetah execution</li>
 						</ul>
 					</div>
+				</div>
+			</div>
+
+			<!-- PLAYWRIGHT SETUP -->
+			<div id="playwright-setup" class="content-section">
+				<h2>Playwright Setup & Requirements</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading"><i class="ti ti-brand-typescript me-1"></i> TypeScript/Playwright Support</h5>
+						<p>Gheetah supports Playwright (TypeScript) BDD test projects alongside C# and Java projects, with the same orchestration, execution, and reporting capabilities.</p>
+					</div>
+
+					<h4 class="mt-4">Server Requirements</h4>
+					<div class="system-requirements-container">
+						<div class="requirement-card">
+							<div class="card-header">
+								<h3>Gheetah Server – Playwright</h3>
+								<span class="badge">Node.js Runtime</span>
+							</div>
+							<div class="card-body">
+								<div class="requirement-section">
+									<h4>Software Dependencies</h4>
+									<div class="dependency-group">
+										<span class="dependency-pill">Node.js 18+</span>
+										<span class="dependency-pill">npm 9+</span>
+										<span class="dependency-pill">Playwright</span>
+									</div>
+									<ul class="feature-list mt-3">
+										<li><span class="feature-name">Node.js:</span> Version 18 or later required</li>
+										<li><span class="feature-name">npm:</span> Included with Node.js installation</li>
+										<li><span class="feature-name">Playwright:</span> Installed via <code>npm install</code> per project</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<h4 class="mt-4">Project Structure</h4>
+					<p>Your Playwright BDD project should follow this structure:</p>
+					<pre><code>my-playwright-project/
+├── package.json
+├── playwright.config.ts
+├── tsconfig.json
+├── tests/
+│   └── example.spec.ts
+└── .gitignore</code></pre>
+
+					<div class="alert alert-info mt-3">
+						<h5 class="alert-heading">Test Results</h5>
+						<p>Gheetah expects Playwright to generate a JSON report at <code>test-results/results.json</code>. This is configured automatically in the scaffolded <code>playwright.config.ts</code>:</p>
+						<pre class="mt-2 mb-0"><code>reporter: [['json', { outputFile: 'test-results/results.json' }]]</code></pre>
+					</div>
+
+					<h4 class="mt-4">Adding a Playwright Project</h4>
+					<ol>
+						<li>Navigate to <strong>Projects → Add Project</strong></li>
+						<li>Select the <strong>"Upload"</strong> tab or <strong>"Clone"</strong> tab</li>
+						<li>Choose <strong>Language: Playwright</strong> from the dropdown</li>
+						<li>Upload your <code>.zip</code> file or enter the repository URL</li>
+						<li>Click <strong>"Add Project"</strong> — Gheetah detects <code>package.json</code> automatically</li>
+					</ol>
+
+					<div class="alert alert-warning mt-3">
+						<h5 class="alert-heading">Build Step Required</h5>
+						<p>After adding the project, you must <strong>build</strong> it first. This runs <code>npm install</code> and installs Playwright browsers. Unbuilt projects cannot execute scenarios.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- PLAYWRIGHT EXECUTION -->
+			<div id="playwright-execution" class="content-section">
+				<h2>Running Playwright Tests</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-success">
+						<h5 class="alert-heading">Execution Workflow</h5>
+						<p>Playwright test execution in Gheetah works identically to C# and Java — scenarios are discovered, tagged, and run either locally on the Gheetah server or remotely via a registered Agent.</p>
+					</div>
+
+					<h4 class="mt-4">Scenario Discovery</h4>
+					<p>After a successful build, Gheetah scans all <code>.spec.ts</code> files in the <code>tests/</code> directory and lists each test as a runnable scenario. Scenarios are identified by their <strong>test name</strong> (the string passed to <code>test('...')</code>).</p>
+
+					<h4 class="mt-4">Running a Specific Scenario</h4>
+					<div class="steps">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Select Scenario</h5>
+								<p>Find your test in the Scenario List or Tree View. Click to preview the TypeScript file content with syntax highlighting.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Click Run Options</h5>
+								<p>Expand the <strong>"Run Options"</strong> panel. Select the scenario tag and optionally choose a remote Agent.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Execute</h5>
+								<p>Click <strong>"Run Scenario"</strong>. Gheetah executes:</p>
+								<pre><code>npx playwright test --grep "your scenario name"</code></pre>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">4</div>
+							<div class="step-content">
+								<h5>View Results</h5>
+								<p>Results are parsed from <code>test-results/results.json</code> and displayed as an HTML report in the Execution Report panel.</p>
+							</div>
+						</div>
+					</div>
+
+					<h4 class="mt-4">Running All Scenarios</h4>
+					<p>Click <strong>"Run All Scenarios"</strong> to execute the full Playwright test suite. Gheetah runs:</p>
+					<pre><code>npx playwright test</code></pre>
+					<p>Results are parsed from the JSON reporter and sent back to Gheetah for display.</p>
+
+					<div class="alert alert-info mt-3">
+						<h5 class="alert-heading">Agent Execution</h5>
+						<p>For remote execution, the Playwright project is packaged as a <code>.zip</code>, sent to the Agent, extracted, <code>npm install</code> is run, and then the test is executed. The Agent must have <strong>Node.js 18+</strong> and <strong>Playwright browsers</strong> installed.</p>
+					</div>
+
+					<h4 class="mt-4">Troubleshooting</h4>
+					<ul>
+						<li><strong>Build fails:</strong> Verify Node.js 18+ is installed and <code>package.json</code> is valid.</li>
+						<li><strong>No scenarios found:</strong> Ensure test files are in the <code>tests/</code> directory with <code>.spec.ts</code> extension.</li>
+						<li><strong>No results:</strong> Confirm <code>playwright.config.ts</code> includes the JSON reporter outputting to <code>test-results/results.json</code>.</li>
+						<li><strong>Agent fails:</strong> Check that the Agent machine has Node.js and <code>npx playwright install</code> has been run.</li>
+					</ul>
 				</div>
 			</div>
 
@@ -2726,6 +2900,24 @@
     <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta17/dist/js/tabler.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-icon');
+            const html = document.documentElement;
+
+            const currentTheme = localStorage.getItem('theme') || 'dark';
+            html.setAttribute('data-theme', currentTheme);
+            if (themeIcon) themeIcon.className = currentTheme === 'dark' ? 'ti ti-moon' : 'ti ti-sun';
+
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const newTheme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    html.setAttribute('data-theme', newTheme);
+                    themeIcon.className = newTheme === 'dark' ? 'ti ti-moon' : 'ti ti-sun';
+                    localStorage.setItem('theme', newTheme);
+                });
+            }
+
             // Menu toggle functionality
             document.querySelectorAll('.nav-item-header').forEach(toggle => {
                 toggle.addEventListener('click', function() {

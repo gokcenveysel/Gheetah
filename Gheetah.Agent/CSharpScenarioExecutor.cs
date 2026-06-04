@@ -23,10 +23,10 @@ namespace Gheetah.Agent
                 string dllDir = Path.GetDirectoryName(dllPath);
                 StatusUI.ShowStatus($"Selected .dll file: {dllPath}, Directory: {dllDir}");
 
-                string testResultsFilePath = AgentService.GetTestResultsFilePath(dllDir, scenarioTag:scenarioTag);
+                string testResultsFilePath = AgentService.GetTestResultsFilePath(dllDir, scenarioTag: scenarioTag);
                 StatusUI.ShowStatus($"Test results file path: {testResultsFilePath}");
 
-                string powerShellCommand = $@"cd '{dllDir}'; dotnet test -v detailed '{buildedTestFileName}' --filter 'Category={scenarioTag}' --logger 'trx;LogFileName={testResultsFilePath}' --no-build --no-restore";
+                string powerShellCommand = $@"cd '{dllDir}'; dotnet test '{buildedTestFileName}' --filter 'Category={scenarioTag}' --logger 'trx;LogFileName={testResultsFilePath}'";
                 StatusUI.ShowStatus($"Running command: {powerShellCommand}");
 
                 ProcessStartInfo startInfo = new ProcessStartInfo

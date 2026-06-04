@@ -22,6 +22,7 @@ namespace {{ProjectName}}.StepDefinitions
 
         // ── Navigation ────────────────────────────────────────────
         [Given(@"I navigate to URL ""(.*)""")]
+        [When(@"I navigate to URL ""(.*)""")]
         public void NavigateToUrl(string url) => _driver.Navigate().GoToUrl(url);
 
         [When(@"I maximize window")]

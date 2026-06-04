@@ -454,6 +454,13 @@ namespace Gheetah.Services
                         if (string.IsNullOrEmpty(assemblyName))
                             throw new Exception($"AssemblyName not found: {csproj}");
 
+                        // Tags must be injected BEFORE build so Reqnroll compiles them into the DLL.
+                        var featurePath = Path.Combine(Path.GetDirectoryName(csproj), "Features");
+                        if (!Directory.Exists(featurePath)) featurePath = Path.GetDirectoryName(csproj);
+
+                        var featureFiles = Directory.GetFiles(featurePath, "*.feature", SearchOption.AllDirectories);
+                        if (featureFiles.Length > 0) ProcessFeatureFilesToDivideScenarios(featureFiles);
+
                         var (restoreExit, restoreOut) = await RunProcessAsync("dotnet", $"restore \"{csproj}\"", Path.GetDirectoryName(csproj));
                         if (restoreExit != 0)
                             throw new Exception($"dotnet restore failed for {csproj}:\n{restoreOut}");
@@ -465,12 +472,6 @@ namespace Gheetah.Services
                         var outputDir = Path.Combine(Path.GetDirectoryName(csproj), "bin", "Debug");
                         var dllFile = Directory.GetFiles(outputDir, $"{assemblyName}.dll", SearchOption.AllDirectories).FirstOrDefault()
                             ?? throw new Exception($"DLL not found: {assemblyName}.dll");
-
-                        var featurePath = Path.Combine(Path.GetDirectoryName(csproj), "Features");
-                        if (!Directory.Exists(featurePath)) featurePath = Path.GetDirectoryName(csproj);
-
-                        var featureFiles = Directory.GetFiles(featurePath, "*.feature", SearchOption.AllDirectories);
-                        if (featureFiles.Length > 0) ProcessFeatureFilesToDivideScenarios(featureFiles);
 
                         var (scenarios, featureCount, scenarioCount) = await ExtractFeatureScenariosAsync(featurePath);
                         totalFeatures += featureCount;

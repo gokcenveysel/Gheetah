@@ -26,7 +26,7 @@ namespace Gheetah.Agent
                 string testResultsFilePath = AgentService.GetTestResultsFilePath(dllDir, scenarioTag: "AllScenarios");
                 StatusUI.ShowStatus($"Test results file path: {testResultsFilePath}");
 
-                string powerShellCommand = $@"cd '{dllDir}'; dotnet test -v detailed '{buildedTestFileName}' --logger 'trx;LogFileName={testResultsFilePath}' --no-build --no-restore";
+                string powerShellCommand = $@"cd '{dllDir}'; dotnet test '{buildedTestFileName}' --logger 'trx;LogFileName={testResultsFilePath}'";
                 StatusUI.ShowStatus($"Running command: {powerShellCommand}");
 
                 ProcessStartInfo startInfo = new ProcessStartInfo
