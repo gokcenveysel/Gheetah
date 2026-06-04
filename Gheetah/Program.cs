@@ -100,6 +100,8 @@ builder.Services.AddScoped<AgentPingService>();
 builder.Services.AddScoped<JavaScenarioExecutor>();
 builder.Services.AddScoped<CSharpAllScenariosExecutor>();
 builder.Services.AddScoped<JavaAllScenariosExecutor>();
+builder.Services.AddScoped<PlaywrightScenarioExecutor>();
+builder.Services.AddScoped<PlaywrightAllScenariosExecutor>();
 builder.Services.AddScoped<AgentManager>();
 builder.Services.AddScoped<JavaProjectConfigurator>();
 

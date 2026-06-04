@@ -209,17 +209,36 @@ namespace Gheetah.Services
 
                 Repository.Clone(repoUrl, projectPath, cloneOptions);
 
-                bool hasFeatureFiles = Directory.GetFiles(projectPath, "*.feature", SearchOption.AllDirectories).Any();
-                bool hasBddLibrary = language.ToLower() switch
-                {
-                    "c#" => CheckForCSharpBdd(projectPath),
-                    "java" => CheckForJavaBdd(projectPath),
-                    _ => false
-                };
+                // Auto-detect Playwright for TypeScript/JavaScript/Unknown repos
+                bool isPlaywrightCandidate = language.Equals("playwright", StringComparison.OrdinalIgnoreCase)
+                    || language.Equals("typescript", StringComparison.OrdinalIgnoreCase)
+                    || language.Equals("javascript", StringComparison.OrdinalIgnoreCase)
+                    || language.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                    || string.IsNullOrWhiteSpace(language);
 
-                if (!hasFeatureFiles || !hasBddLibrary)
+                bool isBddOrPlaywrightCompliant;
+                if (isPlaywrightCandidate && CheckForPlaywrightProject(projectPath))
                 {
-                    throw new InvalidOperationException("The project is not BDD compliant.");
+                    isBddOrPlaywrightCompliant =
+                        Directory.GetFiles(projectPath, "*.spec.ts", SearchOption.AllDirectories).Any();
+                    if (isBddOrPlaywrightCompliant)
+                        language = "Playwright";
+                }
+                else
+                {
+                    bool hasFeatureFiles = Directory.GetFiles(projectPath, "*.feature", SearchOption.AllDirectories).Any();
+                    bool hasBddLibrary = language.ToLower() switch
+                    {
+                        "c#" => CheckForCSharpBdd(projectPath),
+                        "java" => CheckForJavaBdd(projectPath),
+                        _ => false
+                    };
+                    isBddOrPlaywrightCompliant = hasFeatureFiles && hasBddLibrary;
+                }
+
+                if (!isBddOrPlaywrightCompliant)
+                {
+                    throw new InvalidOperationException("The project is not BDD/Playwright compliant.");
                 }
 
                 isBddCompliant = true;
@@ -331,15 +350,32 @@ namespace Gheetah.Services
                     }
                 }
 
-                bool hasFeatureFiles = Directory.GetFiles(projectPath, "*.feature", SearchOption.AllDirectories).Any();
-                bool hasBddLibrary = language.ToLower() switch
-                {
-                    "c#" => CheckForCSharpBdd(projectPath),
-                    "java" => CheckForJavaBdd(projectPath),
-                    _ => false
-                };
+                // Auto-detect Playwright for TypeScript/JavaScript repos
+                bool isPlaywrightUploadCandidate = language.Equals("playwright", StringComparison.OrdinalIgnoreCase)
+                    || language.Equals("typescript", StringComparison.OrdinalIgnoreCase)
+                    || language.Equals("javascript", StringComparison.OrdinalIgnoreCase);
 
-                if (!hasFeatureFiles || !hasBddLibrary)
+                bool isBddOrPlaywrightCompliant;
+                if (isPlaywrightUploadCandidate && CheckForPlaywrightProject(projectPath))
+                {
+                    isBddOrPlaywrightCompliant =
+                        Directory.GetFiles(projectPath, "*.spec.ts", SearchOption.AllDirectories).Any();
+                    if (isBddOrPlaywrightCompliant)
+                        language = "Playwright";
+                }
+                else
+                {
+                    bool hasFeatureFiles = Directory.GetFiles(projectPath, "*.feature", SearchOption.AllDirectories).Any();
+                    bool hasBddLibrary = language.ToLower() switch
+                    {
+                        "c#" => CheckForCSharpBdd(projectPath),
+                        "java" => CheckForJavaBdd(projectPath),
+                        _ => false
+                    };
+                    isBddOrPlaywrightCompliant = hasFeatureFiles && hasBddLibrary;
+                }
+
+                if (!isBddOrPlaywrightCompliant)
                 {
                     Directory.Delete(projectPath, true);
                     File.Delete(archivePath);
@@ -352,7 +388,7 @@ namespace Gheetah.Services
                         await SaveProjectsAsync(projects);
                     }
 
-                    throw new InvalidOperationException("The project is not BDD compliant. Removed.");
+                    throw new InvalidOperationException("The project is not BDD/Playwright compliant. Removed.");
                 }
 
                 if (language.Equals("java", StringComparison.OrdinalIgnoreCase))
@@ -547,6 +583,61 @@ namespace Gheetah.Services
                         });
                     }
                 }
+                else if (languageType.Equals("playwright", StringComparison.OrdinalIgnoreCase))
+                {
+                    var packageJsonFiles = Directory.GetFiles(projectPath, "package.json", SearchOption.AllDirectories)
+                        .Where(f => !f.Contains("node_modules"))
+                        .ToArray();
+
+                    if (!packageJsonFiles.Any())
+                        throw new Exception("No package.json found in the project directory.");
+
+                    var packageJsonPath = packageJsonFiles.First();
+                    var workingDir = Path.GetDirectoryName(packageJsonPath);
+
+                    string npmExecutable = GetNpmExecutablePath();
+                    if (string.IsNullOrEmpty(npmExecutable))
+                        throw new Exception("npm is not installed or not found in PATH. Please install Node.js.");
+
+                    var (npmExit, npmOut) = await RunProcessAsync(npmExecutable, "install", workingDir);
+                    if (npmExit != 0)
+                        throw new Exception($"npm install failed:\n{npmOut}");
+
+                    var testsPath = Path.Combine(workingDir, "tests");
+                    if (!Directory.Exists(testsPath))
+                        testsPath = workingDir;
+
+                    var specFiles = Directory.GetFiles(testsPath, "*.spec.ts", SearchOption.AllDirectories);
+                    totalFeatures = specFiles.Length;
+
+                    var scenarios = new List<FeatureScenarioInfo>();
+                    foreach (var specFile in specFiles)
+                    {
+                        var content = await _fileService.ReadAllTextAsync(specFile);
+                        var matches = Regex.Matches(content, @"test\s*\(\s*['""](.+?)['""]");
+                        foreach (Match match in matches)
+                        {
+                            scenarios.Add(new FeatureScenarioInfo
+                            {
+                                FeatureFileName = Path.GetFileName(specFile),
+                                ScenarioTitle = match.Groups[1].Value,
+                                Parameters = new List<string>()
+                            });
+                            totalScenarios++;
+                        }
+                    }
+
+                    projectInfos.Add(new ProjectInfo
+                    {
+                        ProjectName = project.Name,
+                        BuildedTestFileName = "playwright",
+                        BuildedTestFileFullPath = workingDir,
+                        BuildInfoFileName = "package.json",
+                        BuildInfoFileFullPath = workingDir,
+                        FeatureFilesPath = testsPath,
+                        Scenarios = scenarios
+                    });
+                }
                 else
                 {
                     return new BuildResult { IsSuccess = false, Message = $"Unsupported language: {languageType}" };
@@ -566,6 +657,12 @@ namespace Gheetah.Services
                 await _logService.LogAsync("SYSTEM", "BuildProjectAsync", $"Build Error: {ex.Message}");
                 return new BuildResult { IsSuccess = false, Message = $"Build Error: {ex.Message}" };
             }
+        }
+
+        private bool CheckForPlaywrightProject(string path)
+        {
+            return Directory.GetFiles(path, "playwright.config.ts", SearchOption.AllDirectories).Any() ||
+                   Directory.GetFiles(path, "playwright.config.js", SearchOption.AllDirectories).Any();
         }
 
         private bool CheckForCSharpBdd(string path)
@@ -840,6 +937,43 @@ namespace Gheetah.Services
             }
             
             _logService.LogAsync("SYSTEM", "GetMavenExecutablePath", "Maven executable file not found.").GetAwaiter().GetResult();
+            return null;
+        }
+
+        private string GetNpmExecutablePath()
+        {
+            var path = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrEmpty(path))
+            {
+                var paths = path.Split(Path.PathSeparator);
+                foreach (var p in paths)
+                {
+                    if (!string.IsNullOrEmpty(p) && Directory.Exists(p))
+                    {
+                        foreach (var exe in new[] { "npm.cmd", "npm.exe", "npm" })
+                        {
+                            var npmExe = Path.Combine(p, exe);
+                            if (File.Exists(npmExe))
+                                return npmExe;
+                        }
+                    }
+                }
+            }
+
+            // Check common Node.js installation paths on Windows
+            var commonPaths = new[]
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "nodejs", "npm.cmd"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "nodejs", "npm.cmd"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "npm", "npm.cmd"),
+            };
+
+            foreach (var p in commonPaths)
+            {
+                if (File.Exists(p))
+                    return p;
+            }
+
             return null;
         }
 

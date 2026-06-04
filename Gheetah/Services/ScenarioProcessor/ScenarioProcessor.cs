@@ -47,6 +47,11 @@ namespace Gheetah.Services.ScenarioProcessor
                 _backgroundJobClient.Enqueue<JavaScenarioExecutor>(x =>
                     x.ExecuteAsync(processId, project, request, cancellationTokenSource.Token));
             }
+            else if (project.LanguageType.Equals("playwright", StringComparison.OrdinalIgnoreCase))
+            {
+                _backgroundJobClient.Enqueue<PlaywrightScenarioExecutor>(x =>
+                    x.ExecuteAsync(processId, project, request, cancellationTokenSource.Token));
+            }
 
             return processId;
         }
@@ -75,6 +80,11 @@ namespace Gheetah.Services.ScenarioProcessor
             else if (project.LanguageType.Equals("java", StringComparison.OrdinalIgnoreCase))
             {
                 _backgroundJobClient.Enqueue<JavaAllScenariosExecutor>(x =>
+                    x.ExecuteAllAsync(processId, project, request, cancellationTokenSource.Token));
+            }
+            else if (project.LanguageType.Equals("playwright", StringComparison.OrdinalIgnoreCase))
+            {
+                _backgroundJobClient.Enqueue<PlaywrightAllScenariosExecutor>(x =>
                     x.ExecuteAllAsync(processId, project, request, cancellationTokenSource.Token));
             }
 

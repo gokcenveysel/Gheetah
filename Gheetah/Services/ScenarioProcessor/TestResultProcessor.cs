@@ -21,26 +21,43 @@ namespace Gheetah.Services.ScenarioProcessor
             {
                 try
                 {
-                    var steps = ScenarioHelper.ParseStdOutFromXml(testResultsFilePath);
-                    var partialReport = ScenarioHelper.GenerateHtmlReport(steps);
-            
+                    string partialReport;
+                    if (testResultsFilePath.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        partialReport = IsCucumberJson(testResultsFilePath)
+                            ? ScenarioHelper.GenerateCucumberHtmlReport(testResultsFilePath)
+                            : ScenarioHelper.GeneratePlaywrightHtmlReport(testResultsFilePath);
+                    }
+                    else
+                    {
+                        var steps = ScenarioHelper.ParseStdOutFromXml(testResultsFilePath);
+                        partialReport = ScenarioHelper.GenerateHtmlReport(steps);
+                    }
+
                     processInfo.HtmlReport += partialReport;
-            
                     await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveHtmlReport", processInfo.HtmlReport);
                 }
                 catch (Exception ex)
                 {
                     processInfo.Output.Add($"Report generation error: {ex.Message}");
-                    await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", 
+                    await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput",
                         $"Error generating report: {ex.Message}");
                 }
             }
             else
             {
                 processInfo.Output.Add("Test results file not found.");
-                await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", 
+                await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput",
                     "Test results file not found.");
             }
+        }
+        private static bool IsCucumberJson(string path)
+        {
+            try
+            {
+                return (File.ReadAllText(path).TrimStart().FirstOrDefault()) == '[';
+            }
+            catch { return false; }
         }
     }
 }

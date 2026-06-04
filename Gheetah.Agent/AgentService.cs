@@ -259,6 +259,11 @@ namespace Gheetah.Agent
                         StatusUI.ShowStatus("Calling JavaScenarioExecutor.ExecuteAsync");
                         await JavaScenarioExecutor.ExecuteAsync(extractPath, scenarioTag, processId);
                     }
+                    else if (languageType.Equals("playwright", StringComparison.OrdinalIgnoreCase))
+                    {
+                        StatusUI.ShowStatus("Calling PlaywrightScenarioExecutor.ExecuteAsync");
+                        await PlaywrightScenarioExecutor.ExecuteAsync(extractPath, scenarioTag, processId);
+                    }
                     else
                     {
                         StatusUI.ShowStatus($"Unsupported language type: {languageType}");
@@ -329,6 +334,11 @@ namespace Gheetah.Agent
                     {
                         StatusUI.ShowStatus("Calling JavaAllScenariosExecutor.ExecuteAllAsync");
                         await JavaAllScenariosExecutor.ExecuteAllAsync(extractPath, processId);
+                    }
+                    else if (languageType.Equals("playwright", StringComparison.OrdinalIgnoreCase))
+                    {
+                        StatusUI.ShowStatus("Calling PlaywrightAllScenariosExecutor.ExecuteAllAsync");
+                        await PlaywrightAllScenariosExecutor.ExecuteAllAsync(extractPath, processId);
                     }
                     else
                     {

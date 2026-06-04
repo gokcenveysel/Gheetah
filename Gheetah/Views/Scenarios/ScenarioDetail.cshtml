@@ -234,6 +234,10 @@
                 <option value="">Select a tag...</option>
             </select>
         </div>
+        <div id="playwright-test-selection" class="mb-3" style="display:none;">
+            <label class="form-label">Selected Test</label>
+            <div id="playwright-test-name" class="form-control bg-light text-truncate" style="cursor:default;" title=""></div>
+        </div>
         <div class="mb-3">
             <label class="form-label">Select Agent</label>
             <select id="agentSelection" class="form-select">
@@ -348,6 +352,7 @@
         let currentScenarioPath = null;
         let isRunAllScenarios = false;
         let currentProcessId = null;
+        const languageType = '@(ViewBag.LanguageType ?? "")';
 
         function injectHtmlWithScripts(htmlContent, containerSelector) {
             console.log('injectHtmlWithScripts called with container:', containerSelector);
@@ -449,6 +454,17 @@
             }
 
             isRunAllScenarios = false;
+
+            if (languageType.toLowerCase() === 'playwright') {
+                $('#tag-selection').hide();
+                $('#playwright-test-selection').show();
+                $('#playwright-test-name').text(currentScenarioName).attr('title', currentScenarioName);
+                $('#run-scenario-btn').text('Run Test');
+                window.loadAvailableAgents();
+                new bootstrap.Offcanvas(document.getElementById('runOptionsOffcanvas')).show();
+                return;
+            }
+
             $('#tag-selection').show();
             $('#run-scenario-btn').text('Run Scenario');
 
@@ -568,7 +584,9 @@
                     }
                 });
             } else {
-                if (!selectedTag) {
+                const isPlaywright = languageType.toLowerCase() === 'playwright';
+
+                if (!isPlaywright && !selectedTag) {
                     console.warn('No scenario tag selected');
                     showCustomToast('warning', 'Please select a scenario tag');
                     $('.overlay').hide();
@@ -904,18 +922,33 @@
                     const scenarioName = data.node.original.scenarioName;
                     const fullName = data.node.original.data ? data.node.original.data.fullName : null;
 
-                    $('#scenario-name').text('Scenario: ' + (fullName || scenarioName));
+                    const label = languageType.toLowerCase() === 'playwright' ? 'Test: ' : 'Scenario: ';
+                    $('#scenario-name').text(label + (fullName || scenarioName));
                     $('#select-tag-btn').prop('disabled', false);
-                    $.get(`/Scenarios/GetScenarioContent?filePath=${encodeURIComponent(path)}&scenarioName=${encodeURIComponent(scenarioName)}`)
-                        .done(function(content) {
-                            const codeElement = document.getElementById('feature-content');
-                            codeElement.innerHTML = hljs.highlight(content, { language: 'gherkin' }).value;
-                            codeElement.classList.add('hljs');
-                        })
-                        .fail(function(xhr) {
-                            console.error('GetScenarioContent Failed:', xhr.status, xhr.statusText, xhr.responseText);
-                            showCustomToast('danger', 'Content load failed: ' + (xhr.responseText || 'Unknown error'));
-                        });
+
+                    if (languageType.toLowerCase() === 'playwright') {
+                        $.get(`/Scenarios/GetPlaywrightTestContent?filePath=${encodeURIComponent(path)}&testName=${encodeURIComponent(scenarioName)}`)
+                            .done(function(content) {
+                                const codeElement = document.getElementById('feature-content');
+                                codeElement.innerHTML = hljs.highlight(content, { language: 'typescript' }).value;
+                                codeElement.classList.add('hljs');
+                            })
+                            .fail(function(xhr) {
+                                console.error('GetPlaywrightTestContent Failed:', xhr.status, xhr.statusText);
+                                showCustomToast('danger', 'Content load failed: ' + (xhr.responseText || 'Unknown error'));
+                            });
+                    } else {
+                        $.get(`/Scenarios/GetScenarioContent?filePath=${encodeURIComponent(path)}&scenarioName=${encodeURIComponent(scenarioName)}`)
+                            .done(function(content) {
+                                const codeElement = document.getElementById('feature-content');
+                                codeElement.innerHTML = hljs.highlight(content, { language: 'gherkin' }).value;
+                                codeElement.classList.add('hljs');
+                            })
+                            .fail(function(xhr) {
+                                console.error('GetScenarioContent Failed:', xhr.status, xhr.statusText, xhr.responseText);
+                                showCustomToast('danger', 'Content load failed: ' + (xhr.responseText || 'Unknown error'));
+                            });
+                    }
                 } else {
                     $('#select-tag-btn').prop('disabled', true);
                     currentScenarioName = null;
@@ -931,6 +964,7 @@
             $('#runOptionsOffcanvas').on('hidden.bs.offcanvas', function() {
                 isRunAllScenarios = false;
                 $('#tag-selection').show();
+                $('#playwright-test-selection').hide();
                 $('#run-scenario-btn').text('Run Scenario');
             });
 

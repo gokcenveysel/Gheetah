@@ -1,0 +1,9 @@
+{
+  "Adapters": {
+    "Playwright": ""
+  },
+  "Addons": {
+    "API": "axios",
+    "Database": "pg"
+  }
+}

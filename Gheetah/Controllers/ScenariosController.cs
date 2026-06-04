@@ -48,6 +48,7 @@ public class ScenariosController : Controller
         ViewBag.ProjectName = project.Name;
         ViewBag.FeatureFileCount = project.FeatureFileCount;
         ViewBag.ScenarioCount = project.ScenarioCount;
+        ViewBag.LanguageType = project.LanguageType;
 
         return View();
     }
@@ -81,10 +82,29 @@ public class ScenariosController : Controller
             return NotFound("The project not found!");
         }
 
-        await _logService.LogAsync(User.Identity.Name, "Test Explorer", 
+        await _logService.LogAsync(User.Identity.Name, "Test Explorer",
             $"Project: {project.Name}, Language: {project.LanguageType}, ProjectInfos: {string.Join(", ", project.ProjectInfos.Select(p => p.FeatureFilesPath ?? "null"))}");
 
-        var infoWithFeatures = project.ProjectInfos?.FirstOrDefault(p => 
+        if (project.LanguageType.Equals("playwright", StringComparison.OrdinalIgnoreCase))
+        {
+            var playwrightInfo = project.ProjectInfos?.FirstOrDefault(p =>
+                !string.IsNullOrWhiteSpace(p.FeatureFilesPath) && Directory.Exists(p.FeatureFilesPath));
+
+            if (playwrightInfo == null)
+            {
+                var msg = !project.IsBuilt
+                    ? $"Project '{project.Name}' has not been built yet. Click the Build button on the Project List to run 'npm install' and discover tests."
+                    : "No valid Playwright tests directory found. Ensure the project contains *.spec.ts files.";
+                await _logService.LogAsync(User.Identity.Name, "Test Explorer", msg);
+                return NotFound(msg);
+            }
+
+            var processedTests = ScenarioHelper.ProcessPlaywrightTests(
+                Path.Combine(clonesRoot, project.Name), project.Name, playwrightInfo.FeatureFilesPath);
+            return Json(processedTests);
+        }
+
+        var infoWithFeatures = project.ProjectInfos?.FirstOrDefault(p =>
             !string.IsNullOrWhiteSpace(p.FeatureFilesPath) &&
             Directory.Exists(p.FeatureFilesPath) &&
             (project.LanguageType.ToLower() != "java" || !p.FeatureFilesPath.Contains("target", StringComparison.OrdinalIgnoreCase)));
@@ -204,6 +224,39 @@ public class ScenariosController : Controller
     }
 
     [HttpGet]
+    public IActionResult GetPlaywrightTestContent(string filePath, string testName = null)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !System.IO.File.Exists(filePath))
+            return NotFound("Test file not found.");
+
+        if (!string.IsNullOrWhiteSpace(testName))
+            return Content(ScenarioHelper.ExtractPlaywrightTestContent(filePath, testName), "text/plain");
+
+        return Content(System.IO.File.ReadAllText(filePath), "text/plain");
+    }
+
+    [HttpGet]
+    public IActionResult GetPlaywrightAttachment(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath)) return NotFound();
+        var normalizedPath = Path.GetFullPath(filePath);
+        if (!System.IO.File.Exists(normalizedPath)) return NotFound();
+
+        var ext = Path.GetExtension(normalizedPath).ToLower();
+        var contentType = ext switch
+        {
+            ".webm" => "video/webm",
+            ".mp4" => "video/mp4",
+            ".png" => "image/png",
+            ".jpg" or ".jpeg" => "image/jpeg",
+            _ => (string)null
+        };
+        if (contentType == null) return NotFound();
+
+        return PhysicalFile(normalizedPath, contentType);
+    }
+
+    [HttpGet]
     public async Task<IActionResult> GetScenarioContent(string filePath, string scenarioName)
     {
         try
@@ -290,12 +343,20 @@ public class ScenariosController : Controller
             if (projectInfo == null)
             {
                 await _logService.LogAsync(User.Identity.Name, "RunScenario",
-                    $"FAILED: No ProjectInfo with scenarios and built test file found for project {project.Name}.");
-                return BadRequest(
-                    $"No ProjectInfo with scenarios and built test file found for project {project.Name}.");
+                    $"FAILED: No ProjectInfo with scenarios found for project {project.Name}.");
+                return BadRequest(!project.IsBuilt
+                    ? $"Project '{project.Name}' has not been built yet. Please build it first."
+                    : $"No runnable scenarios found for project '{project.Name}'.");
             }
 
-            var projectPath = Path.Combine(clonesRoot, projectInfo.ProjectName);
+            // For Playwright, ScenarioName (test name for --grep) must be provided
+            if (project.LanguageType.Equals("playwright", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrWhiteSpace(request.ScenarioName))
+            {
+                return BadRequest("Playwright test name is required. Please select a test from the tree.");
+            }
+
+            var projectPath = Path.Combine(clonesRoot, project.Name);
             if (!Directory.Exists(projectPath))
             {
                 await _logService.LogAsync(User.Identity.Name, "RunScenario",
@@ -332,10 +393,25 @@ public class ScenariosController : Controller
                     await _logService.LogAsync(User.Identity.Name, "RunScenario",
                         $"Zip sent: AgentId: {request.AgentId}, ConnectionId: {agent.ConnectionId}, ProcessId: {processId}, ScenarioTag: {request.ScenarioTag}");
 
+                    var tagOrTestName = project.LanguageType.Equals("playwright", StringComparison.OrdinalIgnoreCase)
+                        ? request.ScenarioName
+                        : request.ScenarioTag;
+
+                    // Register ProcessInfo so GetProcessStatus and HTML report storage work for agent runs
+                    var agentProcessInfo = new Gheetah.Models.ProcessModel.ProcessInfo
+                    {
+                        Id = processId,
+                        UserId = user.Id,
+                        Status = Gheetah.Models.ProcessModel.ProcessStatus.Running,
+                        StartTime = DateTime.UtcNow,
+                        CancellationTokenSource = new CancellationTokenSource()
+                    };
+                    _processService.AddProcess(agentProcessInfo);
+
                     await _hubContext.Clients.Client(agent.ConnectionId).SendAsync("ExecuteScenario", processId,
-                        request.ScenarioTag, project.LanguageType, projectInfo.BuildedTestFileName);
+                        tagOrTestName, project.LanguageType, projectInfo.BuildedTestFileName);
                     await _logService.LogAsync(User.Identity.Name, "RunScenario",
-                        $"ExecuteScenario called: AgentId: {request.AgentId}, ProcessId: {processId}, ScenarioTag: {request.ScenarioTag}, LanguageType: {project.LanguageType}, BuildedTestFileName: {projectInfo.BuildedTestFileName}");
+                        $"ExecuteScenario called: AgentId: {request.AgentId}, ProcessId: {processId}, TagOrTestName: {tagOrTestName}, LanguageType: {project.LanguageType}, BuildedTestFileName: {projectInfo.BuildedTestFileName}");
 
                     System.IO.File.Delete(tempPath);
                 }
@@ -401,9 +477,9 @@ public class ScenariosController : Controller
                 return BadRequest($"No ProjectInfo with scenarios found for project {project.Name}.");
             }
 
-            // Use BuildInfoFileFullPath to get the project directory (contains pom.xml, build.gradle, or .csproj)
-            var projectPath = Path.GetDirectoryName(projectInfo.BuildInfoFileFullPath);
-            if (string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
+            // Use clonesRoot + project.Name for consistency with RunScenario
+            var projectPath = Path.Combine(clonesRoot, project.Name);
+            if (!Directory.Exists(projectPath))
             {
                 await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"FAILED: Project path {projectPath} does not exist.");
                 return BadRequest($"Project path {projectPath} does not exist.");
@@ -426,11 +502,23 @@ public class ScenariosController : Controller
                     byte[] zipData = await System.IO.File.ReadAllBytesAsync(tempPath);
                     await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"Zip created: {tempPath}, Size: {zipData.Length} bytes");
 
+                    // Register ProcessInfo so HTML report storage works for agent runs
+                    var agentProcessInfo = new Gheetah.Models.ProcessModel.ProcessInfo
+                    {
+                        Id = processId,
+                        UserId = user.Id,
+                        Status = Gheetah.Models.ProcessModel.ProcessStatus.Running,
+                        StartTime = DateTime.UtcNow,
+                        CancellationTokenSource = new CancellationTokenSource()
+                    };
+                    _processService.AddProcess(agentProcessInfo);
+
                     await _hubContext.Clients.Client(agent.ConnectionId).SendAsync("SendZipFile", request.AgentId, processId, zipData);
                     await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"Zip sent: AgentId: {request.AgentId}, ConnectionId: {agent.ConnectionId}, ProcessId: {processId}");
 
-                    await _hubContext.Clients.Client(agent.ConnectionId).SendAsync("ExecuteAllScenarios", processId, project.LanguageType);
-                    await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"ExecuteAllScenarios called: AgentId: {request.AgentId}, ProcessId: {processId}, LanguageType: {project.LanguageType}");
+                    // FIX: Pass 3 parameters — agent handler expects (processId, languageType, buildedTestFileName)
+                    await _hubContext.Clients.Client(agent.ConnectionId).SendAsync("ExecuteAllScenarios", processId, project.LanguageType, projectInfo.BuildedTestFileName);
+                    await _logService.LogAsync(User.Identity.Name, "RunAllScenarios", $"ExecuteAllScenarios called: AgentId: {request.AgentId}, ProcessId: {processId}, LanguageType: {project.LanguageType}, BuildedTestFileName: {projectInfo.BuildedTestFileName}");
 
                     System.IO.File.Delete(tempPath);
                 }
