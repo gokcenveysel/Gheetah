@@ -6,13 +6,15 @@
 ![Status](https://img.shields.io/badge/Status-Open--Source-brightgreen)
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
 ![Java](https://img.shields.io/badge/Java-11+-red)
+![Playwright](https://img.shields.io/badge/Playwright-TypeScript-2EAD33)
 
-**Gheetah** is an open-source test orchestration platform designed to streamline the execution and management of BDD (Behavior-Driven Development) test automation projects. With built-in IDE capabilities, project scaffolding, enterprise pull request management, and distributed execution, Gheetah transforms how QA teams work with BDD.
+**Gheetah** is an open-source test orchestration platform designed to streamline the execution and management of BDD (Behavior-Driven Development) and modern test automation projects. With built-in IDE capabilities, project scaffolding, enterprise pull request management, and distributed execution, Gheetah transforms how QA teams work with C#, Java, and Playwright.
 
 ---
 
 ## Table of Contents
 - [Introduction](#introduction)
+- [What's New in v2.1](#whats-new-in-v21)
 - [What's New in v2.0](#whats-new-in-v20)
 - [System Requirements](#system-requirements)
 - [Installation](#installation)
@@ -30,17 +32,17 @@ Gheetah is a powerful **Test Orchestration Platform** with:
 - **Cross-platform** .NET 8.0 MVC backend
 - **Modern frontend** designed using Tabler.io
 - **No database dependency** – stores data as JSON files in `/Data` directory
-- **Support for BDD test projects** in C# (Reqnroll/SpecFlow) or Java (TestNG-Cucumber/JUnit-Cucumber)
+- **Support for BDD and modern test automation** in C# (Reqnroll/SpecFlow), Java (TestNG-Cucumber/JUnit-Cucumber), and **Playwright (TypeScript)**
 - **Run tests remotely** via Gheetah Agent or directly on the Gheetah Server
-- **Real-time test results** with structured reporting
+- **Real-time test results** with language-specific structured reporting
 
 ### Key Features
 
 | Category | Features |
 |----------|----------|
-| **Test Execution** | Run tests remotely via Gheetah Agent or locally, tag filtering, real-time SignalR output |
-| **IDE Capabilities** | Monaco editor, IntelliSense, step definition navigation, diff viewer |
-| **Project Scaffolding** | Create C#/Java BDD projects from scratch (API, Web, Mobile, Desktop) |
+| **Test Execution** | Run tests remotely via Gheetah Agent or locally, tag/test-name filtering, real-time SignalR output |
+| **IDE Capabilities** | Monaco editor, IntelliSense, step definition navigation, TypeScript support, diff viewer |
+| **Project Scaffolding** | Create C#/Java/Playwright projects from scratch (API, Web, Mobile, Desktop) |
 | **Pull Requests** | Inline comments, conflict resolver, approval workflow, merge & build pipeline |
 | **Enterprise-Ready** | Customizable dashboard, user/role management, SSO (Azure AD, Google) |
 | **CI/CD Integrations** | Azure DevOps, Jenkins, GitLab |
@@ -48,10 +50,128 @@ Gheetah is a powerful **Test Orchestration Platform** with:
 
 ---
 
+## What's New in v2.1 🚀
+
+### 🎭 Full Playwright (TypeScript) Support
+
+Gheetah v2.1 brings complete Playwright support with full parity to the existing C# and Java features.
+
+#### Project Management
+- **Create** Playwright projects from scratch via the Project Wizard (Language → Playwright)
+- **Upload** existing Playwright projects as `.zip` / `.rar` archives
+- **Clone** from GitHub, GitLab, Azure DevOps — Playwright projects auto-detected from `playwright.config.ts` and `.spec.ts` files
+- **Build** Playwright projects (`npm install` + test discovery) — no separate build step needed
+
+#### Test Explorer
+- **`test.describe` hierarchy** — JsTree groups tests by their describe block, showing each `test(...)` as a runnable leaf node
+- **Scenario Content panel** — clicking a test shows only that test's TypeScript code (not the entire file), with the describe block shown as context comment
+- **TypeScript syntax highlighting** in the Scenario Content panel
+
+#### Test Execution
+- **Run single test** — uses `--grep 'test name'` to execute only the selected test
+- **Run all tests** — executes the entire spec suite
+- **Screenshot + video capture** for every run via automatically generated `gheetah-runner.config.ts` — works even if the project's own config has `only-on-failure` settings
+- **Playwright HTML Report** — Gheetah-styled report showing suite grouping, pass/fail/skip badges, browser label, duration, error details (expandable), and embedded screenshots/videos
+
+#### Reporting
+- **Playwright JSON** reporter output parsed into a Gheetah-native report with:
+  - Summary row: `✓ N passed`, `✗ N failed`, `− N skipped`, total duration
+  - Suite groupings by spec file
+  - Each test with status icon, name, browser, duration
+  - Failed tests auto-expanded showing full error message
+  - Screenshots embedded as base64
+  - Videos served via `/Scenarios/GetPlaywrightAttachment`
+
+#### Agent Execution
+- Full Playwright remote execution via Gheetah Agent
+- Agent creates the same `gheetah-runner.config.ts` override for consistent screenshot/video capture
+- JSON results sent back to server and rendered identically to local runs
+
+#### IDE (Gheetah Editor)
+- **Add New Item** dialog extended with TypeScript file types:
+  - **Playwright Spec Test** (`.spec.ts`) — generates a `test.describe` skeleton
+  - **Page Object Model** (`.ts`) — generates a typed POM class
+  - **Custom Fixture** (`.ts`) — generates a `test.extend` fixture
+  - **TypeScript Class** (`.ts`) — generates a plain class
+- `.spec.ts` files get a test-pipe icon; `.ts` files get a TypeScript icon in the file tree
+
+#### Rich Templates
+The Playwright `Base_Web` template ships with **14 `test.describe` blocks** covering all major Playwright capabilities:
+
+| Describe Block | What it demonstrates |
+|----------------|----------------------|
+| `Navigation` | `goto`, `goBack`, `goForward`, `reload`, URL/title assertions |
+| `Locator Strategies` | role, text, placeholder, label, CSS, XPath, testId, nth, filter |
+| `Form Interactions` | `fill`, `clear`, `check`, `uncheck`, `selectOption`, form submission |
+| `Keyboard and Mouse` | `keyboard.press`, key combos, hover, dblclick, right-click, drag-and-drop, scroll |
+| `Waiting and Auto-Wait` | `waitForSelector`, `waitForURL`, `networkidle`, `waitForResponse`, `waitForFunction` |
+| `Dialogs and Alerts` | alert accept/dismiss, confirm, prompt, message capture |
+| `Frames` | `frameLocator`, nested frames |
+| `Multiple Pages and Tabs` | `context.waitForEvent('page')`, multi-context, popup handling |
+| `Network Interception` | `route.fulfill`, block resources, modify headers, log requests |
+| `Screenshots` | full-page, element, clipped screenshots |
+| `Playwright Assertions` | state, text, attribute, count, value, URL, title |
+| `API Testing` | GET, POST, PUT, DELETE, auth, reusable `request.newContext` |
+| `Mobile Viewport` | custom viewport, custom user agent |
+| `Storage and Cookies` | cookies, localStorage, sessionStorage |
+| `JavaScript Execution` | `evaluate`, DOM manipulation, element evaluate |
+
+### 🔧 Execution & Reporting Improvements
+
+#### Smarter Output Handling
+- **ANSI code stripping** — terminal escape sequences (`\x1B[...`) are stripped from all output before display
+- **Intelligent stderr filtering** — Java logger INFO messages, WebDriverManager notifications, CDP warnings, and npm informational output are no longer prefixed with `Error:`, preventing false alarms in the output panel
+
+#### Java — Cucumber JSON Reports (Server & Agent)
+- Java executors now look for `target/cucumber-reports/**/*.json` (Cucumber's actual output directory) instead of the non-existent `TestResults/` directory
+- Cucumber JSON parsed into a **Gheetah-native step-level report**: each step shown with ✓/✗/− icon, keyword highlighted in indigo, duration, and full error message for failed steps
+- Failed tests no longer cause early `return` before the report is collected — the JSON report is always generated even when tests fail
+
+#### GheetahHub — Multi-format Result Routing
+`SendOutput`, `SendResult`, and `ReceiveResult` in the Hub now detect result content type automatically:
+- Content starting with `[` → **Cucumber JSON** → `GenerateCucumberHtmlReport`
+- Content starting with `{` → **Playwright JSON** → `GeneratePlaywrightHtmlReport`
+- All other content → **TRX/XML** → `ParseStdOutFromXml` + `GenerateHtmlReport` (C# existing behavior preserved)
+
+#### C# — Step Status Fixed
+Reqnroll step status is now correctly determined from each step's own output:
+- `-> skipped because of previous errors` → **Failed** (red) — previously showed green
+- `-> No matching step definition found` → **Failed** (red)
+- `-> error:` / `-> fail:` → **Failed** (red)
+- `-> skipped:` → **Skipped** (yellow)
+- `-> done:` → **Passed** (green)
+
+### 🏗️ Expanded BDD Templates
+
+Both C# (Reqnroll) and Java (Cucumber) templates now include **comprehensive step definitions** covering the full Selenium WebDriver API:
+
+| Category | New Steps Added |
+|----------|----------------|
+| **Dropdown** | Select by text / value / index; assert selected option |
+| **Checkbox/Radio** | Check, uncheck, assert checked state |
+| **Alerts** | Accept, dismiss, enter text in prompt, assert alert text |
+| **Frames** | Switch by ID/Name/XPath/index; switch to parent; switch to default |
+| **Tabs/Windows** | Open new tab, switch to tab by index, close tab, switch to main |
+| **Scroll** | Scroll to top/bottom, scroll by pixels, scroll to element |
+| **Wait** | Wait N seconds/ms, wait for element visible/disappear, wait for URL/title |
+| **Keyboard** | Arrow keys, Home/End, PageUp/Down, Ctrl/Alt/Shift combos, key on element |
+| **JavaScript** | Execute script, set attribute, highlight element |
+| **Drag & Drop** | `dragTo` / `DragAndDrop` |
+| **File Upload** | `SendKeys` with file path |
+| **Cookies** | Add, delete, assert cookie exists |
+| **Assertions** | URL (be/contain/end with), page source, element count (exact/greater than), CSS property, attribute (not be empty), dropdown selection, checkbox state |
+
+Feature files include **10–12 scenarios** demonstrating all steps against publicly available test sites (`the-internet.herokuapp.com`, `reqres.in`).
+
+### 📁 Upload — Playwright Support
+The **Upload Projects** tab now has three language options (Java, C#, Playwright) with auto-detection: if a `.zip` contains `playwright.config.ts` and `.spec.ts` files, it is accepted as a Playwright project regardless of the selected language.
+
+---
+
 ## What's New in v2.0 🚀
 
 ### 🔧 Built-in Professional IDE
-- **Monaco Editor** – Same engine as VS Code with syntax highlighting for C#, Java, Gherkin, JSON, XML
+- **Monaco Editor** – Same engine as VS Code with syntax highlighting for C#, Java, Gherkin, TypeScript, JSON, XML
 - **IntelliSense & Autocomplete** – Code snippets for classes, methods, properties, step definitions, test methods
 - **Ctrl+Click Navigation** – Jump from `.feature` steps to step definition implementations instantly
 - **Real-time Diff Viewer** – Track changes before commit
@@ -96,20 +216,17 @@ Generated projects include pre-configured package references, sample feature fil
 | **Operating System** | Windows 10/11 or Linux (x64 distributions) | Same |
 | **Compute** | 2 CPU cores | 4+ CPU cores |
 | **Memory** | 4GB RAM | 8GB RAM |
-| **Runtime** | .NET 8.0 | .NET 8.0 + Java 11+ |
+| **Runtime** | .NET 8.0 | .NET 8.0 + Java 11+ + Node.js 18+ |
 
-### For Java Project Support (on Gheetah Server)
+### Language-Specific Requirements (Server & Agent)
 
-- **JDK**: OpenJDK 11+ or Oracle JDK 11+
-- **Build Tools**: Maven 3.6+ or Gradle 7.4+
-- **Environment**: Properly configured `JAVA_HOME` and build tool paths
+| Language | Required Software |
+|----------|-------------------|
+| **C# / Reqnroll** | .NET 8.0 SDK, NuGet restore capability |
+| **Java / Cucumber** | JDK 11+, Maven 3.6+ or Gradle 7.4+, `JAVA_HOME` set |
+| **Playwright / TypeScript** | Node.js 18+ with `npm` in PATH, Chromium (installed via `npx playwright install` or bundled) |
 
-### Language-Specific Agent Requirements
-
-| Language | Requirements |
-|----------|--------------|
-| **C# / SpecFlow** | NuGet package restore capability, MSBuild or dotnet CLI |
-| **Java / Cucumber** | Maven or Gradle installation, network access to artifact repositories, proper `JAVA_HOME` |
+> **Note for Playwright:** Run `npx playwright install chromium` on the server/agent machine after Node.js is installed. The build step runs `npm install`; browser binaries are installed separately.
 
 ---
 
@@ -135,7 +252,7 @@ When you deploy **Gheetah** to a compatible server or run it via Visual Studio, 
    - Default permissions: Clone, Build, Delete, ManageUsers, ManageGroups, ManagePermissions, ViewDashboard, RunScenarios, ViewResults
 
 4. **Configure Project Folder**
-   - ⚠️ **Critical System Configuration** – defines the root directory where all BDD test automation projects will be stored
+   - ⚠️ **Critical System Configuration** – defines the root directory where all test automation projects will be stored
    - If no directory is specified, projects default to `Gheetah\CopiedProjects`
    - Without this configuration, the entire test orchestration pipeline will be non-functional
 
@@ -176,10 +293,11 @@ The Pending Request system serves as a critical security gateway:
 
 | Feature | Description |
 |---------|-------------|
-| **File Explorer** | Tree view of project files with folder/file icons |
-| **Monaco Editor** | Same engine as VS Code with syntax highlighting |
-| **IntelliSense** | Code completion for C#, Java, Gherkin |
-| **Code Snippets** | `class`, `method`, `prop`, `stepdef`, `test`, Feature/Scenario templates |
+| **File Explorer** | Tree view with language-specific icons (C#, Java, Gherkin, TypeScript, JSON, XML) |
+| **Monaco Editor** | Same engine as VS Code with syntax highlighting for all supported languages |
+| **IntelliSense** | Code completion for C#, Java, Gherkin, TypeScript |
+| **Code Snippets** | `class`, `method`, `prop`, `stepdef`, `test`, Feature/Scenario, Playwright spec templates |
+| **Add New Item** | C# (Class/Interface/StepDef), Java (Class/StepDef), TypeScript (Spec/POM/Fixture/Class), Feature, XML, JSON |
 | **Step Definition Navigation** | Ctrl+Click on Given/When/Then → opens step definition |
 | **Diff Viewer** | Side-by-side comparison of modified files |
 | **Tab Management** | Open multiple files, close with Ctrl+Q, switch with Ctrl+1-9 |
@@ -217,45 +335,47 @@ The Pending Request system serves as a critical security gateway:
 
 ### 🏗️ Project Scaffolding
 
-Create new BDD projects directly from Gheetah without leaving the platform:
+Create new test projects directly from Gheetah without leaving the platform:
 
 **Supported Project Types:**
 
-| Type | C# (.NET) | Java |
-|------|-----------|------|
-| **API Testing** | RestSharp + SpecFlow/Reqnroll | RestAssured + Cucumber |
-| **Web Testing** | Selenium WebDriver / Playwright | Selenium WebDriver |
-| **Mobile Testing** | Appium | Appium |
-| **Desktop Testing** | WinAppDriver | WinAppDriver |
+| Type | C# (.NET) | Java | Playwright |
+|------|-----------|------|------------|
+| **Web Testing** | Selenium + Reqnroll | Selenium + Cucumber | `@playwright/test` |
+| **API Testing** | RestSharp + Reqnroll | RestAssured + Cucumber | `@playwright/test` request context |
+| **Mobile Testing** | Appium | Appium | — |
+| **Desktop Testing** | WinAppDriver | WinAppDriver | — |
 
 **Generated Project Includes:**
-- Pre-configured package references (SpecFlow/Reqnroll for C#, Cucumber for Java)
-- Sample feature file with example scenario
-- Sample step definition class
-- `.gitignore` file for proper version control
+- Pre-configured dependencies (NuGet / Maven / npm)
+- Sample feature/spec file with example scenarios covering all key capabilities
+- Sample step definition class with 40+ ready-to-use steps (C#/Java)
+- `.gitignore` configured for each ecosystem
 - Build configuration ready for Gheetah execution
+- **Playwright:** `playwright.config.ts`, `tsconfig.json`, `package.json`, comprehensive `example.spec.ts`
 
 ### 📁 Project Management
 
 | Feature | Description |
 |---------|-------------|
-| **Add Projects** | Via remote repository clone or local ZIP upload |
-| **Required Formats** | Java (TestNG/JUnit with Cucumber) or .NET (xUnit with Reqnroll/SpecFlow) |
-| **Build Projects** | Mandatory step before test execution |
+| **Add Projects** | Via remote repository clone, local ZIP/RAR upload, or scaffold from scratch |
+| **Supported Frameworks** | C# (Reqnroll/SpecFlow), Java (Cucumber-JUnit/TestNG), Playwright (TypeScript) |
+| **Auto Language Detection** | Clone/upload of TypeScript repos with `playwright.config.ts` auto-detected as Playwright |
+| **Build Projects** | `dotnet build` (C#), `mvn package` (Java), `npm install` (Playwright) |
 | **Delete Projects** | Admin/Lead only, blocked during active execution |
-| **Project Settings** | Configure environment variables and execution preferences |
-| **Test Suites** | Organize scenarios into logical groups |
 
 ### 🧪 Test Execution
 
 | Feature | Description |
 |---------|-------------|
-| **Scenario Discovery** | Automatic scanning of `.feature` files with unique tag assignment |
-| **Tag Filtering** | Run specific scenarios by selecting their generated tag |
+| **Scenario/Test Discovery** | `.feature` files for C#/Java (with unique tag assignment); `.spec.ts` test functions for Playwright |
+| **Tree Grouping** | C#/Java: feature file → scenario; Playwright: spec file → describe block → individual test |
+| **Test Content Preview** | Selected scenario/test shows its content with syntax highlighting |
+| **Tag / Name Filtering** | C#/Java: run by generated tag; Playwright: run by test name via `--grep` |
 | **Agent Selection** | Choose remote agent or execute locally |
-| **Real-time Output** | SignalR streaming of execution logs |
-| **HTML Reports** | Detailed test execution reports |
-| **Hangfire Integration** | Background job tracking for "Run All Scenarios" |
+| **Real-time Output** | SignalR streaming of execution logs with ANSI stripping |
+| **Language-specific Reports** | C#: TRX step report; Java: Cucumber JSON step report; Playwright: JSON suite report with screenshots/videos |
+| **Hangfire Integration** | Background job tracking for "Run All Scenarios/Tests" |
 
 ### 📊 Dashboard
 
@@ -263,7 +383,7 @@ Create new BDD projects directly from Gheetah without leaving the platform:
 |-------------|-------------|
 | **Azure Pipeline Charts** | Bar charts of test results (requires Azure CI/CD integration) |
 | **Azure Test Result Table** | Detailed test result tables |
-| **Recent Scenario Execution** | Latest individual scenario runs |
+| **Recent Scenario Execution** | Latest individual scenario/test runs |
 | **Recent Hangfire Jobs** | Background job monitoring |
 | **Custom Widgets** | Drag-and-drop, resizable, user-specific layouts |
 
@@ -281,7 +401,7 @@ Create new BDD projects directly from Gheetah without leaving the platform:
 | **Version Control** | Azure DevOps | Fully tested |
 | **Version Control** | GitLab | Available (not fully tested) |
 | **Version Control** | Bitbucket | Available (not fully tested) |
-| **Email** | SMTP, SendGrid, Azure Communication | Configuration ready (sending planned) |
+| **Email** | SMTP, SendGrid, Azure Communication | Configuration ready |
 
 ### 👥 User & Role Management
 
@@ -301,10 +421,31 @@ Create new BDD projects directly from Gheetah without leaving the platform:
 
 1. Navigate to **Projects → Add Project** from the top navigation bar
 2. Select the **"Create New"** tab
-3. Choose your **Language** (C# or Java)
-4. Select a **Project Template** (API, Web, Mobile, Desktop)
-5. Enter a **Project Name** and optional **Description**
-6. Click **"Create Project"**
+3. Choose your **Language** (C#, Java, or **Playwright**)
+4. Select a **Test Adapter** (auto-selected for Playwright)
+5. Select a **Project Template** (Web for Playwright; API/Web/Mobile/Desktop for C#/Java)
+6. Enter a **Project Name**
+7. Click **"Create Project"**
+
+### Quick Start: Run a Playwright Test
+
+1. From **Project List**, click **Build** on your Playwright project (runs `npm install`)
+2. Click the **Scenarios** icon to open the Test Explorer
+3. Expand the spec file → expand the describe block → click an individual test
+4. The **Scenario Content** panel shows only that test's TypeScript code
+5. Click **"Run Options"** → the selected test name is shown in the panel
+6. Optionally select a remote Agent
+7. Click **"Run Test"**
+8. Monitor real-time output; the **Scenario Execution Report** shows the Playwright-styled report with pass/fail badges, duration, and any screenshots/videos
+
+### Quick Start: Create a New File in the IDE
+
+1. Right-click a folder in the file explorer → **"Add New Item..."**
+2. Select the **File Type**:
+   - For Playwright projects: choose **TypeScript File (.ts)**
+   - Select a **TypeScript Template**: Playwright Spec Test, Page Object Model, Custom Fixture, or TypeScript Class
+   - Spec Test filenames automatically get `.spec` appended (e.g., `Login` → `Login.spec.ts`)
+3. Enter the file name and click **Create**
 
 ### Quick Start: Open and Edit a Feature File
 
@@ -314,7 +455,6 @@ Create new BDD projects directly from Gheetah without leaving the platform:
 4. Edit the scenario steps with full syntax highlighting
 5. Press **Ctrl+Click** on any Given/When/Then step → automatically navigates to the step definition
 6. Press **Ctrl+S** to save changes
-7. Modified files show a **red dot** indicator and "dirty" state
 
 ### Quick Start: Commit and Create Pull Request
 
@@ -322,39 +462,22 @@ Create new BDD projects directly from Gheetah without leaving the platform:
 2. Switch to the **Git** tab in the left sidebar
 3. Select or create a branch from the dropdown (cannot push directly to main/master)
 4. Click the **Commit** button
-5. Enter a branch name if creating a new branch
-6. After successful push, go to **Push History** panel at the bottom
-7. Find your push and click the **PR** button
-8. Select **Target Branch** (e.g., main, develop)
-9. Add **Reviewers** (Admin or Lead users)
-10. Write a **Description** explaining your changes
-11. Click **"Create Pull Request"**
-
-### Quick Start: Review and Merge a PR
-
-1. Open the PR from push history or direct link (`/Editor/PRDetails/{id}`)
-2. Review the **Overview** tab for pipeline status and approvals
-3. Go to the **Files** tab to see changed files
-4. Click a file to view the diff side-by-side
-5. **Add inline comments** by clicking the gutter area (left of line numbers)
-6. Resolve comments by changing their status from "Active" to "Resolved"
-7. Approve or reject the PR using buttons in the top-right
-8. Creator clicks **"Complete Merge"** to start the pipeline
-9. Pipeline runs automatically: Build Source → Merge → Build Target
-10. If conflicts appear, go to **Conflicts** tab and resolve using Ours/Theirs buttons
-11. After successful merge, remote repository is automatically synced
+5. After successful push, go to **Push History** panel at the bottom
+6. Find your push and click the **PR** button
+7. Select **Target Branch**, add **Reviewers**, write a **Description**
+8. Click **"Create Pull Request"**
 
 ### Running Tests
 
-1. From **Project List**, click **Manage** on your project
-2. Click **Build** (required before first execution)
-3. Select individual scenarios from the tree or list view
-4. Click **"Run Options"** to configure:
-   - Select the generated tag for specific scenario
+1. From **Project List**, click the **Scenarios** icon on your built project
+2. Select a scenario/test from the JsTree
+3. Click **"Run Options"** to configure:
+   - **C#/Java**: select the generated tag for the specific scenario
+   - **Playwright**: selected test name is shown automatically
    - Choose an Agent (or leave empty for local execution)
-5. Click **"Run Scenario"** or **"Run All Scenarios"**
-6. Monitor real-time output in the modal window via SignalR
-7. View detailed HTML reports after execution completes
+4. Click **"Run Scenario"** / **"Run Test"** or **"Run All"**
+5. Monitor real-time output in the modal window via SignalR
+6. View detailed HTML reports after execution completes
 
 ### Agent Management
 
@@ -367,7 +490,7 @@ Create new BDD projects directly from Gheetah without leaving the platform:
 
 ### Dashboard Customization
 
-1. Click the **gear icon** (<i class="ti ti-settings"></i>) on the dashboard
+1. Click the **gear icon** on the dashboard
 2. Add, remove, or configure widgets
 3. Drag and drop widgets to rearrange
 4. Resize widgets using corner handles

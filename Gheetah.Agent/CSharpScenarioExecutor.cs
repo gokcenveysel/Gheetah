@@ -23,10 +23,10 @@ namespace Gheetah.Agent
                 string dllDir = Path.GetDirectoryName(dllPath);
                 StatusUI.ShowStatus($"Selected .dll file: {dllPath}, Directory: {dllDir}");
 
-                string testResultsFilePath = AgentService.GetTestResultsFilePath(dllDir, scenarioTag:scenarioTag);
+                string testResultsFilePath = AgentService.GetTestResultsFilePath(dllDir, scenarioTag: scenarioTag);
                 StatusUI.ShowStatus($"Test results file path: {testResultsFilePath}");
 
-                string powerShellCommand = $@"cd '{dllDir}'; dotnet test -v detailed '{buildedTestFileName}' --filter 'Category={scenarioTag}' --logger 'trx;LogFileName={testResultsFilePath}' --no-build --no-restore";
+                string powerShellCommand = $@"cd '{dllDir}'; dotnet test '{buildedTestFileName}' --filter 'Category={scenarioTag}' --logger 'trx;LogFileName={testResultsFilePath}'";
                 StatusUI.ShowStatus($"Running command: {powerShellCommand}");
 
                 ProcessStartInfo startInfo = new ProcessStartInfo
@@ -54,8 +54,9 @@ namespace Gheetah.Agent
                     {
                         if (!string.IsNullOrEmpty(e.Data))
                         {
-                            StatusUI.ShowStatus($"Error: {e.Data}");
-                            await AgentService.SendOutputAsync($"Error: {e.Data}", processId);
+                            StatusUI.ShowStatus($"Stderr: {e.Data}");
+                            var msg = IsNonErrorStderr(e.Data) ? e.Data : $"Error: {e.Data}";
+                            await AgentService.SendOutputAsync(msg, processId);
                         }
                     };
 
@@ -107,6 +108,14 @@ namespace Gheetah.Agent
                     StatusUI.ShowStatus($"Cleanup error: {ex.Message}");
                 }
             }
+        }
+        private static bool IsNonErrorStderr(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return true;
+            if (System.Text.RegularExpressions.Regex.IsMatch(line, @"^\[.+\]\s+(INFO|WARN|WARNING)\s+")) return true;
+            if (System.Text.RegularExpressions.Regex.IsMatch(line, @"^\w{3}\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}:\d{2}\s+(AM|PM)")) return true;
+            if (line.TrimStart().StartsWith("WARNING:") && !line.Contains("FAILURE") && !line.Contains("ERROR")) return true;
+            return false;
         }
     }
 }

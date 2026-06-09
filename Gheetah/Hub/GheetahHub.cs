@@ -11,8 +11,9 @@ namespace Gheetah.Hub
         private static bool _isInitialized = false;
         private readonly ITestResultProcessor _testResultProcessor;
         private readonly IFileService _fileService;
+        private readonly IProcessService _processService;
 
-        public GheetahHub(IFileService fileService, ITestResultProcessor testResultProcessor)
+        public GheetahHub(IFileService fileService, ITestResultProcessor testResultProcessor, IProcessService processService)
         {
             if (!_isInitialized)
             {
@@ -22,6 +23,7 @@ namespace Gheetah.Hub
 
             _fileService = fileService;
             _testResultProcessor = testResultProcessor;
+            _processService = processService;
         }
 
         public override async Task OnConnectedAsync()
@@ -158,17 +160,13 @@ namespace Gheetah.Hub
         {
             try
             {
-                Console.WriteLine($"SendOutput was called - AgentId: {agentId}, ProcessId: {processId}, Output: {output}");
+                Console.WriteLine($"SendOutput was called - AgentId: {agentId}, ProcessId: {processId}, Output length: {output?.Length}");
                 if (output.StartsWith("TestResult:"))
                 {
-                    var trxContent = output.Substring("TestResult:".Length);
-                    var tempFile = Path.Combine(Path.GetTempPath(), $"testresults_{Guid.NewGuid()}.trx");
-                    await File.WriteAllTextAsync(tempFile, trxContent);
-                    var steps = ScenarioHelper.ParseStdOutFromXml(tempFile);
-                    var htmlReport = ScenarioHelper.GenerateHtmlReport(steps);
+                    var content = output.Substring("TestResult:".Length);
+                    var htmlReport = await GenerateHtmlReportFromContent(content);
                     Console.WriteLine($"Sending ReceiveHtmlReport - ProcessId: {processId}");
                     await Clients.Group(processId).SendAsync("ReceiveHtmlReport", htmlReport);
-                    File.Delete(tempFile);
                 }
                 else
                 {
@@ -178,7 +176,7 @@ namespace Gheetah.Hub
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SendOutput error - AgentId: {agentId}, ProcessId: {processId}, Error: {ex.Message}, StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"SendOutput error - AgentId: {agentId}, ProcessId: {processId}, Error: {ex.Message}");
                 throw;
             }
         }
@@ -187,23 +185,19 @@ namespace Gheetah.Hub
         {
             try
             {
-                Console.WriteLine($"SendResult called - AgentId: {agentId}, ProcessId: {processId}, Result length: {result.Length}");
+                Console.WriteLine($"SendResult called - AgentId: {agentId}, ProcessId: {processId}, Result length: {result?.Length}");
                 await Clients.Group(processId).SendAsync("ReceiveResult", result);
                 if (result.StartsWith("TestResult:"))
                 {
-                    var trxContent = result.Substring("TestResult:".Length);
-                    var tempFile = Path.Combine(Path.GetTempPath(), $"testresults_{Guid.NewGuid()}.trx");
-                    await File.WriteAllTextAsync(tempFile, trxContent);
-                    var steps = ScenarioHelper.ParseStdOutFromXml(tempFile);
-                    var htmlReport = ScenarioHelper.GenerateHtmlReport(steps);
+                    var content = result.Substring("TestResult:".Length);
+                    var htmlReport = await GenerateHtmlReportFromContent(content);
                     Console.WriteLine($"Sending ReceiveHtmlReport - ProcessId: {processId}");
                     await Clients.Group(processId).SendAsync("ReceiveHtmlReport", htmlReport);
-                    File.Delete(tempFile);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"SendResult error - AgentId: {agentId}, ProcessId: {processId}, Error: {ex.Message}, StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"SendResult error - AgentId: {agentId}, ProcessId: {processId}, Error: {ex.Message}");
                 throw;
             }
         }
@@ -235,21 +229,33 @@ namespace Gheetah.Hub
 
                 if (result.StartsWith("TestResult:"))
                 {
-                    var trxContent = result.Substring("TestResult:".Length);
-                    var tempFile = Path.Combine(Path.GetTempPath(), $"testresults_{Guid.NewGuid()}.trx");
-                    await File.WriteAllTextAsync(tempFile, trxContent);
-                    var processInfo = new ProcessInfo { Id = processId };
+                    var content = result.Substring("TestResult:".Length);
+                    var trimmed = content.TrimStart();
+                    var ext = (trimmed.StartsWith("[") || trimmed.StartsWith("{")) ? ".json" : ".trx";
+                    var tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"testresults_{Guid.NewGuid()}{ext}");
+                    await System.IO.File.WriteAllTextAsync(tempFile, content);
+
+                    // Use the real ProcessInfo from ProcessService so HTML report is stored and accessible
+                    // (controller creates ProcessInfo for agent runs before sending to agent)
+                    var processInfo = _processService.GetProcess(processId)
+                        ?? new ProcessInfo { Id = processId };
+
                     try
                     {
                         await _testResultProcessor.ProcessTestResultsAsync(processInfo, tempFile);
+                        processInfo.Status = ProcessStatus.Executed;
                         Console.WriteLine($"Test results processed for processId: {processId}");
                     }
                     catch (Exception ex)
                     {
+                        processInfo.Status = ProcessStatus.Failed;
                         Console.WriteLine($"Error processing test results for processId: {processId}, Error: {ex.Message}");
                         await Clients.Group(processId).SendAsync("ReceiveOutput", $"Error processing test results: {ex.Message}");
                     }
-                    File.Delete(tempFile);
+                    finally
+                    {
+                        if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile);
+                    }
                     await Clients.Group(processId).SendAsync("ReceiveCompletionMessage", $"Process {processId} completed with test results.");
                 }
                 else if (result.StartsWith("Error:"))
@@ -269,6 +275,36 @@ namespace Gheetah.Hub
                 Console.WriteLine($"ReceiveResult error - ProcessId: {processId}, Error: {ex.Message}, StackTrace: {ex.StackTrace}");
                 await Clients.Group(processId).SendAsync("ReceiveOutput", $"Error processing result: {ex.Message}");
                 await Clients.Group(processId).SendAsync("ReceiveCompletionMessage", $"Process failed: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Detects whether content is Cucumber JSON, Playwright JSON, or TRX XML,
+        /// then generates the appropriate HTML report string.
+        /// </summary>
+        private static async Task<string> GenerateHtmlReportFromContent(string content)
+        {
+            var trimmed = content.TrimStart();
+            var ext = (trimmed.StartsWith("[") || trimmed.StartsWith("{")) ? ".json" : ".trx";
+            var tempFile = Path.Combine(Path.GetTempPath(), $"testresults_{Guid.NewGuid()}{ext}");
+            try
+            {
+                await File.WriteAllTextAsync(tempFile, content);
+                if (ext == ".json")
+                {
+                    return trimmed.StartsWith("[")
+                        ? ScenarioHelper.GenerateCucumberHtmlReport(tempFile)
+                        : ScenarioHelper.GeneratePlaywrightHtmlReport(tempFile);
+                }
+                else
+                {
+                    var steps = ScenarioHelper.ParseStdOutFromXml(tempFile);
+                    return ScenarioHelper.GenerateHtmlReport(steps);
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempFile)) File.Delete(tempFile);
             }
         }
 

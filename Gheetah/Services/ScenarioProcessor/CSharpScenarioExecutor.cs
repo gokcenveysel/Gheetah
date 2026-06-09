@@ -45,7 +45,7 @@ namespace Gheetah.Services.ScenarioProcessor
 
                         var powerShellCommand = $@"
                             cd '{buildedTestFileFullPath}'
-                            dotnet test -v detailed '{projectInfo.BuildedTestFileName}' --filter 'Category={request.ScenarioTag}' --logger 'trx;LogFileName={testResultsFilePath}'";
+                            dotnet test '{projectInfo.BuildedTestFileName}' --filter 'Category={request.ScenarioTag}' --logger 'trx;LogFileName={testResultsFilePath}'";
 
                         Console.WriteLine($"Executing scenario for processId: {processId}, agentId: {request.AgentId}");
 

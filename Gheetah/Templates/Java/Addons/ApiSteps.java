@@ -87,7 +87,8 @@ public class ApiSteps {
 
     @Then("The response field {string} should not be null")
     public void verifyFieldNotNull(String jsonPath) {
-        assertThat(response.jsonPath().get(jsonPath)).as("Field [%s] Null Check", jsonPath).isNotNull();
+        Object fieldValue = response.jsonPath().get(jsonPath);
+        assertThat(fieldValue).as("Field [%s] Null Check", jsonPath).isNotNull();
     }
 
     @Then("The response array {string} should have size {int}")

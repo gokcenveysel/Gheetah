@@ -1,0 +1,14 @@
+{
+  "name": "{{ProjectName}}",
+  "version": "1.0.0",
+  "description": "Playwright BDD automation project",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:headed": "npx playwright test --headed",
+    "test:debug": "npx playwright test --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "typescript": "^5.0.0"
+  }
+}

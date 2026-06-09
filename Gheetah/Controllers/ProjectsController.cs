@@ -416,6 +416,7 @@ namespace Gheetah.Controllers
 
                 string sourcePath = Path.Combine(rootDir, "Templates", model.Language, $"Base_{model.ProjectType}");
                 CopyAndProcessFiles(sourcePath, projectFolderPath, model);
+                CleanupAdapterRunnerFiles(projectFolderPath, model.Language, model.TestAdapter);
                 ProcessAddons(model, projectFolderPath, rootDir);
                 HandlePackageManagement(projectFolderPath, model);
                 
@@ -600,12 +601,29 @@ namespace Gheetah.Controllers
         {
             if (model.Addons == null || !model.Addons.Any()) return;
 
-            string extension = model.Language == "C#" ? "cs" : "java";
-            string stepFolder = model.Language == "C#" 
-                ? Path.Combine(projectPath, "StepDefinitions") 
-                : Path.Combine(projectPath, "src", "test", "java", model.ProjectName, "stepdefinitions");
-
             string addonSourceBase = Path.Combine(rootDir, "Templates", model.Language, "Addons");
+
+            if (model.Language.Equals("Playwright", StringComparison.OrdinalIgnoreCase))
+            {
+                string examplesFolder = Path.Combine(projectPath, "examples");
+                foreach (var addon in model.Addons)
+                {
+                    string addonFileName = addon == "API" ? "ApiSteps.spec.ts" : "DbSteps.spec.ts";
+                    string sourceFile = Path.Combine(addonSourceBase, addonFileName);
+                    if (System.IO.File.Exists(sourceFile))
+                    {
+                        if (!Directory.Exists(examplesFolder)) Directory.CreateDirectory(examplesFolder);
+                        string content = System.IO.File.ReadAllText(sourceFile);
+                        System.IO.File.WriteAllText(Path.Combine(examplesFolder, addonFileName), content);
+                    }
+                }
+                return;
+            }
+
+            string extension = model.Language == "C#" ? "cs" : "java";
+            string stepFolder = model.Language == "C#"
+                ? Path.Combine(projectPath, "StepDefinitions")
+                : Path.Combine(projectPath, "src", "test", "java", model.ProjectName, "stepdefinitions");
 
             foreach (var addon in model.Addons)
             {
@@ -615,7 +633,6 @@ namespace Gheetah.Controllers
                 if (System.IO.File.Exists(sourceFile))
                 {
                     if (!Directory.Exists(stepFolder)) Directory.CreateDirectory(stepFolder);
-            
                     string content = System.IO.File.ReadAllText(sourceFile).Replace("{{ProjectName}}", model.ProjectName);
                     System.IO.File.WriteAllText(Path.Combine(stepFolder, addonFileName), content);
                 }
@@ -633,7 +650,23 @@ namespace Gheetah.Controllers
                 projects = JsonSerializer.Deserialize<List<Project>>(existingJson) ?? new List<Project>();
             }
 
-            string buildFileName = model.Language == "C#" ? $"{model.ProjectName}.csproj" : "pom.xml";
+            string buildFileName;
+            string featureFilesPath;
+            if (model.Language.Equals("Playwright", StringComparison.OrdinalIgnoreCase))
+            {
+                buildFileName = "package.json";
+                featureFilesPath = Path.Combine(fullPath, "tests");
+            }
+            else if (model.Language == "C#")
+            {
+                buildFileName = $"{model.ProjectName}.csproj";
+                featureFilesPath = Path.Combine(fullPath, "Features");
+            }
+            else
+            {
+                buildFileName = "pom.xml";
+                featureFilesPath = Path.Combine(fullPath, "src/test/resources/features");
+            }
 
             var newProject = new Project
             {
@@ -652,13 +685,13 @@ namespace Gheetah.Controllers
                     {
                         ProjectName = model.ProjectName,
                         BuildInfoFileName = buildFileName,
-                        BuildInfoFileFullPath = Path.Combine(fullPath, buildFileName),
-                        FeatureFilesPath = model.Language == "C#" 
-                            ? Path.Combine(fullPath, "Features") 
-                            : Path.Combine(fullPath, "src/test/resources/features"),
+                        BuildInfoFileFullPath = model.Language.Equals("Playwright", StringComparison.OrdinalIgnoreCase)
+                            ? fullPath
+                            : Path.Combine(fullPath, buildFileName),
+                        FeatureFilesPath = featureFilesPath,
                         BuildedTestFileName = "Not Built Yet",
                         BuildedTestFileFullPath = "Pending",
-                        Scenarios = new List<FeatureScenarioInfo>() 
+                        Scenarios = new List<FeatureScenarioInfo>()
                     }
                 }
             };
@@ -671,6 +704,16 @@ namespace Gheetah.Controllers
 
         private void HandlePackageManagement(string targetDir, ProjectCreateViewModel model)
         {
+            if (model.Language.Equals("Playwright", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrWhiteSpace(model.CustomSourceUrl))
+                {
+                    string npmrcContent = $"registry={model.CustomSourceUrl}{Environment.NewLine}";
+                    System.IO.File.WriteAllText(Path.Combine(targetDir, ".npmrc"), npmrcContent);
+                }
+                return;
+            }
+
             if (model.Language == "C#")
             {
                 string sourceUrl = string.IsNullOrWhiteSpace(model.CustomSourceUrl) 
@@ -711,6 +754,26 @@ namespace Gheetah.Controllers
             }
         }
         
+        private void CleanupAdapterRunnerFiles(string projectPath, string language, string adapter)
+        {
+            if (!language.Equals("Java", StringComparison.OrdinalIgnoreCase)) return;
+
+            var runnerDirs = Directory.GetDirectories(projectPath, "runners", SearchOption.AllDirectories);
+            foreach (var dir in runnerDirs)
+            {
+                if (adapter.Equals("JUnit5", StringComparison.OrdinalIgnoreCase))
+                {
+                    var testNGFile = Path.Combine(dir, "TestNGRunner.java");
+                    if (System.IO.File.Exists(testNGFile)) System.IO.File.Delete(testNGFile);
+                }
+                else if (adapter.Equals("TestNG", StringComparison.OrdinalIgnoreCase))
+                {
+                    var jUnitFile = Path.Combine(dir, "JUnitRunner.java");
+                    if (System.IO.File.Exists(jUnitFile)) System.IO.File.Delete(jUnitFile);
+                }
+            }
+        }
+
         private void InitializeGitRepository(string path, string projectName)
         {
             var user = User.Identity?.Name ?? "system@gheetah.com";

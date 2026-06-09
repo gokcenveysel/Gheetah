@@ -2098,11 +2098,24 @@ namespace Gheetah.Controllers
                 {
                     "class" => $"namespace {namespaceName};\n\npublic class {fileName}\n{{\n\t// TODO: Implement {fileName}\n}}",
                     "interface" => $"namespace {namespaceName};\n\npublic interface I{fileName}\n{{\n\t// TODO: Define contract\n}}",
-                    "stepdef" => $"using TechTalk.SpecFlow;\n\nnamespace {namespaceName};\n\n[Binding]\npublic class {fileName}\n{{\n\t// TODO: Add step definitions\n}}",
+                    "stepdef" => $"using Reqnroll;\n\nnamespace {namespaceName};\n\n[Binding]\npublic class {fileName}\n{{\n\t[Given(@\"I \")]\n\tpublic void GivenI() {{ }}\n\n\t[When(@\"I \")]\n\tpublic void WhenI() {{ }}\n\n\t[Then(@\"I should \")]\n\tpublic void ThenIShouldSee() {{ }}\n}}",
                     _ => $"namespace {namespaceName};\n\npublic class {fileName}\n{{\n}}"
                 },
-                "feature" => $"Feature: {fileName}\n\tAs a user\n\tI want to ...\n\tSo that ...\n\nScenario: First scenario\n\tGiven ...\n\tWhen ...\n\tThen ...",
-                "java" => $"public class {fileName} {{\n\tpublic static void main(String[] args) {{\n\t\t// TODO: Implement\n\t}}\n}}",
+                "feature" => $"Feature: {fileName}\n\n  @Web\n  Scenario: {fileName} Scenario\n    Given I navigate to URL \"https://example.com\"\n    When I click on element with ID \"submit\"\n    Then Title should contain \"Expected\"",
+                "java" => templateType switch
+                {
+                    "stepdef" => $"package {namespaceName};\n\nimport io.cucumber.java.en.*;\nimport static org.assertj.core.api.Assertions.assertThat;\n\npublic class {fileName} {{\n\n\t@Given(\"I \")\n\tpublic void givenI() {{ }}\n\n\t@When(\"I \")\n\tpublic void whenI() {{ }}\n\n\t@Then(\"I should \")\n\tpublic void thenIShouldSee() {{ }}\n}}",
+                    _ => $"package {namespaceName};\n\npublic class {fileName} {{\n\tpublic static void main(String[] args) {{\n\t\t// TODO: Implement\n\t}}\n}}"
+                },
+                "ts" => templateType switch
+                {
+                    "spec" => $"// @ts-nocheck\nimport {{ test, expect }} from '@playwright/test';\n\ntest.describe('{fileName}', () => {{\n\n  test('should work', async ({{ page }}) => {{\n    await page.goto('https://example.com');\n    await expect(page).toHaveTitle(/Example/);\n  }});\n\n  test('form interaction', async ({{ page }}) => {{\n    await page.goto('https://example.com');\n    await page.getByRole('button').click();\n  }});\n\n}});\n",
+                    "page-object" => $"// @ts-nocheck\nimport {{ Page, Locator, expect }} from '@playwright/test';\n\nexport class {fileName} {{\n  readonly page: Page;\n\n  constructor(page: Page) {{\n    this.page = page;\n  }}\n\n  async navigate(url: string) {{\n    await this.page.goto(url);\n  }}\n\n  async getTitle(): Promise<string> {{\n    return await this.page.title();\n  }}\n\n  async clickButton(name: string) {{\n    await this.page.getByRole('button', {{ name }}).click();\n  }}\n\n  async assertTitle(expected: RegExp | string) {{\n    await expect(this.page).toHaveTitle(expected);\n  }}\n}}\n",
+                    "fixture" => $"// @ts-nocheck\nimport {{ test as base }} from '@playwright/test';\n\ntype {fileName}Fixtures = {{\n  // Add your fixture types here\n  appUrl: string;\n}};\n\nexport const test = base.extend<{fileName}Fixtures>({{ \n  appUrl: async ({{ }}, use) => {{\n    await use('https://example.com');\n  }},\n}});\n\nexport {{ expect }} from '@playwright/test';\n",
+                    _ => $"// @ts-nocheck\nexport class {fileName} {{\n  // TODO: Implement {fileName}\n}}\n"
+                },
+                "xml" => $"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root>\n\t<!-- {fileName} -->\n</root>",
+                "json" => $"{{\n\t\"name\": \"{fileName}\"\n}}",
                 _ => $"// New {fileType} file: {fileName}"
             };
         }
@@ -2112,6 +2125,7 @@ namespace Gheetah.Controllers
             "cs" => ".cs",
             "java" => ".java",
             "feature" => ".feature",
+            "ts" => ".ts",
             "xml" => ".xml",
             "json" => ".json",
             _ => ".txt"
@@ -2616,8 +2630,14 @@ namespace Gheetah.Controllers
             if (fileName.EndsWith(".cs")) return "ti ti-brand-c-sharp";
             if (fileName.EndsWith(".csproj")) return "ti ti-file-code";
             if (fileName.EndsWith(".java")) return "ti ti-coffee";
+            if (fileName.EndsWith(".spec.ts")) return "ti ti-test-pipe";
+            if (fileName.EndsWith(".ts")) return "ti ti-brand-typescript";
+            if (fileName.EndsWith(".js")) return "ti ti-brand-javascript";
+            if (fileName.EndsWith(".html")) return "ti ti-brand-html5";
+            if (fileName.EndsWith(".css")) return "ti ti-brand-css3";
             if (fileName.EndsWith(".xml") || fileName.EndsWith(".config")) return "ti ti-file-type-xml";
             if (fileName.EndsWith(".json")) return "ti ti-json";
+            if (fileName.EndsWith(".md")) return "ti ti-markdown";
 
             return "ti ti-file";
         }

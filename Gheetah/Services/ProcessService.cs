@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 public class ProcessService : IProcessService
 {
@@ -76,9 +77,11 @@ public class ProcessService : IProcessService
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    Console.WriteLine($"Process Output for processId: {processInfo.Id}: {e.Data}");
-                    processInfo.Output.Add(e.Data);
-                    await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", e.Data);
+                    var cleaned = StripAnsiCodes(e.Data);
+                    if (string.IsNullOrWhiteSpace(cleaned)) return;
+                    Console.WriteLine($"Process Output for processId: {processInfo.Id}: {cleaned}");
+                    processInfo.Output.Add(cleaned);
+                    await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", cleaned);
                 }
             };
 
@@ -86,10 +89,14 @@ public class ProcessService : IProcessService
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    Console.WriteLine($"Process Error for processId: {processInfo.Id}: {e.Data}");
-                    var errorMessage = $"Error: {e.Data}";
-                    processInfo.Output.Add(errorMessage);
-                    await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", errorMessage);
+                    var cleaned = StripAnsiCodes(e.Data);
+                    if (string.IsNullOrWhiteSpace(cleaned)) return;
+                    Console.WriteLine($"Process Error for processId: {processInfo.Id}: {cleaned}");
+                    // Java/Maven INFO and WARNING messages go to stderr but are not real errors.
+                    // Only prefix with "Error:" for lines that are genuine error output.
+                    var message = IsNonErrorStderr(cleaned) ? cleaned : $"Error: {cleaned}";
+                    processInfo.Output.Add(message);
+                    await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", message);
                 }
             };
 
@@ -113,6 +120,43 @@ public class ProcessService : IProcessService
 
             await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveCompletionMessage", "Test execution completed.");
         }
+    }
+
+    private static string StripAnsiCodes(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        return Regex.Replace(text, @"\x1B\[[0-9;]*[a-zA-Z]|\x1B[=>]|\x1B\][\s\S]*?(\x07|\x1B\\)", string.Empty);
+    }
+
+    /// <summary>
+    /// Returns true for stderr lines that are informational (not real errors).
+    /// Java/Maven send INFO and WARNING log messages to stderr; these should not be
+    /// prefixed with "Error:" since they confuse users when tests actually pass.
+    /// </summary>
+    private static bool IsNonErrorStderr(string line)
+    {
+        if (string.IsNullOrWhiteSpace(line)) return true;
+
+        // Java logger format:  "[main] INFO  classname - message"
+        //                      "[pool-1-thread-1] WARN ..."
+        if (Regex.IsMatch(line, @"^\[.+\]\s+(INFO|WARN|WARNING)\s+")) return true;
+
+        // Java timestamp format: "Jan 01, 2026 12:00:00 AM org.xyz.ClassName methodName"
+        if (Regex.IsMatch(line, @"^\w{3}\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}:\d{2}\s+(AM|PM)")) return true;
+
+        // Maven build markers that go to stderr in some environments
+        if (line.TrimStart().StartsWith("[INFO]") || line.TrimStart().StartsWith("[WARNING]")) return true;
+
+        // WARNING: lines from Selenium/WebDriverManager CDP mismatches
+        if (line.TrimStart().StartsWith("WARNING:") && !line.Contains("FAILURE") && !line.Contains("ERROR")) return true;
+
+        // npm/Node.js informational warnings (e.g., "npm warn ...")
+        if (Regex.IsMatch(line, @"^npm\s+(warn|notice|info)\s+", RegexOptions.IgnoreCase)) return true;
+
+        // Playwright informational lines
+        if (line.TrimStart().StartsWith("npx: ") || line.TrimStart().StartsWith("Need to install")) return true;
+
+        return false;
     }
 
     private async Task RemoveProcessAfterDelay(string processId, TimeSpan delay)

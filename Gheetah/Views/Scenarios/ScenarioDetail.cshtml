@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Scenarios";
 }
 
@@ -131,7 +131,7 @@
                         </div>
 
                         <div class="card-footer">
-                            <button type="button" class="btn btn-primary w-100" onclick="openRunAllScenariosOffcanvas()">
+                            <button type="button" id="run-all-scenarios-btn" class="btn btn-primary w-100" onclick="openRunAllScenariosOffcanvas()">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                     <path d="M7 4v16l13 -8z" />
@@ -144,24 +144,52 @@
                 <div class="col-lg-7">
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                                    <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-                                    <path d="M9 9l1 0" />
-                                    <path d="M9 13l6 0" />
-                                    <path d="M9 17l6 0" />
-                                </svg>
-                                Scenario Content
-                            </h3>
-                            <div class="card-actions">
-                                <span id="process-status" class="badge bg-secondary"></span>
+                            <ul class="nav nav-tabs card-header-tabs" data-bs-toggle="tabs">
+                                <li class="nav-item">
+                                    <a href="#tab-scenario-content" class="nav-link active" data-bs-toggle="tab" id="tab-content-link">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-file-text me-1" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                            <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                                            <path d="M9 9l1 0" />
+                                            <path d="M9 13l6 0" />
+                                            <path d="M9 17l6 0" />
+                                        </svg>
+                                        Scenario Content
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="#tab-scenario-output" class="nav-link" data-bs-toggle="tab" id="tab-output-link">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-terminal-2 me-1" width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                            <path d="M8 9l3 3l-3 3" />
+                                            <path d="M13 15l3 0" />
+                                            <path d="M3 4m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
+                                        </svg>
+                                        Scenario Output
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="card-options">
+                                <span id="process-status" style="display:none;"></span>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="highlight">
-                                <pre><code id="feature-content" class="language-gherkin"></code></pre>
+                        <div class="card-body tab-content">
+                            <div class="tab-pane active show position-relative" id="tab-scenario-content">
+                                <div class="highlight">
+                                    <pre><code id="feature-content" class="language-gherkin"></code></pre>
+                                </div>
+                                <div class="overlay" style="display: none;">
+                                    <div class="d-flex align-items-center">
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Running scenarios...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab-scenario-output">
+                                <div class="highlight scenario-output-highlight">
+                                    <pre class="scenario-output-pre"><code id="test-result-content" class="language-stylus"></code></pre>
+                                </div>
                             </div>
                         </div>
                         <div class="card-footer">
@@ -176,12 +204,6 @@
                                     </svg>
                                     Run Options
                                 </button>
-                            </div>
-                        </div>
-                        <div class="overlay" style="display: none;">
-                            <div class="d-flex align-items-center">
-                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                <span>Running scenarios...</span>
                             </div>
                         </div>
                     </div>
@@ -234,6 +256,10 @@
                 <option value="">Select a tag...</option>
             </select>
         </div>
+        <div id="playwright-test-selection" class="mb-3" style="display:none;">
+            <label class="form-label">Selected Test</label>
+            <div id="playwright-test-name" class="form-control bg-light text-truncate" style="cursor:default;" title=""></div>
+        </div>
         <div class="mb-3">
             <label class="form-label">Select Agent</label>
             <select id="agentSelection" class="form-select">
@@ -250,36 +276,7 @@
     </div>
 </div>
 
-<div class="modal modal-blur fade" id="scenarioResultModal" tabindex="-1" role="dialog" aria-hidden="true">
-    <div class="modal-dialog modal-full-width modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Scenario Execution Result</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" style="max-height: 75vh; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;">
-                <div class="card" style="height: 100%;">
-                    <div class="card-body" style="padding: 0;">
-                        <div class="highlight" style="margin: 0; height: 100%;">
-                            <pre style="margin: 0; height: 100%;"><code id="test-result-content" class="language-stylus" style="display: block; height: 100%; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;"></code></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
-                    Close
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-    #scenarioResultModal ::-webkit-scrollbar {
-        display: none;
-    }
-
     .highlight {
         position: relative;
         background: var(--tblr-bg-surface);
@@ -305,11 +302,13 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(var(--tblr-body-bg-rgb, 255, 255, 255), 0.88);
+        backdrop-filter: blur(2px);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 10;
+        border-radius: var(--tblr-border-radius);
     }
 
     #treeview {
@@ -319,41 +318,44 @@
     .accordion {
         --tblr-accordion-border-width: 0;
     }
+
+    .scenario-output-highlight {
+        min-height: 200px;
+    }
+
+    .scenario-output-pre {
+        min-height: 200px;
+    }
 </style>
 @section Scripts {
     @Html.AntiForgeryToken()
-    <style>
-        #scenarioResultModal ::-webkit-scrollbar {
-            display: none;
-        }
-        #scenarioResultModal {
-            z-index: 1055 !important;
-        }
-
-        #scenarioResultModal.show {
-            display: block !important;
-            opacity: 1;
-        }
-
-        #scenarioResultModal .modal-dialog {
-            z-index: 1056 !important;
-        }
-
-        .modal-backdrop {
-            z-index: 1040 !important;
-        }
-    </style>
     <script>
         let currentScenarioName = null;
         let currentScenarioPath = null;
         let isRunAllScenarios = false;
         let currentProcessId = null;
+        let pendingTestStatus = null;   // set by HTML report badge parsing (fallback)
+        let outputHasFailure  = false;  // any [FAIL] or "Failed: N>0" in output
+        let outputHasPass     = false;  // any [PASS] or "Failed: 0" in output
+        let outputNoMatch     = false;  // "No test matches" in output
+        const languageType = '@(ViewBag.LanguageType ?? "")';
+
+        function switchToOutputTab() {
+            const outputTabLink = document.getElementById('tab-output-link');
+            if (outputTabLink) {
+                bootstrap.Tab.getOrCreateInstance(outputTabLink).show();
+            }
+        }
+
+        function resetRunButtonStates() {
+            $('#run-scenario-btn').prop('disabled', false);
+            $('#run-all-scenarios-btn').prop('disabled', false);
+            if (currentScenarioName) $('#select-tag-btn').prop('disabled', false);
+        }
 
         function injectHtmlWithScripts(htmlContent, containerSelector) {
-            console.log('injectHtmlWithScripts called with container:', containerSelector);
             const container = document.querySelector(containerSelector);
             if (!container) {
-                console.error('Container not found:', containerSelector);
                 showCustomToast('danger', 'Target container for HTML report not found');
                 return;
             }
@@ -368,59 +370,7 @@
             }
         }
 
-        function checkModalExists() {
-            console.log('Checking modal existence');
-            const modal = document.getElementById('scenarioResultModal');
-            if (!modal) {
-                console.error('Modal element not found in DOM');
-                showCustomToast('danger', 'Scenario result modal not found in DOM');
-                return false;
-            }
-            const modalDialog = modal.querySelector('.modal-dialog');
-            const modalContent = modal.querySelector('.modal-content');
-            const backdrop = document.querySelector('.modal-backdrop');
-            return true;
-        }
-
-        function openModal() {
-            console.log('Attempting to open modal');
-            if (!checkModalExists()) return false;
-            try {
-                const modalElement = document.getElementById('scenarioResultModal');
-                if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
-                    console.error('Bootstrap Modal is not available');
-                    showCustomToast('danger', 'Bootstrap Modal is not loaded');
-                    return false;
-                }
-
-                const modalInstance = new bootstrap.Modal(modalElement, {
-                    backdrop: 'static',
-                    keyboard: false
-                });
-                modalInstance.show();
-
-                setTimeout(() => {
-                    const modal = $('#scenarioResultModal');
-                    const backdrop = $('.modal-backdrop');
-                    if (!modal.hasClass('show')) {
-                        modal.css({ display: 'block', opacity: 1, 'z-index': 1055 });
-                        modal.addClass('show');
-                        if (backdrop.length) {
-                            backdrop.css('z-index', 1040);
-                        }
-                    } else {
-                    }
-                }, 500);
-                return true;
-            } catch (err) {
-                console.error('Error opening modal:', err);
-                showCustomToast('danger', 'Failed to open results modal: ' + err.message);
-                return false;
-            }
-        }
-
         window.loadAvailableAgents = function () {
-            console.log('loadAvailableAgents called');
             $.get('/Agents/GetAvailableAgents')
                 .done(function (agents) {
                     const agentSelect = $('#agentSelection');
@@ -449,10 +399,19 @@
             }
 
             isRunAllScenarios = false;
+
+            if (languageType.toLowerCase() === 'playwright') {
+                $('#tag-selection').hide();
+                $('#playwright-test-selection').show();
+                $('#playwright-test-name').text(currentScenarioName).attr('title', currentScenarioName);
+                $('#run-scenario-btn').text('Run Test');
+                window.loadAvailableAgents();
+                new bootstrap.Offcanvas(document.getElementById('runOptionsOffcanvas')).show();
+                return;
+            }
+
             $('#tag-selection').show();
             $('#run-scenario-btn').text('Run Scenario');
-
-            console.log('Extracting tags for:', currentScenarioName, currentScenarioPath);
 
             $.get(`/Scenarios/GetScenarioContent?filePath=${encodeURIComponent(currentScenarioPath)}&scenarioName=${encodeURIComponent(currentScenarioName)}`)
                 .done(function (content) {
@@ -489,8 +448,6 @@
         $(document).ready(function () {
             const projectID = window.location.pathname.split('/').pop();
 
-            checkModalExists();
-
             window.openRunAllScenariosOffcanvas = function () {
                 isRunAllScenarios = true;
                 $('#tag-selection').hide();
@@ -500,148 +457,144 @@
             };
 
             window.runScenarioOrAll = function () {
-            currentProcessId = null;
-            localStorage.removeItem('currentProcessId');
-            const agentId = $('#agentSelection').val();
-            const selectedTag = $('#scenarioTags').val();
-            const runButton = $('#run-scenario-btn');
-            runButton.prop('disabled', true);
+                currentProcessId = null;
+                localStorage.removeItem('currentProcessId');
+                const agentId = $('#agentSelection').val();
+                const selectedTag = $('#scenarioTags').val();
 
-            $('#accordion').empty();
-            $('#test-result-content').empty();
-            updateStatus('Running');
-            $('.overlay').show();
-
-            setTimeout(() => {
-                if (!openModal()) {
-                    console.error('Failed to open modal in runScenarioOrAll');
-                    $('.overlay').hide();
-                    runButton.prop('disabled', false);
-                    showCustomToast('danger', 'Failed to open results modal');
-                    return;
+                // Clear previous results before starting a new run
+                $('#accordion').empty();
+                const prevResult = document.getElementById('test-result-content');
+                if (prevResult) {
+                    prevResult.textContent = '';
+                    prevResult.removeAttribute('data-highlighted');
                 }
-            }, 100);
 
-            if (isRunAllScenarios) {
-                $.ajax({
-                    url: '/Scenarios/RunAllScenarios',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    data: JSON.stringify({ projectId: projectID, agentId: agentId }),
-                    success: function (response) {
-                        console.log('RunAllScenarios response:', response);
-                        if (response.success) {
-                            currentProcessId = response.processId;
-                            connection.invoke('SubscribeToProcess', currentProcessId)
-                                .then(() => {
-                                    console.log('Subscribed to process:', currentProcessId);
-                                    checkProcessStatus(currentProcessId);
-                                })
-                                .catch(err => {
-                                    console.error('SubscribeToProcess Error:', err);
-                                    showCustomToast('danger', 'Failed to subscribe to process: ' + err);
-                                    updateStatus('Failed');
-                                    $('.overlay').hide();
-                                    $('#scenarioResultModal').modal('hide');
-                                    runButton.prop('disabled', false);
-                                });
-                        } else {
-                            console.error('RunAllScenarios failed:', response.message);
-                            showCustomToast('danger', response.message);
+                pendingTestStatus = null;
+                outputHasFailure = false;
+                outputHasPass    = false;
+                outputNoMatch    = false;
+                updateStatus('Running');
+                $('.overlay').show();
+
+                // Close offcanvas, switch to output tab, disable all run buttons
+                const offcanvasEl = document.getElementById('runOptionsOffcanvas');
+                const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+                if (bsOffcanvas) bsOffcanvas.hide();
+                switchToOutputTab();
+                $('#run-scenario-btn').prop('disabled', true);
+                $('#run-all-scenarios-btn').prop('disabled', true);
+                $('#select-tag-btn').prop('disabled', true);
+
+                if (isRunAllScenarios) {
+                    $.ajax({
+                        url: '/Scenarios/RunAllScenarios',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        data: JSON.stringify({ projectId: projectID, agentId: agentId }),
+                        success: function (response) {
+                            console.log('RunAllScenarios response:', response);
+                            if (response.success) {
+                                currentProcessId = response.processId;
+                                connection.invoke('SubscribeToProcess', currentProcessId)
+                                    .then(() => {
+                                        console.log('Subscribed to process:', currentProcessId);
+                                        checkProcessStatus(currentProcessId);
+                                    })
+                                    .catch(err => {
+                                        console.error('SubscribeToProcess Error:', err);
+                                        showCustomToast('danger', 'Failed to subscribe to process: ' + err);
+                                        updateStatus('Failed');
+                                        $('.overlay').hide();
+                                        resetRunButtonStates();
+                                    });
+                            } else {
+                                console.error('RunAllScenarios failed:', response.message);
+                                showCustomToast('danger', response.message);
+                                updateStatus('Failed');
+                                $('.overlay').hide();
+                                resetRunButtonStates();
+                            }
+                        },
+                        error: function (xhr) {
+                            const errorMessage = xhr.responseJSON?.message || 'Unknown error';
+                            console.error('RunAllScenarios Error:', xhr.status, xhr.statusText, xhr.responseText);
+                            showCustomToast('danger', errorMessage);
                             updateStatus('Failed');
                             $('.overlay').hide();
-                            $('#scenarioResultModal').modal('hide');
-                            runButton.prop('disabled', false);
+                            resetRunButtonStates();
                         }
-                    },
-                    error: function (xhr) {
-                        const errorMessage = xhr.responseJSON?.message || 'Unknown error';
-                        console.error('RunAllScenarios Error:', xhr.status, xhr.statusText, xhr.responseText);
-                        showCustomToast('danger', errorMessage);
-                        updateStatus('Failed');
+                    });
+                } else {
+                    const isPlaywright = languageType.toLowerCase() === 'playwright';
+
+                    if (!isPlaywright && !selectedTag) {
+                        console.warn('No scenario tag selected');
+                        showCustomToast('warning', 'Please select a scenario tag');
                         $('.overlay').hide();
-                        $('#scenarioResultModal').modal('hide');
-                        runButton.prop('disabled', false);
+                        resetRunButtonStates();
+                        return;
                     }
-                });
-            } else {
-                if (!selectedTag) {
-                    console.warn('No scenario tag selected');
-                    showCustomToast('warning', 'Please select a scenario tag');
-                    $('.overlay').hide();
-                    $('#scenarioResultModal').modal('hide');
-                    runButton.prop('disabled', false);
-                    return;
-                }
 
-                if (!currentScenarioName || !currentScenarioPath) {
-                    console.error('No scenario selected', { currentScenarioName, currentScenarioPath });
-                    showCustomToast('danger', 'Please select a scenario first');
-                    $('.overlay').hide();
-                    $('#scenarioResultModal').modal('hide');
-                    runButton.prop('disabled', false);
-                    return;
-                }
+                    if (!currentScenarioName || !currentScenarioPath) {
+                        console.error('No scenario selected', { currentScenarioName, currentScenarioPath });
+                        showCustomToast('danger', 'Please select a scenario first');
+                        $('.overlay').hide();
+                        resetRunButtonStates();
+                        return;
+                    }
 
-                $.ajax({
-                    url: '/Scenarios/RunScenario',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    headers: {
-                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
-                    },
-                    data: JSON.stringify({ scenarioTag: selectedTag, projectId: projectID, agentId: agentId, scenarioName: currentScenarioName, filePath: currentScenarioPath }),
-                    success: function (response) {
-                        if (response.success) {
-                            currentProcessId = response.processId;
-                            console.log('Using processId:', currentProcessId);
-                            connection.invoke('SubscribeToProcess', currentProcessId)
-                                .then(() => {
-                                    console.log('Subscribed to process:', currentProcessId);
-                                    checkProcessStatus(currentProcessId);
-                                })
-                                .catch(err => {
-                                    console.error('SubscribeToProcess Error:', err);
-                                    showCustomToast('danger', 'Failed to subscribe to process: ' + err);
-                                    updateStatus('Failed');
-                                    $('.overlay').hide();
-                                    $('#scenarioResultModal').modal('hide');
-                                    runButton.prop('disabled', false);
-                                });
-                        } else {
-                            console.error('RunScenario failed:', response.message);
-                            showCustomToast('danger', response.message);
+                    $.ajax({
+                        url: '/Scenarios/RunScenario',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        headers: {
+                            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                        },
+                        data: JSON.stringify({ scenarioTag: selectedTag, projectId: projectID, agentId: agentId, scenarioName: currentScenarioName, filePath: currentScenarioPath }),
+                        success: function (response) {
+                            if (response.success) {
+                                currentProcessId = response.processId;
+                                connection.invoke('SubscribeToProcess', currentProcessId)
+                                    .then(() => {
+                                        checkProcessStatus(currentProcessId);
+                                    })
+                                    .catch(err => {
+                                        showCustomToast('danger', 'Failed to subscribe to process: ' + err);
+                                        updateStatus('Failed');
+                                        $('.overlay').hide();
+                                        resetRunButtonStates();
+                                    });
+                            } else {
+                                showCustomToast('danger', response.message);
+                                updateStatus('Failed');
+                                $('.overlay').hide();
+                                resetRunButtonStates();
+                            }
+                        },
+                        error: function (xhr) {
+                            const errorMessage = xhr.responseJSON?.message || 'Unknown error';
+                            showCustomToast('danger', errorMessage);
                             updateStatus('Failed');
                             $('.overlay').hide();
-                            $('#scenarioResultModal').modal('hide');
-                            runButton.prop('disabled', false);
+                            resetRunButtonStates();
                         }
-                    },
-                    error: function (xhr) {
-                        const errorMessage = xhr.responseJSON?.message || 'Unknown error';
-                        console.error('RunScenario Error:', xhr.status, xhr.statusText, xhr.responseText);
-                        showCustomToast('danger', errorMessage);
-                        updateStatus('Failed');
-                        $('.overlay').hide();
-                        $('#scenarioResultModal').modal('hide');
-                        runButton.prop('disabled', false);
-                    }
-                });
-            }
-        };
-
-             const connection = new signalR.HubConnectionBuilder()
-            .withUrl('/gheetahHub')
-            .configureLogging(signalR.LogLevel.Information)
-            .withAutomaticReconnect({
-                nextRetryDelayInMilliseconds: retryContext => {
-                    return Math.min(retryContext.elapsedMilliseconds * 2, 10000);
+                    });
                 }
-            })
-            .build();
+            };
+
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/gheetahHub')
+                .configureLogging(signalR.LogLevel.Information)
+                .withAutomaticReconnect({
+                    nextRetryDelayInMilliseconds: retryContext => {
+                        return Math.min(retryContext.elapsedMilliseconds * 2, 10000);
+                    }
+                })
+                .build();
 
             connection.on('ReceiveOutput', function (output) {
                 const resultElement = document.getElementById('test-result-content');
@@ -653,26 +606,54 @@
                     if (wasScrolled) {
                         resultElement.scrollTop = resultElement.scrollHeight;
                     }
-                    if (!$('#scenarioResultModal').hasClass('show')) {
-                        console.warn('Modal is not open, attempting to open it');
-                        if (!openModal()) {
-                            console.error('Failed to open modal in ReceiveOutput');
-                        }
-                    }
                 } else {
                     console.error('test-result-content element not found');
                     showCustomToast('danger', 'Test result element not found');
+                }
+                // Accumulate test outcome signals from every output line.
+                // Failures always take precedence — once set, outputHasFailure stays true.
+                if (/No test matches the given testcase filter/i.test(output)) {
+                    outputNoMatch = true;
+                }
+                // xUnit per-test result markers
+                if (/\[FAIL\]/i.test(output)) {
+                    outputHasFailure = true;
+                } else if (/\[PASS\]/i.test(output)) {
+                    outputHasPass = true;
+                }
+                // dotnet test final summary line
+                const sumMatch = output.match(/\b(Failed|Passed)!\s+-\s+Failed:\s+(\d+)/);
+                if (sumMatch) {
+                    if (parseInt(sumMatch[2]) > 0) outputHasFailure = true;
+                    else outputHasPass = true;
                 }
             });
 
             connection.on('ReceiveHtmlReport', function (htmlReport) {
                 const containerSelector = '#accordion';
+                // Fallback: derive result from badge counts in the HTML report
+                if (!pendingTestStatus && htmlReport) {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = htmlReport;
+                    const passed  = parseInt(tmp.querySelector('.badge.passed')?.textContent)  || 0;
+                    const failed  = parseInt(tmp.querySelector('.badge.failed')?.textContent)  || 0;
+                    const skipped = parseInt(tmp.querySelector('.badge.skipped')?.textContent) || 0;
+                    const total   = passed + failed + skipped;
+                    if (total > 0) {
+                        if (failed > 0) {
+                            pendingTestStatus = 'Failed';
+                        } else if (passed > 0) {
+                            pendingTestStatus = 'Passed';
+                        } else {
+                            pendingTestStatus = 'Failed';
+                        }
+                    }
+                }
                 try {
                     injectHtmlWithScripts(htmlReport, containerSelector);
                     setTimeout(() => {
                         $('.collapse').collapse({ toggle: false });
                         hljs.highlightAll();
-                        $('#scenarioResultModal').modal('handleUpdate');
                         $('.collapse').first().collapse('show');
                     }, 100);
                 } catch (err) {
@@ -681,10 +662,20 @@
                 }
             });
 
+            // Server-authoritative outcome — sent by TestResultProcessor after parsing the result file.
+            connection.on('ReceiveTestResult', function (result) {
+                if (result === 'Failed')       { outputHasFailure = true; }
+                else if (result === 'Passed')  { if (!outputHasFailure) outputHasPass = true; }
+                else if (result === 'Skipped') { outputNoMatch = true; }
+                updateStatus(resolveTestStatus());
+            });
+
             connection.on('ReceiveCompletionMessage', function (message) {
                 showCustomToast('info', message);
-                updateStatus('Completed');
+                updateStatus(resolveTestStatus());
+                resetTestStatusTracking();
                 $('.overlay').hide();
+                resetRunButtonStates();
             });
 
             connection.on('ReceiveInitialData', (outputs, status) => {
@@ -693,17 +684,17 @@
                     resultElement.textContent = outputs.join('\n');
                     resultElement.removeAttribute('data-highlighted');
                     hljs.highlightElement(resultElement);
-                    if (!$('#scenarioResultModal').hasClass('show')) {
-                        console.warn('Modal is not open, attempting to open it');
-                        if (!openModal()) {
-                            console.error('Failed to open modal in ReceiveInitialData');
-                        }
-                    }
-                } else {
-                    console.error('test-result-content element not found');
-                    showCustomToast('danger', 'Test result element not found');
                 }
-                updateStatus(status);
+                const displayStatus = status === 'Executed'
+                    ? resolveTestStatus()
+                    : status === 'Failed'
+                        ? 'Failed'
+                        : status;
+                updateStatus(displayStatus);
+                if (status === 'Executed' || status === 'Failed') {
+                    resetTestStatusTracking();
+                    resetRunButtonStates();
+                }
             });
 
             connection.start()
@@ -720,12 +711,12 @@
                     try {
                         const response = await fetch(`/Scenarios/GetProcessStatus?processId=${processId}`);
                         if (!response.ok) {
-                            handleMissingProcess(processId);
+                            handleMissingProcess(processId, statusCheckInterval);
                             return;
                         }
 
                         const data = await response.json();
-                        updateStatus(data.status);
+                        if (data.status === 'Running') updateStatus('Running');
 
                         if (data.output && data.output.length > 0) {
                             const resultElement = document.getElementById('test-result-content');
@@ -733,12 +724,6 @@
                                 resultElement.textContent = data.output.join('\n');
                                 resultElement.removeAttribute('data-highlighted');
                                 hljs.highlightElement(resultElement);
-                                if (!$('#scenarioResultModal').hasClass('show')) {
-                                    console.warn('Modal is not open, attempting to open it');
-                                    if (!openModal()) {
-                                        console.error('Failed to open modal in checkProcessStatus');
-                                    }
-                                }
                             }
                         }
 
@@ -748,7 +733,6 @@
                                 setTimeout(() => {
                                     $('.collapse').collapse({ toggle: false });
                                     hljs.highlightAll();
-                                    $('#scenarioResultModal').modal('handleUpdate');
                                     $('.collapse').first().collapse('show');
                                 }, 100);
                             } catch (err) {
@@ -759,43 +743,66 @@
 
                         if (data.status === 'Executed' || data.status === 'Failed') {
                             clearInterval(statusCheckInterval);
+                            const finalStatus = data.status === 'Failed'
+                                ? 'Failed'
+                                : resolveTestStatus();
+                            updateStatus(finalStatus);
+                            resetTestStatusTracking();
                             if (data.status === 'Failed') {
                                 showCustomToast('danger', 'Process failed');
                             }
                             $('.overlay').hide();
+                            resetRunButtonStates();
                         }
                     } catch (error) {
                         console.error('Status check error:', error);
                         showCustomToast('danger', 'Status check error: ' + error.toString());
-                        handleMissingProcess(processId);
+                        handleMissingProcess(processId, statusCheckInterval);
                     }
                 }, 1000);
             }
 
-            function handleMissingProcess(processId) {
-                clearInterval(statusCheckInterval);
+            function handleMissingProcess(processId, statusCheckInterval) {
+                if (statusCheckInterval) clearInterval(statusCheckInterval);
                 showCustomToast('warning', 'Process session expired');
                 connection.invoke('UnsubscribeFromProcess', processId)
                     .catch(err => console.error('UnsubscribeFromProcess Error:', err));
                 $('.overlay').hide();
-                $('#scenarioResultModal').modal('hide');
+                resetRunButtonStates();
+            }
+
+            // Compute final pass/fail/skipped from accumulated output signals + HTML report fallback
+            function resolveTestStatus() {
+                if (outputNoMatch && !outputHasFailure && !outputHasPass)
+                    return 'Skipped';
+                if (outputHasFailure)
+                    return 'Failed';
+                if (outputHasPass)
+                    return 'Passed';
+                return pendingTestStatus || 'Executed';
+            }
+
+            function resetTestStatusTracking() {
+                pendingTestStatus = null;
+                outputHasFailure  = false;
+                outputHasPass     = false;
+                outputNoMatch     = false;
             }
 
             function updateStatus(status) {
-                const statusElement = document.getElementById('process-status');
-                const badgeClasses = {
-                    Running: 'bg-info',
-                    Executed: 'bg-success',
-                    Completed: 'bg-success',
-                    Failed: 'bg-danger'
+                const el = document.getElementById('process-status');
+                if (!el) return;
+                const configs = {
+                    Running:  { cls: 'status status-blue',   dot: 'status-dot-animated', label: 'Running'  },
+                    Executed: { cls: 'status status-blue',   dot: '',                    label: 'Executed' },
+                    Passed:   { cls: 'status status-green',  dot: '',                    label: 'Passed'   },
+                    Failed:   { cls: 'status status-red',    dot: '',                    label: 'Failed'   },
+                    Skipped:  { cls: 'status status-yellow', dot: '',                    label: 'Skipped'  },
                 };
-                if (statusElement) {
-                    statusElement.textContent = `Status: ${status}`;
-                    statusElement.className = `badge ${badgeClasses[status] || 'bg-secondary'}`;
-                    if (status === 'Completed' || status === 'Executed') {
-                        $('#scenarioResultModal').modal('handleUpdate');
-                    }
-                }
+                const cfg = configs[status] || { cls: 'status status-secondary', dot: '', label: status };
+                el.className = cfg.cls;
+                el.style.display = '';
+                el.innerHTML = `<span class="status-dot ${cfg.dot}"></span>${cfg.label}`;
             }
 
             function escapeHtml(unsafe) {
@@ -904,18 +911,33 @@
                     const scenarioName = data.node.original.scenarioName;
                     const fullName = data.node.original.data ? data.node.original.data.fullName : null;
 
-                    $('#scenario-name').text('Scenario: ' + (fullName || scenarioName));
+                    const label = languageType.toLowerCase() === 'playwright' ? 'Test: ' : 'Scenario: ';
+                    $('#scenario-name').text(label + (fullName || scenarioName));
                     $('#select-tag-btn').prop('disabled', false);
-                    $.get(`/Scenarios/GetScenarioContent?filePath=${encodeURIComponent(path)}&scenarioName=${encodeURIComponent(scenarioName)}`)
-                        .done(function(content) {
-                            const codeElement = document.getElementById('feature-content');
-                            codeElement.innerHTML = hljs.highlight(content, { language: 'gherkin' }).value;
-                            codeElement.classList.add('hljs');
-                        })
-                        .fail(function(xhr) {
-                            console.error('GetScenarioContent Failed:', xhr.status, xhr.statusText, xhr.responseText);
-                            showCustomToast('danger', 'Content load failed: ' + (xhr.responseText || 'Unknown error'));
-                        });
+
+                    if (languageType.toLowerCase() === 'playwright') {
+                        $.get(`/Scenarios/GetPlaywrightTestContent?filePath=${encodeURIComponent(path)}&testName=${encodeURIComponent(scenarioName)}`)
+                            .done(function(content) {
+                                const codeElement = document.getElementById('feature-content');
+                                codeElement.innerHTML = hljs.highlight(content, { language: 'typescript' }).value;
+                                codeElement.classList.add('hljs');
+                            })
+                            .fail(function(xhr) {
+                                console.error('GetPlaywrightTestContent Failed:', xhr.status, xhr.statusText);
+                                showCustomToast('danger', 'Content load failed: ' + (xhr.responseText || 'Unknown error'));
+                            });
+                    } else {
+                        $.get(`/Scenarios/GetScenarioContent?filePath=${encodeURIComponent(path)}&scenarioName=${encodeURIComponent(scenarioName)}`)
+                            .done(function(content) {
+                                const codeElement = document.getElementById('feature-content');
+                                codeElement.innerHTML = hljs.highlight(content, { language: 'gherkin' }).value;
+                                codeElement.classList.add('hljs');
+                            })
+                            .fail(function(xhr) {
+                                console.error('GetScenarioContent Failed:', xhr.status, xhr.statusText, xhr.responseText);
+                                showCustomToast('danger', 'Content load failed: ' + (xhr.responseText || 'Unknown error'));
+                            });
+                    }
                 } else {
                     $('#select-tag-btn').prop('disabled', true);
                     currentScenarioName = null;
@@ -928,9 +950,19 @@
                 });
             });
 
+            let searchTimeout = null;
+            $('#treeSearchInput').on('input', function() {
+                clearTimeout(searchTimeout);
+                const val = $(this).val();
+                searchTimeout = setTimeout(function() {
+                    $('#treeview').jstree(true).search(val);
+                }, 250);
+            });
+
             $('#runOptionsOffcanvas').on('hidden.bs.offcanvas', function() {
                 isRunAllScenarios = false;
                 $('#tag-selection').show();
+                $('#playwright-test-selection').hide();
                 $('#run-scenario-btn').text('Run Scenario');
             });
 

@@ -6,14 +6,46 @@
     --gh-primary-dark: #FF9A3C;
     --gh-secondary: #2a3042;
     --topbar-color: #2a3042;
-    --content-bg: #ffffff;
     --gh-gradient: linear-gradient(135deg, var(--gh-primary) 0%, var(--gh-secondary) 100%);
+    /* Default (dark) */
+    --content-bg: #1A1E2B;
+    --content-text: #E5E7EB;
+    --content-muted: rgba(229, 231, 235, 0.6);
+    --card-bg: #2a3042;
+    --card-border: rgba(255,255,255,0.08);
+    --pre-bg: #1e1e2e;
+    --pre-text: #E5E7EB;
+    --table-stripe: rgba(255,255,255,0.04);
+    --input-bg: #2a3042;
+    --input-border: rgba(255,255,255,0.15);
+}
+
+[data-theme="dark"] {
+    --content-bg: #1A1E2B;
+    --content-text: #E5E7EB;
+    --content-muted: rgba(229, 231, 235, 0.6);
+    --card-bg: #2a3042;
+    --card-border: rgba(255,255,255,0.08);
+    --pre-bg: #1e1e2e;
+    --pre-text: #E5E7EB;
+    --table-stripe: rgba(255,255,255,0.04);
+}
+
+[data-theme="light"] {
+    --content-bg: #ffffff;
+    --content-text: #333333;
+    --content-muted: rgba(31, 41, 55, 0.6);
+    --card-bg: #ffffff;
+    --card-border: rgba(0,0,0,0.05);
+    --pre-bg: #f8f9fa;
+    --pre-text: #333333;
+    --table-stripe: rgba(0,0,0,0.03);
 }
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--content-bg);
-    color: #333;
+    color: var(--content-text);
     overflow-x: hidden;
 }
 
@@ -191,7 +223,7 @@ body {
     min-height: calc(100vh - var(--navbar-height));
     margin-top: var(--navbar-height);
     background-color: var(--content-bg);
-    color: #333;
+    color: var(--content-text);
 }
 
 .content-section {
@@ -208,24 +240,44 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* THEME TOGGLE */
+.theme-toggle {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.theme-toggle:hover {
+    background: rgba(255,255,255,0.2);
+}
+
 /* CARD STYLES (Consolidated all card styles) */
 .card {
     transition: all 0.3s ease;
-    background: white;
+    background: var(--card-bg);
     border-radius: 8px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
     overflow: hidden;
+    border: 1px solid var(--card-border);
 }
 
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
 .card-header {
-    background: #f8f9fa;
+    background: rgba(255,255,255,0.04);
     padding: 16px 24px;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid var(--card-border);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -234,7 +286,7 @@ body {
 .card-header h3 {
     margin: 0;
     font-size: 1.25rem;
-    color: #2c3e50;
+    color: var(--content-text);
 }
 
 .card-body {
@@ -256,13 +308,14 @@ body {
 
 /* HIGHLIGHTED CONTENT STYLES */
 .highlighted-content {
-    background-color: #f8f9fa;
+    background-color: var(--pre-bg);
     padding: 20px;
     border-radius: 8px;
     border-left: 4px solid var(--gh-primary);
 }
 
 .technical-details {
+    background-color: var(--pre-bg);
     border-left: 4px solid var(--gh-secondary);
 }
 
@@ -336,10 +389,12 @@ body {
 
 /* MISC STYLES */
 pre {
-    background-color: #f8f9fa;
+    background-color: var(--pre-bg);
+    color: var(--pre-text);
     padding: 15px;
     border-radius: 4px;
     overflow-x: auto;
+    border: 1px solid var(--card-border);
 }
 
 .feather-folder {
@@ -360,7 +415,7 @@ pre {
 .feature-name {
     font-weight: 600;
     min-width: 140px;
-    color: #495057;
+    color: var(--content-muted);
 }
 
 .dependency-group {
@@ -370,7 +425,9 @@ pre {
 }
 
 .dependency-pill {
-    background: #e9ecef;
+    background: rgba(255, 179, 71, 0.15);
+    color: var(--gh-primary);
+    border: 1px solid rgba(255, 179, 71, 0.3);
     padding: 4px 12px;
     border-radius: 16px;
     font-size: 0.85rem;
@@ -379,7 +436,7 @@ pre {
 
 .contact-note {
     font-style: italic;
-    color: #6c757d;
+    color: var(--content-muted);
     margin-top: 12px;
 }
 

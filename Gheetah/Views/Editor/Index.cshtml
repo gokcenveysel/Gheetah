@@ -476,11 +476,20 @@
                 <div class="mb-3">
                     <label class="form-label">File Type</label>
                     <select id="new-file-type" class="form-select" onchange="updateTemplateOptions()">
-                        <option value="cs">C# Class (.cs)</option>
-                        <option value="feature">Feature File (.feature)</option>
-                        <option value="java">Java Class (.java)</option>
-                        <option value="xml">XML File (.xml)</option>
-                        <option value="json">JSON File (.json)</option>
+                        <optgroup label="C# / Reqnroll">
+                            <option value="cs">C# File (.cs)</option>
+                            <option value="feature">Feature File (.feature)</option>
+                        </optgroup>
+                        <optgroup label="Java / Cucumber">
+                            <option value="java">Java File (.java)</option>
+                        </optgroup>
+                        <optgroup label="Playwright / TypeScript">
+                            <option value="ts">TypeScript File (.ts)</option>
+                        </optgroup>
+                        <optgroup label="Config / Data">
+                            <option value="xml">XML File (.xml)</option>
+                            <option value="json">JSON File (.json)</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="mb-3" id="template-selector" style="display: none;">
@@ -489,6 +498,15 @@
                         <option value="class">Class</option>
                         <option value="interface">Interface</option>
                         <option value="stepdef">Step Definition</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="ts-template-selector" style="display: none;">
+                    <label class="form-label">TypeScript Template</label>
+                    <select id="new-ts-template" class="form-select">
+                        <option value="spec">Playwright Spec Test (.spec.ts)</option>
+                        <option value="page-object">Page Object Model</option>
+                        <option value="fixture">Custom Fixture</option>
+                        <option value="class">TypeScript Class</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -1122,13 +1140,34 @@
 
         function updateTemplateOptions() {
             var type = $('#new-file-type').val();
-            $('#template-selector').toggle(type === 'cs');
+            $('#template-selector').toggle(type === 'cs' || type === 'java');
+            $('#ts-template-selector').toggle(type === 'ts');
+
+            if (type === 'cs') {
+                $('#new-file-template').html(
+                    '<option value="class">Class</option>' +
+                    '<option value="interface">Interface</option>' +
+                    '<option value="stepdef">Step Definition</option>'
+                );
+            } else if (type === 'java') {
+                $('#new-file-template').html(
+                    '<option value="class">Class</option>' +
+                    '<option value="stepdef">Step Definition</option>'
+                );
+            }
         }
 
         function createNewFile() {
             var fileType = $('#new-file-type').val();
-            var templateType = $('#new-file-template').val() || 'class';
+            var templateType = fileType === 'ts'
+                ? ($('#new-ts-template').val() || 'spec')
+                : ($('#new-file-template').val() || 'class');
             var fileName = $('#new-file-name').val().trim();
+
+            // Playwright spec test: append .spec to filename if not already present
+            if (fileType === 'ts' && templateType === 'spec' && !fileName.endsWith('.spec')) {
+                fileName = fileName + '.spec';
+            }
 
             if (!fileName) {
                 showAlert("Error", "Please enter a file name.", "danger");

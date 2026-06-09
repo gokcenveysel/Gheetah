@@ -132,9 +132,10 @@ namespace Gheetah.Agent
                     {
                         if (!string.IsNullOrEmpty(e.Data))
                         {
-                            StatusUI.ShowStatus($"Error: {e.Data}");
-                            LogToFile($"Error: {e.Data}");
-                            await SendOutputWithTimeout($"Error: {e.Data}", processId);
+                            StatusUI.ShowStatus($"Stderr: {e.Data}");
+                            LogToFile($"Stderr: {e.Data}");
+                            var msg = IsNonErrorStderr(e.Data) ? e.Data : $"Error: {e.Data}";
+                            await SendOutputWithTimeout(msg, processId);
                         }
                     };
 
@@ -168,71 +169,70 @@ namespace Gheetah.Agent
                     }
                 }
 
-                string testResultsDir = Path.Combine(buildDir, "TestResults");
-                string testResultsFilePath = null;
+                // Look for Cucumber JSON report in target/cucumber-reports/
+                string cucumberReportsDir = Path.Combine(buildDir, "target", "cucumber-reports");
+                string cucumberJsonPath = null;
                 try
                 {
-                    if (Directory.Exists(testResultsDir))
+                    if (Directory.Exists(cucumberReportsDir))
                     {
-                        var xmlFiles = Directory.GetFiles(testResultsDir, "*_test_results.xml")
-                            .OrderByDescending(f => File.GetLastWriteTime(f))
-                            .ToList();
-                        if (xmlFiles.Any())
+                        var jsonFiles = Directory.GetFiles(cucumberReportsDir, "*.json", SearchOption.AllDirectories)
+                            .OrderByDescending(f => new FileInfo(f).LastWriteTime)
+                            .ToArray();
+                        if (jsonFiles.Length > 0)
                         {
-                            testResultsFilePath = xmlFiles.First().Replace("\\", "/");
-                            StatusUI.ShowStatus($"Found XML report: {testResultsFilePath}");
-                            LogToFile($"Found XML report: {testResultsFilePath}");
+                            cucumberJsonPath = jsonFiles[0];
+                            StatusUI.ShowStatus($"Found Cucumber JSON report: {cucumberJsonPath}");
+                            LogToFile($"Found Cucumber JSON report: {cucumberJsonPath}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    StatusUI.ShowStatus($"Error searching for XML report: {ex.Message}, StackTrace: {ex.StackTrace}");
-                    LogToFile($"Error searching for XML report: {ex.Message}, StackTrace: {ex.StackTrace}");
-                    await SendOutputWithTimeout($"Error searching for XML report: {ex.Message}", processId);
+                    StatusUI.ShowStatus($"Error searching for Cucumber JSON report: {ex.Message}");
+                    LogToFile($"Error searching for Cucumber JSON report: {ex.Message}");
+                    await SendOutputWithTimeout($"Error searching for Cucumber JSON report: {ex.Message}", processId);
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(testResultsFilePath) && File.Exists(testResultsFilePath))
+                if (!string.IsNullOrEmpty(cucumberJsonPath) && File.Exists(cucumberJsonPath))
                 {
-                    StatusUI.ShowStatus($"Reading XML report: {testResultsFilePath}");
-                    LogToFile($"Reading XML report: {testResultsFilePath}");
-                    string xmlReport;
+                    StatusUI.ShowStatus($"Sending Cucumber JSON report: {cucumberJsonPath}");
+                    LogToFile($"Sending Cucumber JSON report: {cucumberJsonPath}");
+                    string jsonContent;
                     try
                     {
-                        xmlReport = await File.ReadAllTextAsync(testResultsFilePath);
+                        jsonContent = await File.ReadAllTextAsync(cucumberJsonPath);
                     }
                     catch (Exception ex)
                     {
-                        StatusUI.ShowStatus($"Error reading XML report: {ex.Message}, StackTrace: {ex.StackTrace}");
-                        LogToFile($"Error reading XML report: {ex.Message}, StackTrace: {ex.StackTrace}");
-                        await SendOutputWithTimeout($"Error reading XML report: {ex.Message}", processId);
+                        StatusUI.ShowStatus($"Error reading Cucumber JSON report: {ex.Message}");
+                        LogToFile($"Error reading Cucumber JSON report: {ex.Message}");
+                        await SendOutputWithTimeout($"Error reading Cucumber JSON report: {ex.Message}", processId);
                         return;
                     }
-                    StatusUI.ShowStatus($"Sending XML report: {testResultsFilePath}");
-                    LogToFile($"Sending XML report: {testResultsFilePath}");
-                    var sendResultTask = AgentService.SendResultAsync($"TestResult:{xmlReport}", processId);
-                    if (await Task.WhenAny(sendResultTask, Task.Delay(30000)) == sendResultTask)
+                    var sendTask = AgentService.SendResultAsync($"TestResult:{jsonContent}", processId);
+                    if (await Task.WhenAny(sendTask, Task.Delay(30000)) == sendTask)
                     {
-                        await sendResultTask;
-                        StatusUI.ShowStatus($"Successfully sent XML report: {testResultsFilePath}");
-                        LogToFile($"Successfully sent XML report: {testResultsFilePath}");
+                        await sendTask;
+                        StatusUI.ShowStatus($"Successfully sent Cucumber JSON report");
+                        LogToFile($"Successfully sent Cucumber JSON report");
                     }
                     else
                     {
-                        StatusUI.ShowStatus($"Timeout sending XML report: {testResultsFilePath}");
-                        LogToFile($"Timeout sending XML report: {testResultsFilePath}");
-                        await SendOutputWithTimeout($"Timeout sending XML report: {testResultsFilePath}", processId);
+                        StatusUI.ShowStatus($"Timeout sending Cucumber JSON report");
+                        LogToFile($"Timeout sending Cucumber JSON report");
+                        await SendOutputWithTimeout("Timeout sending Cucumber JSON report", processId);
                         return;
                     }
-                    await SendOutputWithTimeout($"XML report generated: {testResultsFilePath}", processId);
+                    await SendOutputWithTimeout($"Cucumber JSON report generated: {cucumberJsonPath}", processId);
                     xmlReportGenerated = true;
                 }
                 else
                 {
-                    StatusUI.ShowStatus($"Error: XML report not found in {testResultsDir}");
-                    LogToFile($"Error: XML report not found in {testResultsDir}");
-                    await SendOutputWithTimeout($"Error: XML report not found in {testResultsDir}", processId);
+                    StatusUI.ShowStatus($"Cucumber JSON report not found in {cucumberReportsDir}");
+                    LogToFile($"Cucumber JSON report not found in {cucumberReportsDir}");
+                    await SendOutputWithTimeout("Warning: Cucumber JSON report not found in target/cucumber-reports/", processId);
                 }
             }
             catch (Exception ex)
@@ -315,6 +315,15 @@ namespace Gheetah.Agent
                 StatusUI.ShowStatus($"Timeout sending result: {message}");
                 LogToFile($"Timeout sending result: {message}");
             }
+        }
+
+        private static bool IsNonErrorStderr(string line)
+        {
+            if (string.IsNullOrWhiteSpace(line)) return true;
+            if (System.Text.RegularExpressions.Regex.IsMatch(line, @"^\[.+\]\s+(INFO|WARN|WARNING)\s+")) return true;
+            if (System.Text.RegularExpressions.Regex.IsMatch(line, @"^\w{3}\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}:\d{2}\s+(AM|PM)")) return true;
+            if (line.TrimStart().StartsWith("WARNING:") && !line.Contains("FAILURE") && !line.Contains("ERROR")) return true;
+            return false;
         }
 
         private static void LogToFile(string message)

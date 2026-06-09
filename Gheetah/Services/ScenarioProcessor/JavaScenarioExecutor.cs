@@ -1,11 +1,11 @@
-﻿using Gheetah.Hub;
+﻿using Gheetah.Helper;
+using Gheetah.Hub;
 using Gheetah.Interfaces;
 using Gheetah.Models.ProcessModel;
 using Gheetah.Models.ProjectModel;
 using Gheetah.Models.ScenarioModel;
 using Hangfire;
 using Microsoft.AspNetCore.SignalR;
-using System.Text.RegularExpressions;
 
 namespace Gheetah.Services.ScenarioProcessor
 {
@@ -66,27 +66,12 @@ namespace Gheetah.Services.ScenarioProcessor
                     }
                     else
                     {
-                        await _processService.ExecuteProcessAsync(
-                            command,
-                            processInfo,
-                            null
-                        );
+                        await _processService.ExecuteProcessAsync(command, processInfo, null);
 
-                        var testResultsFileName = ExtractTestResultsFilePath(processInfo.Output, request.ScenarioTag);
-                        if (string.IsNullOrEmpty(testResultsFileName))
+                        foreach (var jsonFile in ScenarioHelper.FindCucumberJsonReports(projectInfo.BuildInfoFileFullPath))
                         {
-                            await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", $"Error: Test results file not found for scenario tag {request.ScenarioTag}");
-                            continue;
+                            await _testResultProcessor.ProcessTestResultsAsync(processInfo, jsonFile);
                         }
-
-                        var relativeTestResultFilePath = Path.Combine(projectInfo.BuildInfoFileFullPath, "TestResults", testResultsFileName);
-                        if (!File.Exists(relativeTestResultFilePath))
-                        {
-                            await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveOutput", $"Error: Test results file not found at {relativeTestResultFilePath}");
-                            continue;
-                        }
-
-                        await _testResultProcessor.ProcessTestResultsAsync(processInfo, relativeTestResultFilePath);
                     }
                 }
 
@@ -102,24 +87,6 @@ namespace Gheetah.Services.ScenarioProcessor
                 await _hubContext.Clients.Group(processInfo.Id).SendAsync("ReceiveCompletionMessage", $"Scenario execution failed: {ex.Message}");
                 throw;
             }
-        }
-
-        private string ExtractTestResultsFilePath(List<string> outputLines, string scenarioTag)
-        {
-            var pattern = @"XML report written successfully to: TestResults/(.*?)\.xml";
-            foreach (var line in outputLines)
-            {
-                var match = Regex.Match(line, pattern);
-                if (match.Success)
-                {
-                    var fileName = match.Groups[1].Value + ".xml";
-                    if (fileName.Contains(scenarioTag))
-                    {
-                        return fileName;
-                    }
-                }
-            }
-            return null;
         }
     }
 }

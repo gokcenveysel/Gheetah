@@ -5,5 +5,7 @@
         public Guid projectId { get; set; }
         public string ScenarioTag { get; set; } = string.Empty;
         public string AgentId { get; set; } = string.Empty;
+        public string ScenarioName { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
     }
 }
