@@ -21,9 +21,10 @@ namespace Gheetah.Controllers
         private readonly IFileService _fileService;
         private readonly IEnumerable<IGitRepoService> _repoServices;
         private readonly IWebHostEnvironment _env;
+        private readonly IAiProjectService _aiProjectService;
         private readonly string _rootPath = Directory.GetCurrentDirectory();
 
-        public ProjectsController(IProjectService projectService, IDynamicAuthService dynamicAuthService, ILogService logService, IFileService fileService, IEnumerable<IGitRepoService> repoServices, IWebHostEnvironment env)
+        public ProjectsController(IProjectService projectService, IDynamicAuthService dynamicAuthService, ILogService logService, IFileService fileService, IEnumerable<IGitRepoService> repoServices, IWebHostEnvironment env, IAiProjectService aiProjectService)
         {
             _projectService = projectService;
             _dynamicAuthService = dynamicAuthService;
@@ -31,6 +32,7 @@ namespace Gheetah.Controllers
             _fileService = fileService;
             _repoServices = repoServices;
             _env = env;
+            _aiProjectService = aiProjectService;
         }
 
         [HttpGet]
@@ -48,12 +50,13 @@ namespace Gheetah.Controllers
         public async Task<IActionResult> ProjectList(bool showToast = false)
         {
             var projects = await _projectService.GetProjectsAsync();
-    
+            ViewBag.AiProjects = await _aiProjectService.GetProjectsAsync();
+
             if (showToast && TempData["Success"] == null)
             {
                 TempData.Keep("Success");
             }
-    
+
             return View(projects);
         }
 

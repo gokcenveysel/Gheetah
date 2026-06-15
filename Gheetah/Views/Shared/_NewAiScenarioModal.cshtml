@@ -1,0 +1,72 @@
+<div class="modal modal-blur fade" id="newScenarioModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newScenarioModalTitle">New Scenario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs mb-3" id="newScenarioTabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" onclick="switchScenarioTab('manual'); return false;">Manual</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="switchScenarioTab('ai'); return false;">AI Generate</a>
+                    </li>
+                </ul>
+
+                <!-- Manual tab -->
+                <div id="scenarioTabManual">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label required">Title</label>
+                            <input type="text" class="form-control" id="newScenarioTitle" placeholder="User can login with valid credentials" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Feature Name</label>
+                            <input type="text" class="form-control" id="newScenarioFeature" placeholder="Authentication" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label required">Gherkin Content</label>
+                            <textarea class="form-control font-monospace" id="newScenarioGherkin" rows="8" placeholder="Scenario: User can login with valid credentials&#10;  Given I am on the login page&#10;  When I enter valid credentials&#10;  Then I should be redirected to the dashboard"></textarea>
+                            <div id="gherkinValidationFeedback" class="mt-1"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Tags (comma-separated)</label>
+                            <input type="text" class="form-control" id="newScenarioTags" placeholder="smoke, login" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Generate tab -->
+                <div id="scenarioTabAi" class="d-none">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label required">Describe what to test</label>
+                            <textarea class="form-control" id="aiScenarioPrompt" rows="4" placeholder="Test that a user can log in with valid email and password and is redirected to the dashboard..."></textarea>
+                            <div id="aiPromptValidationFeedback" class="mt-1"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Feature Name</label>
+                            <input type="text" class="form-control" id="aiScenarioFeature" placeholder="Authentication" />
+                        </div>
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M12 9h.01"/><path d="M11 12h1v4h1"/>
+                                    <path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9 -9 9s-9 -1.8 -9 -9s1.8 -9 9 -9z"/>
+                                </svg>
+                                The AI agent will generate a Gherkin scenario from your description and save it as a Draft.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-purple" onclick="saveNewScenario()" id="saveScenarioBtn">Save Scenario</button>
+            </div>
+        </div>
+    </div>
+</div>

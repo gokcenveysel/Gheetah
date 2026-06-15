@@ -1,0 +1,201 @@
+@{
+    ViewData["Title"] = "New AI Project";
+}
+
+<form id="antiForgeryForm" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+<div class="page-header d-print-none">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">AI Projects</div>
+            <h2 class="page-title">New AI Project</h2>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <!-- Step indicator -->
+    <div class="card-body border-bottom py-3">
+        <div class="steps steps-counter" id="wizardSteps">
+            <a href="#" class="step-item active" id="tab-step1" onclick="goToStep(1); return false;">Project Info</a>
+            <a href="#" class="step-item" id="tab-step2" onclick="goToStep(2); return false;">AI Agent &amp; Requirements</a>
+            <a href="#" class="step-item" id="tab-step3" onclick="goToStep(3); return false;">Environment</a>
+            <a href="#" class="step-item" id="tab-step4" onclick="goToStep(4); return false;">Review &amp; Create</a>
+        </div>
+    </div>
+
+    <!-- Step 1: Project Info -->
+    <div class="card-body" id="step1" data-step="1">
+        <div class="row g-3">
+            <div class="col-md-8">
+                <label class="form-label required">Project Name</label>
+                <input type="text" class="form-control" id="projName" placeholder="My AI Test Project" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Tags <span class="text-muted fw-normal small">(comma-separated)</span></label>
+                <input type="text" class="form-control" id="projTags" placeholder="smoke, regression" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" id="projDescription" rows="2" placeholder="Describe what this AI project tests..."></textarea>
+            </div>
+            <div class="col-12">
+                <label class="form-label required">Test Types <span class="text-muted fw-normal small">— determines what requirement fields appear in the next step</span></label>
+                <div class="row g-2 mt-1">
+                    @foreach (var tt in new[] { "UI Testing", "API Testing", "E2E Testing", "Regression", "Smoke Testing", "Accessibility" })
+                    {
+                        <div class="col-auto">
+                            <label class="form-check mb-0">
+                                <input class="form-check-input test-type-cb" type="checkbox" value="@tt" />
+                                <span class="form-check-label">@tt</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 2: AI Agent + Requirements -->
+    <div class="card-body d-none" id="step2" data-step="2">
+        <div class="row g-4">
+            <div class="col-12">
+                <label class="form-label required">Select AI Agent</label>
+                <div id="agentCards" class="row g-3">
+                    <div class="col-12 text-center py-4 text-muted">
+                        <span class="spinner-border spinner-border-sm me-2"></span> Loading agents...
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <a href="/SiteSettings/Index" class="text-muted small">+ Configure AI agents in Site Settings</a>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <label class="form-label">Target URL</label>
+                <input type="text" class="form-control" id="targetUrl" placeholder="https://your-app.com" />
+                <div class="form-text">The application URL the agent will navigate to.</div>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Browser</label>
+                <select class="form-select" id="browserType">
+                    <option value="chromium">Chromium</option>
+                    <option value="firefox">Firefox</option>
+                    <option value="webkit">WebKit (Safari)</option>
+                </select>
+            </div>
+            <!-- Dynamic requirement fields — populated by JS based on selected test types -->
+            <div class="col-12" id="requirementsSection"></div>
+        </div>
+    </div>
+
+    <!-- Step 3: Environment -->
+    <div class="card-body d-none" id="step3" data-step="3">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label required">Environment Name</label>
+                <input type="text" class="form-control" id="envName" placeholder="Production / Staging / Dev" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Base URL</label>
+                <input type="text" class="form-control" id="envBaseUrl" placeholder="https://staging.your-app.com" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">Environment Variables</label>
+                <div class="table-responsive">
+                    <table class="table table-sm table-vcenter">
+                        <thead>
+                            <tr><th>Key</th><th>Value</th><th class="w-1"></th></tr>
+                        </thead>
+                        <tbody id="envVarsBody"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addEnvVar()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-1">
+                        <path d="M12 5l0 14"/><path d="M5 12l14 0"/>
+                    </svg>
+                    Add Variable
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 4: Review & Create -->
+    <div class="card-body d-none" id="step4" data-step="4">
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <h4 class="mb-3">Configuration Summary</h4>
+                <dl class="row">
+                    <dt class="col-sm-5 text-muted">Project Name</dt><dd class="col-sm-7" id="rev-name">—</dd>
+                    <dt class="col-sm-5 text-muted">Description</dt><dd class="col-sm-7" id="rev-desc">—</dd>
+                    <dt class="col-sm-5 text-muted">Tags</dt><dd class="col-sm-7" id="rev-tags">—</dd>
+                    <dt class="col-sm-5 text-muted">Test Types</dt><dd class="col-sm-7" id="rev-testtypes">—</dd>
+                    <dt class="col-sm-5 text-muted">AI Agent</dt><dd class="col-sm-7" id="rev-agent">—</dd>
+                    <dt class="col-sm-5 text-muted">Target URL</dt><dd class="col-sm-7" id="rev-url">—</dd>
+                    <dt class="col-sm-5 text-muted">Browser</dt><dd class="col-sm-7" id="rev-browser">—</dd>
+                    <dt class="col-sm-5 text-muted">Environment</dt><dd class="col-sm-7" id="rev-env">—</dd>
+                </dl>
+
+                <div class="mt-3">
+                    <label class="form-label">Initial Scenario Source</label>
+                    <div class="d-flex gap-3">
+                        <label class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="scenarioSource" value="manual" checked />
+                            <span class="form-check-label">Add manually after creation</span>
+                        </label>
+                        <label class="form-check mb-0">
+                            <input class="form-check-input" type="radio" name="scenarioSource" value="ai" />
+                            <span class="form-check-label">Generate with AI</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h4 class="mb-0">Generated Pre-Prompt</h4>
+                    <span id="prePromptTokenBadge" class="badge bg-blue-lt" style="display:none"></span>
+                </div>
+                <div id="prePromptPreviewContainer">
+                    <div class="text-center py-4 text-muted">
+                        <span class="spinner-border spinner-border-sm me-2"></span> Generating pre-prompt from your requirements...
+                    </div>
+                </div>
+                <div class="form-text mt-1">
+                    This pre-prompt is constructed from your requirements and instructs the AI agent how to test your application.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between align-items-center">
+        <button class="btn" id="prevBtn" onclick="prevStep()" style="display:none">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M15 6l-6 6l6 6" />
+            </svg>
+            Previous
+        </button>
+        <div class="ms-auto d-flex gap-2">
+            <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">
+                Next
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon ms-1">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M9 6l6 6l-6 6" />
+                </svg>
+            </button>
+            <button class="btn btn-success d-none" id="createBtn" onclick="createProject()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M5 12l5 5l10 -10" />
+                </svg>
+                Create Project
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/ai-project-wizard.js"></script>
+}

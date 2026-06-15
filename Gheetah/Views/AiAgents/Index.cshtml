@@ -1,0 +1,156 @@
+@{
+    ViewData["Title"] = "AI Agents";
+}
+
+<form id="antiForgeryForm" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+<div class="page-header d-print-none">
+    <div class="row align-items-center">
+        <div class="col">
+            <h2 class="page-title">AI Agents</h2>
+            <div class="text-muted mt-1">Manage external AI agent connections</div>
+        </div>
+        <div class="col-auto ms-auto">
+            <button class="btn btn-purple" onclick="openAgentModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 5l0 14" />
+                    <path d="M5 12l14 0" />
+                </svg>
+                Add Agent
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Configured Agents</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table">
+            <thead>
+                <tr>
+                    <th>Agent</th>
+                    <th>Provider</th>
+                    <th>Model</th>
+                    <th>Status</th>
+                    <th class="w-1">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="agentsTableBody">
+                <tr id="agentsLoadingRow">
+                    <td colspan="5" class="text-center py-4">
+                        <span class="spinner-border spinner-border-sm me-2"></span> Loading agents...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add/Edit Agent Modal -->
+<div class="modal modal-blur fade" id="agentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="agentModalTitle">Add AI Agent</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="agentId" />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label required">Name</label>
+                        <input type="text" class="form-control" id="agentName" placeholder="My Claude Agent" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">Provider Type</label>
+                        <select class="form-select" id="agentProvider" onchange="onProviderChange()">
+                            <option value="Claude">Claude (Computer Use)</option>
+                            <option value="OpenAI">OpenAI Operator</option>
+                            <option value="Gemini">Gemini</option>
+                            <option value="Grok">Grok</option>
+                            <option value="MCP">MCP Server</option>
+                            <option value="Custom">Custom</option>
+                            <option value="Mock">Mock (UI Testing)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">API Endpoint</label>
+                        <input type="text" class="form-control" id="agentEndpoint" placeholder="https://api.example.com/v1" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label required">API Key</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="agentApiKey" placeholder="sk-..." />
+                            <button class="btn" type="button" onclick="toggleApiKeyVisibility()">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eyeIcon">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                                    <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Model Name</label>
+                        <input type="text" class="form-control" id="agentModel" placeholder="claude-3-5-sonnet-20241022" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Max Concurrent Sessions</label>
+                        <input type="number" class="form-control" id="agentMaxSessions" value="1" min="1" max="10" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Timeout (seconds)</label>
+                        <input type="number" class="form-control" id="agentTimeout" value="120" min="30" max="3600" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Capabilities</label>
+                        <div class="row g-2" id="capabilitiesGroup">
+                            @foreach (var cap in new[] { "BrowserAutomation", "ScreenshotCapture", "FormInteraction", "APITesting", "FileSystem", "CodeExecution" })
+                            {
+                                <div class="col-auto">
+                                    <label class="form-check form-check-inline">
+                                        <input class="form-check-input capability-cb" type="checkbox" value="@cap" />
+                                        <span class="form-check-label">@cap</span>
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="agentEnabled" checked />
+                            <label class="form-check-label">Enabled</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="agentDefault" />
+                            <label class="form-check-label">Set as Default</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn me-auto" onclick="testAgentConnection()" id="testConnBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M9 12l2 2l4 -4" />
+                        <path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0 -18" />
+                    </svg>
+                    Test Connection
+                </button>
+                <button class="btn" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-purple" onclick="saveAgent()" id="saveAgentBtn">Save Agent</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/ai-agents.js"></script>
+}

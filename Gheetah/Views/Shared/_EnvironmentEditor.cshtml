@@ -1,0 +1,51 @@
+@model Gheetah.Models.AiModels.EnvironmentConfig
+@{
+    var envId = Model?.Id ?? "";
+    var envName = Model?.Name ?? "";
+    var envBaseUrl = Model?.BaseUrl ?? "";
+    var envVars = Model?.Variables ?? new Dictionary<string, string>();
+}
+
+<div class="row g-3" id="envEditor">
+    <div class="col-md-6">
+        <label class="form-label required">Environment Name</label>
+        <input type="text" class="form-control" id="envEditorName" value="@envName" placeholder="Staging" />
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Base URL</label>
+        <input type="text" class="form-control" id="envEditorBaseUrl" value="@envBaseUrl" placeholder="https://staging.app.com" />
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Browser Type</label>
+        <select class="form-select" id="envEditorBrowser">
+            <option value="chromium">Chromium</option>
+            <option value="firefox">Firefox</option>
+            <option value="webkit">WebKit</option>
+        </select>
+    </div>
+    <div class="col-md-6">
+        <div class="form-check form-switch mt-4">
+            <input class="form-check-input" type="checkbox" id="envEditorDefault" @(Model?.IsDefault == true ? "checked" : "") />
+            <label class="form-check-label">Set as Default</label>
+        </div>
+    </div>
+    <div class="col-12">
+        <label class="form-label">Variables</label>
+        <table class="table table-sm">
+            <thead>
+                <tr><th>Key</th><th>Value</th><th></th></tr>
+            </thead>
+            <tbody id="envEditorVarsBody">
+                @foreach (var kv in envVars)
+                {
+                    <tr class="env-var-row">
+                        <td><input type="text" class="form-control form-control-sm env-var-key" value="@kv.Key" /></td>
+                        <td><input type="text" class="form-control form-control-sm env-var-val" value="@kv.Value" /></td>
+                        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="removeEnvVarRow(this)">×</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="addEnvVarRow()">+ Add Variable</button>
+    </div>
+</div>

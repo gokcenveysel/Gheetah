@@ -256,6 +256,28 @@
 					</div>
 				</li>
 
+				<!-- AI Projects -->
+				<li>
+					<div class="nav-item-header" data-target="ai-menu">
+						<span>AI Projects</span>
+						<i class="ti ti-chevron-right menu-toggle"></i>
+					</div>
+					<div id="ai-menu" class="submenu">
+						<a class="nav-link" href="#" data-section="ai-agent-config">
+							<i class="ti ti-robot"></i> Configuring AI Agents
+						</a>
+						<a class="nav-link" href="#" data-section="ai-project-wizard">
+							<i class="ti ti-wand"></i> Creating an AI Project
+						</a>
+						<a class="nav-link" href="#" data-section="ai-execution">
+							<i class="ti ti-player-play"></i> Running AI Scenarios
+						</a>
+						<a class="nav-link" href="#" data-section="ai-session-recovery">
+							<i class="ti ti-refresh"></i> Session Recovery
+						</a>
+					</div>
+				</li>
+
 			</ul>
 		</div>
 	</div>
@@ -703,7 +725,7 @@
             <div id="what-is-gheetah" class="content-section">
                 <h2>What is Gheetah?</h2>
                 <div class="mt-4 p-4 rounded">
-                    <p class="lead">Gheetah is a powerful <strong>Test Orchestration Platform</strong> designed to streamline the execution and management of BDD (Behavior-Driven Development) test automation projects. Built as a <strong>cross-platform</strong> solution with a <strong>.NET 8.0 MVC backend</strong>, it features a modern and intuitive frontend designed using <strong>Tabler.io</strong>.</p>
+                    <p class="lead">Gheetah is a powerful <strong>Test Orchestration Platform</strong> (v3.0) designed to streamline the execution and management of BDD (Behavior-Driven Development) test automation projects — and now AI Agent-driven testing. Built as a <strong>cross-platform</strong> solution with a <strong>.NET 8.0 MVC backend</strong>, it features a modern and intuitive frontend designed using <strong>Tabler.io</strong>.</p>
 
                     <h5 class="mt-4 mb-3">Key Features & Capabilities:</h5>
                     <ul class="list-unstyled">
@@ -715,7 +737,16 @@
                                 <li>View <strong>real-time test results</strong> with structured reporting.</li>
                             </ul>
                         </li>
-                        
+
+                        <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>AI Agent Orchestration (v3.0 New):</strong>
+                            <ul class="mt-2">
+                                <li>Create <strong>AI Projects</strong> — no-code test mode powered by external AI agents.</li>
+                                <li>Supports <strong>Claude, OpenAI, Gemini, Grok, MCP Server, Custom</strong> providers.</li>
+                                <li>4-step wizard with dynamic requirement fields and server-side pre-prompt generation.</li>
+                                <li>Real-time execution streaming via <strong>SignalR</strong> with session recovery.</li>
+                            </ul>
+                        </li>
+
                         <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Enterprise-Ready Platform:</strong>
                             <ul class="mt-2">
                                 <li><strong>Customizable Dashboard</strong> for analytics and visibility.</li>
@@ -724,7 +755,7 @@
                                 <li>Scalable for <strong>enterprise environments</strong>.</li>
                             </ul>
                         </li>
-                        
+
                         <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i> <strong>Lightweight & Easy to Use:</strong>
                             <ul class="mt-2">
                                 <li>No database dependency—stores data as <strong>JSON files</strong> in the <code>/Data</code> directory.</li>
@@ -2740,6 +2771,307 @@
 						<li><strong>No results:</strong> Confirm <code>playwright.config.ts</code> includes the JSON reporter outputting to <code>test-results/results.json</code>.</li>
 						<li><strong>Agent fails:</strong> Check that the Agent machine has Node.js and <code>npx playwright install</code> has been run.</li>
 					</ul>
+				</div>
+			</div>
+
+			<!-- AI AGENT CONFIGURATION -->
+			<div id="ai-agent-config" class="content-section">
+				<h2>Configuring AI Agents</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">Where to find it</h5>
+						<p class="mb-0">AI Agents are managed under <strong>Admin → Site Settings → AI Agents</strong> tab. This tab is only visible to Administrator users.</p>
+					</div>
+
+					<h4 class="mt-4">Supported Provider Types</h4>
+					<div class="table-responsive mt-3">
+						<table class="table table-bordered">
+							<thead class="table-light">
+								<tr>
+									<th>Provider</th>
+									<th>Auth Required</th>
+									<th>Best For</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr><td><strong>Claude (Computer Use)</strong></td><td>Anthropic API key</td><td>Browser automation, screenshots, file system</td></tr>
+								<tr><td><strong>OpenAI Operator</strong></td><td>OpenAI API key</td><td>Web browsing, form interaction, API testing</td></tr>
+								<tr><td><strong>Google Gemini</strong></td><td>Google AI Studio key</td><td>Multimodal reasoning, vision, API testing</td></tr>
+								<tr><td><strong>xAI Grok</strong></td><td>xAI API key</td><td>API testing, code execution</td></tr>
+								<tr><td><strong>MCP Server</strong></td><td>Optional bearer token</td><td>Custom tool servers, any capability</td></tr>
+								<tr><td><strong>Custom</strong></td><td>User-defined</td><td>Any OpenAI-compatible self-hosted LLM</td></tr>
+								<tr><td><strong>Mock (UI Testing)</strong></td><td>None required</td><td>UI/frontend development — returns realistic fake Gherkin without any API call</td></tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="alert alert-info mt-3">
+						<h5 class="alert-heading"><i class="ti ti-flask me-1"></i> Mock Provider — UI Testing Without API Keys</h5>
+						<p class="mb-0">The <strong>Mock</strong> provider is a built-in adapter that simulates a real AI agent. It generates plausible BDD Gherkin output with a short delay so you can test the full AI Project UI flow — scenario generation, jstree display, Gherkin highlighting, execution streaming — without needing any external API key or network access. Use it during development or demos.</p>
+					</div>
+
+					<h4 class="mt-4">Adding a New Agent</h4>
+					<div class="step-list">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Open Site Settings → AI Agents</h5>
+								<p>Click the <strong>AI Agents</strong> tab in Site Settings. Click <strong>"Add Agent"</strong> to open the configuration modal.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Enter Agent Name &amp; Select Provider</h5>
+								<p>Give the agent a descriptive name (e.g., "Claude Prod"). When you select a <strong>Provider Type</strong>, the form dynamically updates:</p>
+								<ul>
+									<li><strong>Cloud providers</strong> (Claude/OpenAI/Gemini/Grok): show API key, model suggestions dropdown, optional endpoint override</li>
+									<li><strong>MCP Server</strong>: shows server URL (required), transport type (HTTP/SSE/WebSocket), optional bearer token — no model field</li>
+									<li><strong>Custom</strong>: shows endpoint (required), API key, free-text model name</li>
+									<li><strong>Mock</strong>: no API key or endpoint required — returns simulated Gherkin for UI testing</li>
+								</ul>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Configure Capabilities</h5>
+								<p>Capabilities are pre-selected based on the provider (e.g., Claude gets Browser Automation + Screenshot + File System by default). Adjust them to match what your agent actually supports.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">4</div>
+							<div class="step-content">
+								<h5>Test Connection</h5>
+								<p>Click <strong>"Test Connection"</strong> to verify the agent is reachable and the API key is valid. A latency reading is shown on success.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">5</div>
+							<div class="step-content">
+								<h5>Save</h5>
+								<p>Click <strong>"Save Agent"</strong>. The agent appears in the table and is now available for selection when creating AI Projects.</p>
+							</div>
+						</div>
+					</div>
+
+					<h4 class="mt-4">Understanding the Agents Table</h4>
+					<p>The AI Agents table uses <strong>5 columns</strong> designed for quick at-a-glance monitoring:</p>
+					<div class="table-responsive mt-2">
+						<table class="table table-bordered">
+							<thead class="table-light">
+								<tr><th>Column</th><th>What it shows</th></tr>
+							</thead>
+							<tbody>
+								<tr><td><strong>Agent</strong></td><td>Agent name (bold) · <span class="badge bg-warning text-dark">★ Default</span> badge if this is the default agent · <span class="badge bg-info">Pre-prompt</span> badge if a pre-prompt is linked</td></tr>
+								<tr><td><strong>Provider</strong></td><td>Colour-coded badge: <span class="badge bg-purple">Claude</span> <span class="badge bg-success">OpenAI</span> <span class="badge bg-primary">Gemini</span> <span class="badge bg-info">Grok</span> <span class="badge bg-orange">MCP</span> <span class="badge bg-secondary">Custom</span> <span class="badge bg-warning text-dark">Mock</span></td></tr>
+								<tr><td><strong>Model</strong></td><td>The model name configured for this agent (e.g. <code>claude-sonnet-4-6</code>)</td></tr>
+								<tr><td><strong>Status</strong></td><td>
+									<span class="badge bg-secondary me-1">● Disabled</span> Agent is toggled off<br>
+									<span class="badge bg-secondary me-1">● Not tested</span> Enabled but "Test Connection" has never been run<br>
+									<span class="badge bg-success me-1 animated">● Online</span> Last health check passed — animated green dot + timestamp<br>
+									<span class="badge bg-danger me-1">● Offline</span> Last health check failed + timestamp
+								</td></tr>
+								<tr><td><strong>Actions</strong></td><td>Test Connection · Edit · Delete icon buttons</td></tr>
+							</tbody>
+						</table>
+					</div>
+
+					<div class="alert alert-info mt-4">
+						<h5 class="alert-heading">API Key Security</h5>
+						<p class="mb-0">API keys are stored in <code>Data/ai-agents.json</code> on the Gheetah server. Ensure your server file system has appropriate access controls. Keys are never sent to the browser after initial save — they are masked in the Edit modal.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- AI PROJECT WIZARD -->
+			<div id="ai-project-wizard" class="content-section">
+				<h2>Creating an AI Project — 4-Step Wizard</h2>
+				<div class="mt-4 p-4 rounded">
+					<p class="lead">Navigate to <strong>Projects → New AI Project</strong> to launch the wizard. The wizard guides you through four steps to configure everything the AI agent needs to test your application.</p>
+
+					<h4 class="mt-4">Step 1 — Project Info</h4>
+					<ul>
+						<li>Enter a <strong>Project Name</strong> (required) and optional description and tags.</li>
+						<li>Select one or more <strong>Test Types</strong>:
+							<ul>
+								<li><strong>UI Testing</strong> — form interactions, page navigation, visual checks</li>
+								<li><strong>API Testing</strong> — endpoint validation, response schema checks</li>
+								<li><strong>E2E Testing</strong> — full user journey flows across multiple pages/systems</li>
+								<li><strong>Regression</strong> — safety net for recent changes against known-good baselines</li>
+								<li><strong>Smoke Testing</strong> — fast critical-path checks after deployments</li>
+								<li><strong>Accessibility</strong> — WCAG compliance, keyboard navigation, color contrast</li>
+							</ul>
+						</li>
+					</ul>
+					<div class="alert alert-warning">
+						<i class="ti ti-info-circle me-1"></i> <strong>Test Types drive Step 2.</strong> The requirement fields shown in Step 2 are generated dynamically based on which types you select here.
+					</div>
+
+					<h4 class="mt-4">Step 2 — AI Agent &amp; Requirements</h4>
+
+					<h5>Selecting an Agent</h5>
+					<p>Agent cards show the provider name, model, and capability badges. Click a card to select it (selected card highlights in blue with a checkmark). If no agents appear, click <strong>"+ Configure AI agents in Site Settings"</strong> to add one first.</p>
+
+					<h5 class="mt-3">Target URL &amp; Browser</h5>
+					<p>Enter the URL of the application you want to test (e.g., <code>https://staging.myapp.com</code>) and select the browser (Chromium, Firefox, or WebKit).</p>
+
+					<h5 class="mt-3">Requirement Fields</h5>
+					<p>Below the agent cards, requirement fields appear for each selected test type. These are the inputs the server uses to generate a detailed AI pre-prompt — fill them in as accurately as possible:</p>
+					<div class="table-responsive">
+						<table class="table table-bordered">
+							<thead class="table-light">
+								<tr><th>Test Type</th><th>Key Fields</th></tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><strong>UI Testing</strong></td>
+									<td>User roles, key pages/features to test, whether auth is required, auth credentials (shown only when auth ≠ "No")</td>
+								</tr>
+								<tr>
+									<td><strong>API Testing</strong></td>
+									<td>Swagger/docs URL, auth method, auth value (shown when auth ≠ None), key endpoints, expected response formats</td>
+								</tr>
+								<tr>
+									<td><strong>E2E Testing</strong></td>
+									<td>User flows (detailed journey descriptions), test account credentials, preconditions &amp; test data</td>
+								</tr>
+								<tr>
+									<td><strong>Regression</strong></td>
+									<td>Critical paths to protect, recent changes to focus on, known flaky areas to skip</td>
+								</tr>
+								<tr>
+									<td><strong>Smoke Testing</strong></td>
+									<td>Critical checks checklist, maximum acceptable response time</td>
+								</tr>
+								<tr>
+									<td><strong>Accessibility</strong></td>
+									<td>WCAG level (A / AA / AAA), pages to audit, known issues to verify</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="alert alert-info mt-3">
+						<i class="ti ti-info-circle me-1"></i> <strong>Conditional fields:</strong> Some fields only appear when they are relevant (e.g., "Auth Details" only shows when you select an auth method other than "No"). This keeps the form clean.
+					</div>
+
+					<h4 class="mt-4">Step 3 — Environment</h4>
+					<ul>
+						<li>Enter an <strong>Environment Name</strong> (e.g., "Staging", "Production").</li>
+						<li>Optionally override the <strong>Base URL</strong> for this environment.</li>
+						<li>Add <strong>Environment Variables</strong> (key-value pairs) for secrets, tokens, or config flags the agent should use.</li>
+					</ul>
+
+					<h4 class="mt-4">Step 4 — Review &amp; Create</h4>
+					<p>The review page has two panels:</p>
+					<ul>
+						<li><strong>Configuration Summary</strong> (left): all your selections at a glance — project name, test types, agent, URL, browser, environment.</li>
+						<li><strong>Generated Pre-Prompt preview</strong> (right): Gheetah sends your requirements to the server and returns a fully structured pre-prompt. It shows the token count (≈ characters ÷ 4). <em>This is the exact prompt the AI agent will receive for every scenario execution.</em></li>
+					</ul>
+					<p>Choose the <strong>Initial Scenario Source</strong>:</p>
+					<ul>
+						<li><strong>Add manually after creation</strong> — write Gherkin scenarios yourself in the scenario editor</li>
+						<li><strong>Generate with AI</strong> — have the AI agent produce initial scenarios from the pre-prompt</li>
+					</ul>
+					<p>Click <strong>"Create Project"</strong>. Gheetah saves the project and the generated pre-prompt, then redirects you to the project's scenario page.</p>
+				</div>
+			</div>
+
+			<!-- AI EXECUTION -->
+			<div id="ai-execution" class="content-section">
+				<h2>Running AI Scenarios</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-primary">
+						<h5 class="alert-heading">How AI Execution Works</h5>
+						<p class="mb-0">When you run a scenario, Gheetah sends the Gherkin steps + the stored pre-prompt to the selected AI agent via GAAP (Gheetah AI Agent Protocol). The agent navigates, interacts, and reports back — all streamed in real time.</p>
+					</div>
+
+					<h4 class="mt-4">The AI Project Details Page</h4>
+					<p>The details page has a two-panel layout:</p>
+					<ul>
+						<li><strong>Left panel (Scenarios tree)</strong> — all scenarios grouped by feature, shown in a collapsible jstree. Status badges (Draft / Ready / Running / Passed / Failed) and a purple dot for AI-generated scenarios are shown inline. Use the search box to filter by title.</li>
+						<li><strong>Right panel (Scenario detail)</strong> — displays the selected scenario's Gherkin content with <strong>BDD syntax highlighting</strong> (keywords coloured, tags, tables, docstrings). The card header shows the status badge, source (Manual / AI Generated), feature name, and action buttons: <strong>Run</strong>, <strong>Edit</strong>, <strong>Delete</strong>.</li>
+					</ul>
+					<p>To add a new scenario, use the <strong>"Add Scenario with AI"</strong> button in the page header (opens the AI generation modal) or the <strong>"New Scenario"</strong> button to write Gherkin manually.</p>
+
+					<h4 class="mt-4">Running a Scenario</h4>
+					<div class="step-list">
+						<div class="step">
+							<div class="step-number">1</div>
+							<div class="step-content">
+								<h5>Open the AI Project</h5>
+								<p>From the Projects list, click your AI project. The <strong>Scenario Details</strong> page opens with the jstree on the left and an empty state on the right.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">2</div>
+							<div class="step-content">
+								<h5>Select a Scenario</h5>
+								<p>Click a scenario in the tree. The Gherkin steps and last execution status are shown on the right panel.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">3</div>
+							<div class="step-content">
+								<h5>Click Run</h5>
+								<p>Click the <strong>"Run"</strong> button. An execution modal opens showing a live terminal output stream as the AI agent works through the scenario steps.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">4</div>
+							<div class="step-content">
+								<h5>Watch the Stream</h5>
+								<p>The terminal updates in real time via <strong>SignalR</strong>. You can see the agent's reasoning, browser actions, and any screenshots it captures.</p>
+							</div>
+						</div>
+						<div class="step">
+							<div class="step-number">5</div>
+							<div class="step-content">
+								<h5>View Results</h5>
+								<p>On completion, the scenario's status (Pass/Fail/Error) and duration are saved to execution history. Screenshots and output are available in the result panel.</p>
+							</div>
+						</div>
+					</div>
+
+					<h4 class="mt-4">Cancelling Execution</h4>
+					<p>Click <strong>"Cancel"</strong> in the execution modal to abort. The agent receives a cancel signal and the session is marked as terminated.</p>
+
+					<div class="alert alert-warning mt-3">
+						<h5 class="alert-heading">Note on AI Agent Availability</h5>
+						<p class="mb-0">AI execution requires the configured agent's API endpoint to be reachable from the Gheetah server. Verify connectivity using the <strong>Test Connection</strong> button in Site Settings before running scenarios.</p>
+					</div>
+				</div>
+			</div>
+
+			<!-- AI SESSION RECOVERY -->
+			<div id="ai-session-recovery" class="content-section">
+				<h2>Session Recovery</h2>
+				<div class="mt-4 p-4 rounded">
+					<div class="alert alert-success">
+						<h5 class="alert-heading">No Lost Output</h5>
+						<p class="mb-0">If you accidentally close the browser or lose your connection during AI execution, Gheetah keeps the session alive on the server. When you return, you can reconnect and replay all buffered output.</p>
+					</div>
+
+					<h4 class="mt-4">How Recovery Works</h4>
+					<ol>
+						<li>When an AI execution starts, Gheetah stores a <strong>session ID</strong> in your browser's <code>sessionStorage</code>.</li>
+						<li>All agent output is buffered on the server in the active session record.</li>
+						<li>If you close the browser tab, the session remains alive on the server — the AI agent continues executing.</li>
+						<li>When you reopen the scenario page, Gheetah detects the pending session from <code>sessionStorage</code>.</li>
+						<li>A <strong>"Reconnect"</strong> prompt appears. Click it to reattach to the running session.</li>
+						<li>All buffered output from while you were disconnected is replayed instantly, followed by the live stream resuming.</li>
+					</ol>
+
+					<h4 class="mt-4">When Recovery is Not Available</h4>
+					<ul>
+						<li>If the <strong>Gheetah server was restarted</strong> while you were disconnected, in-memory session data is lost (recovery requires the same server process).</li>
+						<li>Sessions that have already <strong>completed or been cancelled</strong> before you reconnect show the final result — they do not offer recovery.</li>
+						<li>If you open the scenario page in a <strong>different browser</strong> (not same tab or session), the session ID is not in storage and recovery is not offered automatically — you can check execution history for the result.</li>
+					</ul>
+
+					<div class="alert alert-info mt-3">
+						<h5 class="alert-heading">Tip</h5>
+						<p class="mb-0">For long-running AI executions, keep the Gheetah tab open in the background. The real-time stream has minimal bandwidth usage and will not slow down your other work.</p>
+					</div>
 				</div>
 			</div>
 

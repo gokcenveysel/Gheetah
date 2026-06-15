@@ -187,6 +187,140 @@
     </div>
 </div>
 
+@{
+    var aiProjects = ViewBag.AiProjects as List<Gheetah.Models.AiModels.AiProject> ?? new List<Gheetah.Models.AiModels.AiProject>();
+}
+
+<div class="page-header d-print-none mt-4">
+    <div class="row align-items-center">
+        <div class="col">
+            <h2 class="page-title">AI Projects</h2>
+            <div class="text-muted mt-1">AI-orchestrated test projects</div>
+        </div>
+        <div class="col-auto ms-auto">
+            <a href="/AiProject/Wizard" class="btn btn-purple">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 5l0 14" />
+                    <path d="M5 12l14 0" />
+                </svg>
+                New AI Project
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table table-striped">
+            <thead>
+                <tr>
+                    <th>Project</th>
+                    <th>Type</th>
+                    <th>Created</th>
+                    <th>Status</th>
+                    <th class="w-1">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!aiProjects.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No AI projects yet. <a href="/AiProject/Wizard">Create your first AI project</a>.</td>
+                    </tr>
+                }
+                @foreach (var ap in aiProjects)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex py-1 align-items-center">
+                                <span class="me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ae3ec9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M6.5 7h11" />
+                                        <path d="M6.5 17h11" />
+                                        <path d="M6 20v-2a6 6 0 1 1 12 0v2a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1z" />
+                                        <path d="M6 4v2a6 6 0 1 0 12 0v-2a1 1 0 0 0 -1 -1h-10a1 1 0 0 0 -1 1z" />
+                                    </svg>
+                                </span>
+                                <div class="flex-fill">
+                                    <div class="font-weight-medium">@ap.Name</div>
+                                    @if (!string.IsNullOrEmpty(ap.Description))
+                                    {
+                                        <div class="text-muted small">@ap.Description</div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-purple-lt">AI Project</span></td>
+                        <td class="text-muted">@ap.CreatedDate.ToString("dd MMM yyyy")</td>
+                        <td>
+                            @if (ap.Status == Gheetah.Models.AiModels.AiProjectStatus.Active)
+                            {
+                                <span class="badge bg-success-lt">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary-lt">Archived</span>
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-list flex-nowrap">
+                                <a href="/AiProject/Details/@ap.Id" class="btn btn-icon" title="View Scenarios">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-blue" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                        <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                                        <path d="M10 13l-1 2l1 2" />
+                                        <path d="M14 13l1 2l-1 2" />
+                                    </svg>
+                                </a>
+                                <button type="button" class="btn btn-icon" title="Delete AI Project"
+                                        onclick="showDeleteAiProjectModal('@ap.Id', '@ap.Name.Replace("'", "\\'")')">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="icon text-red" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M4 7h16" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                        <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" />
+                                        <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal modal-blur fade" id="deleteAiProjectModal" tabindex="-1">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-status bg-danger"></div>
+            <div class="modal-body text-center py-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon mb-2 text-danger icon-lg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                    <path d="M12 9v2m0 4v.01" />
+                    <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75" />
+                </svg>
+                <h3>Delete AI Project?</h3>
+                <div class="text-muted">You are about to delete <strong id="aiModalProjectName"></strong>. All scenarios will also be deleted.</div>
+            </div>
+            <div class="modal-footer">
+                <div class="row g-2">
+                    <div class="col"><button class="btn w-100" data-bs-dismiss="modal">Cancel</button></div>
+                    <div class="col">
+                        <button id="confirmDeleteAiProject" class="btn btn-danger w-100">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal modal-blur fade" id="deleteProjectModal" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content">
@@ -326,6 +460,38 @@
                     btn.textContent = 'Delete';
                 }
             });
+        });
+
+        let pendingDeleteAiProjectId = null;
+
+        function showDeleteAiProjectModal(projectId, projectName) {
+            pendingDeleteAiProjectId = projectId;
+            document.getElementById('aiModalProjectName').textContent = projectName;
+            new bootstrap.Modal(document.getElementById('deleteAiProjectModal')).show();
+        }
+
+        document.getElementById('confirmDeleteAiProject')?.addEventListener('click', async function() {
+            if (!pendingDeleteAiProjectId) return;
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Deleting...';
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+                const response = await fetch(`/AiProject/Delete/${pendingDeleteAiProjectId}`, {
+                    method: 'DELETE',
+                    headers: { 'RequestVerificationToken': token }
+                });
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message);
+                bootstrap.Modal.getInstance(document.getElementById('deleteAiProjectModal')).hide();
+                showCustomToast('success', 'AI project deleted successfully.');
+                setTimeout(() => location.reload(), 1000);
+            } catch (err) {
+                showCustomToast('danger', err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Delete';
+            }
         });
     </script>
 }

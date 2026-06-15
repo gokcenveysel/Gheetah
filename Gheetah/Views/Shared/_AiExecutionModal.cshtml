@@ -1,0 +1,35 @@
+<div class="modal modal-blur fade" id="aiExecutionModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <span class="spinner-border spinner-border-sm me-2 text-purple" id="execSpinner"></span>
+                    AI Execution
+                    <span class="badge bg-purple-lt ms-2" id="execStatusBadge">Running</span>
+                </h5>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <div class="progress" style="width:200px;height:8px" title="Progress">
+                        <div class="progress-bar bg-purple" id="execProgressBar" style="width:0%"></div>
+                    </div>
+                    <span class="text-muted small" id="execStepLabel">Step 0/0</span>
+                    <button class="btn btn-sm btn-danger ms-2" id="cancelExecBtn" onclick="cancelExecution()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M18 6l-12 12"/><path d="M6 6l12 12"/>
+                        </svg>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body p-0">
+                <!-- Terminal output -->
+                <div id="aiTerminal" style="background:#1e1e2e;color:#cdd6f4;font-family:monospace;font-size:0.82rem;height:400px;overflow-y:auto;padding:1rem;white-space:pre-wrap;"></div>
+            </div>
+            <div class="modal-footer justify-content-between" id="execFooter" style="display:none!important">
+                <!-- Result summary shown after completion -->
+                <div id="execResultSummary" class="text-muted small"></div>
+                <button class="btn" data-bs-dismiss="modal" onclick="onExecutionModalClosed()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

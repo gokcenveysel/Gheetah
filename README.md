@@ -4,9 +4,11 @@
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/Status-Open--Source-brightgreen)
+![Version](https://img.shields.io/badge/Version-3.0-orange)
 ![.NET](https://img.shields.io/badge/.NET-8.0-purple)
 ![Java](https://img.shields.io/badge/Java-11+-red)
 ![Playwright](https://img.shields.io/badge/Playwright-TypeScript-2EAD33)
+![AI](https://img.shields.io/badge/AI_Agents-Claude%20%7C%20OpenAI%20%7C%20Gemini-blueviolet)
 
 **Gheetah** is an open-source test orchestration platform designed to streamline the execution and management of BDD (Behavior-Driven Development) and modern test automation projects. With built-in IDE capabilities, project scaffolding, enterprise pull request management, and distributed execution, Gheetah transforms how QA teams work with C#, Java, and Playwright.
 
@@ -14,6 +16,7 @@
 
 ## Table of Contents
 - [Introduction](#introduction)
+- [What's New in v3.0](#whats-new-in-v30)
 - [What's New in v2.1](#whats-new-in-v21)
 - [What's New in v2.0](#whats-new-in-v20)
 - [System Requirements](#system-requirements)
@@ -40,6 +43,7 @@ Gheetah is a powerful **Test Orchestration Platform** with:
 
 | Category | Features |
 |----------|----------|
+| **🤖 AI Agent Orchestration** | No-code AI-driven BDD testing via Claude, OpenAI, Gemini, Grok, MCP, or custom agents; dynamic pre-prompt generation; real-time SignalR streaming |
 | **Test Execution** | Run tests remotely via Gheetah Agent or locally, tag/test-name filtering, real-time SignalR output |
 | **IDE Capabilities** | Monaco editor, IntelliSense, step definition navigation, TypeScript support, diff viewer |
 | **Project Scaffolding** | Create C#/Java/Playwright projects from scratch (API, Web, Mobile, Desktop) |
@@ -47,6 +51,88 @@ Gheetah is a powerful **Test Orchestration Platform** with:
 | **Enterprise-Ready** | Customizable dashboard, user/role management, SSO (Azure AD, Google) |
 | **CI/CD Integrations** | Azure DevOps, Jenkins, GitLab |
 | **Lightweight** | Simple JSON-based storage, no database required |
+
+---
+
+## What's New in v3.0 🤖
+
+### AI Agent Orchestration Platform
+
+Gheetah v3.0 introduces **AI Projects** — a completely new, no-code project type that delegates BDD test generation and execution to external AI agents. Unlike Technical Projects (C#/Java/Playwright), AI Projects require no code: you describe your requirements, an AI agent generates and runs the scenarios, and Gheetah streams everything back in real time.
+
+#### Supported AI Providers
+
+| Provider | Auth | Model Examples | Best For |
+|----------|------|----------------|----------|
+| **Claude (Computer Use)** | Anthropic API key | claude-sonnet-4-6, claude-opus-4-8 | Browser automation, screenshot capture, file system |
+| **OpenAI Operator** | OpenAI API key | gpt-4o, gpt-4-turbo | Web browsing, form interaction, API testing |
+| **Google Gemini** | Google AI Studio key | gemini-2.0-flash-exp, gemini-1.5-pro | Multimodal reasoning, vision, API testing |
+| **xAI Grok** | xAI API key | grok-2-latest, grok-2-vision | API testing, code execution |
+| **MCP Server** | Optional bearer token | (server-defined) | Custom tool servers, any capability |
+| **Custom** | User-defined | Any OpenAI-compatible | Custom/self-hosted LLM endpoints |
+| **Mock** | None | — | UI/frontend development — realistic fake Gherkin, no API key required |
+
+#### Configuring AI Agents
+
+1. Go to **Admin → Site Settings → AI Agents tab**
+2. Click **"Add Agent"**
+3. Select your **Provider Type** — the form dynamically updates to show only the fields relevant to that provider:
+   - Cloud providers (Claude/OpenAI/Gemini/Grok): API key + optional endpoint override + provider model list
+   - MCP Server: server URL (required) + transport type (HTTP/SSE/WebSocket) + optional auth token
+   - Custom: endpoint (required) + API key + free-text model
+   - Mock: no credentials required — use this for UI development or demos without a real API key
+4. Capabilities are pre-selected based on provider but are fully adjustable
+5. Click **"Test Connection"** to verify connectivity and measure latency before saving
+
+The AI Agents table shows **5 columns**: Agent name (with Default/Pre-prompt badges), Provider (colour-coded badge), Model, Status (animated green dot = Online, red dot = Offline, grey = Disabled/Not tested with last check timestamp), and Actions.
+
+#### Creating an AI Project — 4-Step Wizard
+
+Navigate to **Projects → New AI Project**:
+
+**Step 1 — Project Info**
+- Enter project name, optional description and tags
+- Select one or more **Test Types** (your choice drives which requirement fields appear in Step 2):
+  - UI Testing, API Testing, E2E Testing, Regression, Smoke Testing, Accessibility
+
+**Step 2 — AI Agent & Requirements**
+- Select the AI agent to use (cards show provider, model, and capabilities)
+- Enter the **Target URL** and preferred browser
+- Fill in the **requirement fields** — these are dynamically generated based on your Test Type selections:
+  - *UI Testing* → User roles, key pages/features, auth method and credentials
+  - *API Testing* → Swagger/docs URL, auth method, key endpoints, expected responses
+  - *E2E Testing* → User flows (detailed journey descriptions), test account credentials, preconditions/test data
+  - *Regression* → Critical paths, recent changes to focus on, known flaky areas to skip
+  - *Smoke Testing* → Critical checks checklist, max acceptable response time
+  - *Accessibility* → WCAG compliance level, pages to audit, known issues to verify
+  - Conditional fields appear/disappear automatically (e.g., auth details only when auth is required)
+
+**Step 3 — Environment**
+- Configure an environment: name, base URL, key-value environment variables
+
+**Step 4 — Review & Create**
+- Configuration summary (all selections at a glance)
+- **Generated Pre-Prompt preview**: the server builds a detailed, structured pre-prompt from your requirements — covering test checklists, scenario writing standards, and execution rules for every selected test type. Token count is shown.
+- Choose initial scenario source: add manually after creation or generate with AI
+
+On **Create Project**, the pre-prompt is saved and linked to the project. The AI agent will receive this context every time a scenario is executed.
+
+#### AI Project Execution
+
+- Open an AI project → **Scenario Details** page — two-panel layout:
+  - **Left panel**: jstree with all scenarios grouped by feature. Status badges (Draft/Ready/Running/Passed/Failed) and a purple dot for AI-generated scenarios. Search box filters the tree in real time.
+  - **Right panel**: Gherkin content with **BDD syntax highlighting** (keywords, tags, docstrings, data tables all coloured). Card header shows status badge, source (Manual / AI Generated), and Run/Edit/Delete action buttons.
+- Click **"Add Scenario with AI"** (page header) to generate a new scenario via AI, or **"New Scenario"** to write Gherkin manually
+- Click **Run** → Gheetah sends the scenario + pre-prompt context to the AI agent via GAAP (Gheetah AI Agent Protocol)
+- Execution streams back in real time via SignalR — watch the agent's output in the terminal modal
+- Results (pass/fail, duration, screenshots) saved to execution history
+
+#### Session Recovery
+
+If you close the browser during AI execution, Gheetah keeps the session alive. On return:
+- Gheetah detects the pending session from `sessionStorage`
+- Fetches session status from the server
+- Offers to reconnect — replaying the buffered output so you don't miss anything
 
 ---
 

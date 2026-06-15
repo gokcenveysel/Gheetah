@@ -1,0 +1,275 @@
+@{
+    ViewData["Title"] = "AI Project";
+    var projectId = ViewBag.ProjectId as string ?? "";
+    var projectName = ViewBag.ProjectName as string ?? "AI Project";
+}
+
+<form id="antiForgeryForm" style="display:none">
+    @Html.AntiForgeryToken()
+</form>
+
+<div class="page-header d-print-none">
+    <div class="row align-items-center">
+        <div class="col">
+            <div class="page-pretitle">AI Project</div>
+            <h2 class="page-title">@projectName</h2>
+        </div>
+        <div class="col-auto ms-auto d-print-none">
+            <button class="btn btn-purple me-2" onclick="openGenerateModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M9.5 14.5l-1.5 3.5l3.5 -1.5l7 -7l-2 -2z"/>
+                </svg>
+                Add Scenario with AI
+            </button>
+            <button class="btn btn-outline-secondary me-2" onclick="openNewScenarioModal()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M12 5l0 14" /><path d="M5 12l14 0" />
+                </svg>
+                New Scenario
+            </button>
+            <a href="/Projects/ProjectList" class="btn btn-outline-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <path d="M15 6l-6 6l6 6" />
+                </svg>
+                Back
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Left panel: jstree -->
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hierarchy-2 me-1" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M10 3h4v4h-4z"/>
+                        <path d="M3 17h4v4h-4z"/>
+                        <path d="M17 17h4v4h-4z"/>
+                        <path d="M7 17l5 -4l5 4"/>
+                        <path d="M12 7l0 6"/>
+                    </svg>
+                    Scenarios
+                </h3>
+                <div class="card-actions">
+                    <div class="input-icon">
+                        <input type="text" id="treeSearchInput" class="form-control form-control-sm" placeholder="Search scenarios..." autocomplete="off" />
+                        <span class="input-icon-addon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0"/>
+                                <path d="M21 21l-6 -6"/>
+                            </svg>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="treeview" role="tree" style="min-height:300px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel: Scenario detail -->
+    <div class="col-lg-7">
+        <!-- Empty state -->
+        <div id="scenarioEmptyState" class="card h-100 d-flex align-items-center justify-content-center text-center py-5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" class="text-muted mb-3">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+                <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"/>
+                <path d="M10 13l-1 2l1 2"/><path d="M14 13l1 2l-1 2"/>
+            </svg>
+            <p class="text-muted">Select a scenario from the list to view details</p>
+            <button class="btn btn-purple" onclick="openGenerateModal()">Generate with AI</button>
+        </div>
+
+        <!-- Scenario detail card -->
+        <div id="scenarioDetailCard" class="d-none">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div>
+                        <h3 class="card-title mb-0" id="detailTitle">Scenario Title</h3>
+                        <div class="mt-1">
+                            <span class="badge" id="detailStatusBadge">Draft</span>
+                            <span class="badge bg-secondary-lt ms-1" id="detailSourceBadge">Manual</span>
+                            <span class="text-muted ms-2 small" id="detailFeatureName"></span>
+                        </div>
+                    </div>
+                    <div class="card-options">
+                        <button class="btn btn-sm btn-success me-1" onclick="executeScenario()" id="runBtn" title="Run with AI">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M7 4v16l13 -8z"/>
+                            </svg>
+                            Run
+                        </button>
+                        <div class="btn-group btn-group-sm ms-1" role="group">
+                            <button type="button" class="btn btn-outline-secondary" onclick="editScenario()" title="Edit scenario">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1"/>
+                                    <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger" onclick="deleteScenario()" title="Delete scenario">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M4 7h16"/><path d="M10 11v6"/><path d="M14 11v6"/>
+                                    <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/>
+                                    <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="highlight">
+                        <pre><code id="detailGherkin" class="language-gherkin"></code></pre>
+                    </div>
+                    <div id="detailTags" class="mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Execution history -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Last Execution</h3>
+                </div>
+                <div class="card-body" id="lastExecutionPanel">
+                    <div class="text-muted">No executions yet.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("_AiExecutionModal")
+@await Html.PartialAsync("_NewAiScenarioModal")
+
+<!-- Generate Scenario with AI Modal -->
+<div class="modal modal-blur fade" id="generateScenarioModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-2 text-purple">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M9.5 14.5l-1.5 3.5l3.5 -1.5l7 -7l-2 -2z"/>
+                    </svg>
+                    Generate Scenario with AI
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label required">Scenario Topic</label>
+                    <input type="text" class="form-control" id="genTopic"
+                           placeholder="e.g. User forgets password and resets it via email link" />
+                    <div class="form-text">Describe what user action or flow this scenario should cover.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Additional Context <span class="text-muted fw-normal">(optional)</span></label>
+                    <textarea class="form-control" id="genContext" rows="3"
+                              placeholder="Any specific details, edge cases, or constraints for this scenario..."></textarea>
+                </div>
+
+                <!-- Preview area — shown after generation -->
+                <div id="genPreviewSection" class="d-none">
+                    <hr />
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="form-label mb-0">Generated Gherkin</label>
+                        <span class="badge bg-green-lt" id="genSessionBadge"></span>
+                    </div>
+                    <textarea class="form-control font-monospace" id="genPreview" rows="14" style="font-size:0.82rem"></textarea>
+                    <div class="form-text">You can edit the Gherkin before saving. The original is preserved in session history.</div>
+                </div>
+
+                <div id="genErrorAlert" class="alert alert-danger d-none mt-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link me-auto" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-outline-purple" id="genBtn" onclick="generateScenario()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M9.5 14.5l-1.5 3.5l3.5 -1.5l7 -7l-2 -2z"/>
+                    </svg>
+                    Generate
+                </button>
+                <button type="button" class="btn btn-purple d-none" id="genSaveBtn" onclick="saveGeneratedScenario()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2"/>
+                        <path d="M12 14m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0"/>
+                        <path d="M14 4l0 4l-6 0l0 -4"/>
+                    </svg>
+                    Save Scenario
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .highlight {
+        position: relative;
+        background: var(--tblr-bg-surface);
+        border-radius: var(--tblr-border-radius);
+        border: 1px solid var(--tblr-border-color);
+    }
+    .highlight pre {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        padding: 1rem;
+        margin: 0;
+        background: transparent;
+        min-height: 120px;
+    }
+    .highlight code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: .875em;
+        background: transparent;
+    }
+    #treeview .jstree-anchor {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+</style>
+
+<script>
+    window.AI_PROJECT_ID = '@Html.Raw(projectId)';
+    window.AI_PROJECT_NAME = '@Html.Raw(projectName.Replace("'", "\\'"))';
+</script>
+
+@section Scripts {
+    <script src="~/js/prompt-validator.js"></script>
+    <script src="~/js/ai-scenario-details.js"></script>
+    <script src="~/js/ai-execution.js"></script>
+    <script src="~/js/ai-execution-recovery.js"></script>
+    <script>
+        if (!hljs.getLanguage('gherkin')) {
+            hljs.registerLanguage('gherkin', function (hljs) {
+                return {
+                    case_insensitive: true,
+                    keywords: 'Given When Then And But Background Scenario Outline Examples Feature Rule Example Scenario',
+                    contains: [
+                        hljs.HASH_COMMENT_MODE,
+                        { className: 'keyword', begin: '@@\\w+', relevance: 10 },
+                        { className: 'string', begin: /"""/, end: /"""/, relevance: 10 },
+                        hljs.QUOTE_STRING_MODE,
+                        hljs.NUMBER_MODE,
+                        { className: 'variable', begin: /<[A-Za-z0-9_\-\(\)]+>/ },
+                        { className: 'symbol', begin: /[|]/ }
+                    ]
+                };
+            });
+        }
+    </script>
+}

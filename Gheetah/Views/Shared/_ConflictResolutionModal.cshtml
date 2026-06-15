@@ -1,0 +1,65 @@
+<div class="modal modal-blur fade" id="conflictResolutionModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon text-warning me-2">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M12 9v2m0 4v.01"/>
+                        <path d="M5 19h14a2 2 0 0 0 1.84 -2.75l-7.1 -12.25a2 2 0 0 0 -3.5 0l-7.1 12.25a2 2 0 0 0 1.75 2.75"/>
+                    </svg>
+                    Resolve Git Conflicts
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning mb-3">
+                    <strong>Conflicts detected</strong> in <span id="conflictFilePath" class="font-monospace"></span>.
+                    Review each conflict block and choose a resolution.
+                </div>
+                <div id="conflictBlocksContainer"></div>
+            </div>
+            <div class="modal-footer justify-content-between">
+                <button class="btn" data-bs-dismiss="modal">Cancel</button>
+                <div>
+                    <button class="btn btn-warning me-2" onclick="acceptAllHead()">Accept All (Current)</button>
+                    <button class="btn btn-warning me-2" onclick="acceptAllIncoming()">Accept All (Incoming)</button>
+                    <button class="btn btn-success" onclick="applyResolutions()" id="applyResolutionsBtn">Apply Resolutions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Conflict block template (hidden) -->
+<template id="conflictBlockTemplate">
+    <div class="card mb-3 conflict-block" data-block-index="">
+        <div class="card-header">
+            <h4 class="card-title mb-0">Conflict Block <span class="conflict-block-num"></span></h4>
+            <div class="card-options">
+                <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-success resolve-btn" data-resolution="Head" onclick="resolveBlock(this, 'Head')">Accept Current (HEAD)</button>
+                    <button type="button" class="btn btn-outline-primary resolve-btn" data-resolution="Incoming" onclick="resolveBlock(this, 'Incoming')">Accept Incoming</button>
+                    <button type="button" class="btn btn-outline-secondary resolve-btn" data-resolution="Both" onclick="resolveBlock(this, 'Both')">Keep Both</button>
+                    <button type="button" class="btn btn-outline-warning resolve-btn" data-resolution="Manual" onclick="resolveBlock(this, 'Manual')">Edit Manually</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="row g-0">
+                <div class="col-6 border-end">
+                    <div class="px-3 py-2 bg-success-lt text-success small fw-bold">Current (HEAD)</div>
+                    <pre class="conflict-head-content p-3 m-0 bg-light" style="font-size:0.8rem;min-height:60px;white-space:pre-wrap;"></pre>
+                </div>
+                <div class="col-6">
+                    <div class="px-3 py-2 bg-primary-lt text-primary small fw-bold">Incoming</div>
+                    <pre class="conflict-incoming-content p-3 m-0 bg-light" style="font-size:0.8rem;min-height:60px;white-space:pre-wrap;"></pre>
+                </div>
+            </div>
+            <div class="manual-edit-area d-none px-3 pb-3">
+                <label class="form-label mt-2">Manual Resolution</label>
+                <textarea class="form-control font-monospace conflict-manual-content" rows="4" style="font-size:0.8rem;"></textarea>
+            </div>
+        </div>
+    </div>
+</template>

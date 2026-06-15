@@ -490,10 +490,10 @@
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <span class="feature-badge mb-3">
-                        <i class="ti ti-star me-1"></i> Open Source v2.1
+                        <i class="ti ti-star me-1"></i> Open Source v3.0
                     </span>
                     <h1 class="hero-title mb-4">Enterprise Test Orchestration Redefined</h1>
-                    <p class="hero-subtitle mb-5">Unify your .NET, Java, and TypeScript/Playwright BDD automation with powerful orchestration, execution, and reporting capabilities across distributed environments.</p>
+                    <p class="hero-subtitle mb-5">Unify your .NET, Java, TypeScript/Playwright BDD automation — and now AI Agent-driven testing — with powerful orchestration, real-time execution streaming, and reporting across distributed environments.</p>
                     
                     <div class="d-flex flex-wrap gap-3 mb-5">
                         <a href="#features" class="btn btn-gh btn-lg px-4">
@@ -515,7 +515,7 @@
                             <i class="ti ti-check text-success me-1"></i> Java / TypeScript
                         </div>
                         <div>
-                            <i class="ti ti-check text-success me-1"></i> Cross-Platform
+                            <i class="ti ti-check text-success me-1"></i> Claude / OpenAI / Gemini
                         </div>
                         <div>
                             <i class="ti ti-check text-success me-1"></i> Open Source
@@ -538,7 +538,7 @@
             <div class="row g-4">
                 <div class="col-md-3">
                     <div class="stat-item text-center">
-                        <div class="stat-number">21+</div>
+                        <div class="stat-number">30+</div>
                         <p class="mb-0 text-muted">Core Features</p>
                     </div>
                 </div>
@@ -632,6 +632,68 @@
 				</div>
 				<div class="col-lg-6">
 					<img src="img/remote-repo-connection.jpg" alt="Pull Request" class="img-fluid rounded-3 shadow floating" loading="lazy">
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- NEW: AI Project Section -->
+	<section class="feature-block">
+		<div class="container">
+			<div class="row align-items-center">
+				<div class="col-lg-6 order-lg-2 mb-5 mb-lg-0">
+					<div class="feature-icon">
+						<i class="ti ti-robot"></i>
+					</div>
+					<h2 class="fw-bold mb-4">AI Agent Orchestration — No Code Required</h2>
+					<p class="lead mb-4">v3.0 introduces <strong>AI Projects</strong>: delegate your BDD test generation and execution to Claude, OpenAI, Gemini, Grok, MCP Server, or any custom AI agent.</p>
+					<ul class="text-muted mb-0">
+						<li class="mb-2"><i class="ti ti-check text-success me-2"></i><strong>4-Step Wizard:</strong> Name, requirements, environment, review — no code</li>
+						<li class="mb-2"><i class="ti ti-check text-success me-2"></i><strong>Dynamic Pre-Prompt:</strong> Fill in test type requirements; Gheetah auto-generates a detailed AI context prompt</li>
+						<li class="mb-2"><i class="ti ti-check text-success me-2"></i><strong>Real-Time Streaming:</strong> Watch AI execution output live via SignalR</li>
+						<li class="mb-2"><i class="ti ti-check text-success me-2"></i><strong>Session Recovery:</strong> Close the browser and reconnect — no output lost</li>
+						<li class="mb-2"><i class="ti ti-check text-success me-2"></i><strong>6 Provider Types:</strong> Claude Computer Use, OpenAI Operator, Gemini, Grok, MCP, Custom</li>
+					</ul>
+				</div>
+				<div class="col-lg-6 order-lg-1">
+					<div class="feature-showcase p-4">
+						<div class="feature-showcase-item mb-3 d-flex align-items-start gap-3">
+							<div class="feature-icon" style="width:2.5rem;height:2.5rem;font-size:1.1rem;flex-shrink:0;">
+								<i class="ti ti-list-check"></i>
+							</div>
+							<div>
+								<strong>Step 1 — Project Info</strong>
+								<p class="text-muted small mb-0">Name your project and select test types (UI, API, E2E, Regression, Smoke, Accessibility)</p>
+							</div>
+						</div>
+						<div class="feature-showcase-item mb-3 d-flex align-items-start gap-3">
+							<div class="feature-icon" style="width:2.5rem;height:2.5rem;font-size:1.1rem;flex-shrink:0;">
+								<i class="ti ti-robot"></i>
+							</div>
+							<div>
+								<strong>Step 2 — Agent &amp; Requirements</strong>
+								<p class="text-muted small mb-0">Pick your AI agent and fill in structured requirement fields (dynamically shown per test type)</p>
+							</div>
+						</div>
+						<div class="feature-showcase-item mb-3 d-flex align-items-start gap-3">
+							<div class="feature-icon" style="width:2.5rem;height:2.5rem;font-size:1.1rem;flex-shrink:0;">
+								<i class="ti ti-server"></i>
+							</div>
+							<div>
+								<strong>Step 3 — Environment</strong>
+								<p class="text-muted small mb-0">Configure environment name, base URL, and key-value variables</p>
+							</div>
+						</div>
+						<div class="feature-showcase-item d-flex align-items-start gap-3">
+							<div class="feature-icon" style="width:2.5rem;height:2.5rem;font-size:1.1rem;flex-shrink:0;">
+								<i class="ti ti-eye"></i>
+							</div>
+							<div>
+								<strong>Step 4 — Review &amp; Create</strong>
+								<p class="text-muted small mb-0">Preview the auto-generated pre-prompt with token count, then create</p>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -777,6 +839,19 @@
 						<li>C# / Java / TypeScript templates</li>
 						<li>API, Web, Mobile, Desktop</li>
 						<li>BDD ready out-of-the-box</li>
+					</ul>
+				</div>
+
+				<div class="feature-grid-item">
+					<div class="feature-icon">
+						<i class="ti ti-robot"></i>
+					</div>
+					<h3 class="mb-3">AI Agent Orchestration</h3>
+					<ul class="text-muted mb-0 ps-3">
+						<li>Claude, OpenAI, Gemini, Grok, MCP, Custom</li>
+						<li>Mock adapter for API-free UI testing</li>
+						<li>Dynamic pre-prompt generation</li>
+						<li>Real-time SignalR streaming</li>
 					</ul>
 				</div>
             </div>

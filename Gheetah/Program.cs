@@ -5,6 +5,7 @@ using Gheetah.Hub;
 using Gheetah.Interfaces;
 using Gheetah.Middleware;
 using Gheetah.Services;
+using Gheetah.Services.AiAdapters;
 using Gheetah.Services.Azure;
 using Gheetah.Services.GitHub;
 using Gheetah.Services.GitLab;
@@ -54,7 +55,12 @@ builder.Services.Configure<FormOptions>(options =>
     options.MultipartBodyLengthLimit = 52428800; // 50 MB
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 builder.Services.AddMemoryCache();
@@ -104,6 +110,30 @@ builder.Services.AddScoped<PlaywrightScenarioExecutor>();
 builder.Services.AddScoped<PlaywrightAllScenariosExecutor>();
 builder.Services.AddScoped<AgentManager>();
 builder.Services.AddScoped<JavaProjectConfigurator>();
+
+// AI Agent Orchestration — v3.0
+builder.Services.AddSingleton<AiAgentAdapterFactory>();
+builder.Services.AddSingleton<ISessionService, SessionService>();
+builder.Services.AddSingleton<IAiExecutionService, AiExecutionService>();
+builder.Services.AddScoped<IAiAgentService, AiAgentService>();
+builder.Services.AddScoped<IAiProjectService, AiProjectService>();
+builder.Services.AddScoped<IAiScenarioService, AiScenarioService>();
+builder.Services.AddScoped<IPrePromptService, PrePromptService>();
+builder.Services.AddScoped<IEnvironmentService, EnvironmentService>();
+builder.Services.AddScoped<IExecutionRecoveryService, ExecutionRecoveryService>();
+builder.Services.AddScoped<IGitConflictService, GitConflictService>();
+builder.Services.AddScoped<IPrePromptChunkingService, PrePromptChunkingService>();
+builder.Services.AddScoped<IPromptValidator, PromptValidator>();
+builder.Services.AddScoped<IAgentMemoryService, AgentMemoryService>();
+builder.Services.AddScoped<ISessionHistoryService, SessionHistoryService>();
+builder.Services.AddScoped<GheetahAiAgentProtocol>();
+builder.Services.AddTransient<ClaudeComputerUseAdapter>();
+builder.Services.AddTransient<OpenAIOperatorAdapter>();
+builder.Services.AddTransient<GeminiAgentAdapter>();
+builder.Services.AddTransient<GrokAgentAdapter>();
+builder.Services.AddTransient<McpServerAdapter>();
+builder.Services.AddTransient<CustomAgentAdapter>();
+builder.Services.AddTransient<MockAgentAdapter>();
 
 builder.Services.AddSignalR();
 
@@ -194,6 +224,8 @@ try
 {
     app.Logger.LogInformation("Gheetah startup process has begun.");
     var fileService = app.Services.GetRequiredService<IFileService>();
+    var sessionService = app.Services.GetRequiredService<ISessionService>();
+    await sessionService.RestoreFromStorageAsync();
     bool setupComplete = fileService.IsSetupComplete();
     app.Logger.LogInformation($"Setup status: {setupComplete}");
 
@@ -232,6 +264,7 @@ try
     });
 
     app.MapHub<GheetahHub>("/gheetahHub");
+    app.MapHub<AiExecutionHub>("/aiExecutionHub");
     app.MapControllers();
     app.MapGet("/", context =>
     {
