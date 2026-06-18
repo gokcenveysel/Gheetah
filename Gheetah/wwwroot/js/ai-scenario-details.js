@@ -167,6 +167,20 @@ const ScenarioManager = (() => {
 
         const runBtn = document.getElementById('runBtn');
         if (runBtn) runBtn.dataset.scenarioId = scenario.id || scenario.Id;
+
+        const toggleBtn = document.getElementById('statusToggleBtn');
+        if (toggleBtn) {
+            const s = scenario.status;
+            if (s === 0 || s === 'Draft') {
+                toggleBtn.textContent = '→ Mark as Ready';
+                toggleBtn.style.display = '';
+            } else if (s === 1 || s === 'Ready') {
+                toggleBtn.textContent = '→ Revert to Draft';
+                toggleBtn.style.display = '';
+            } else {
+                toggleBtn.style.display = 'none';
+            }
+        }
     }
 
     async function loadLastExecution(sessionId) {
@@ -261,7 +275,32 @@ function editScenario() {
 }
 function deleteScenario() { ScenarioManager.deleteSelected(); }
 
+async function toggleScenarioStatus() {
+    const scenario = window.ScenarioManager?.getSelectedScenario();
+    if (!scenario) return;
+    const currentStatus = scenario.status;
+    const isDraft = currentStatus === 0 || currentStatus === 'Draft';
+    const newStatus = isDraft ? 'Ready' : 'Draft';
+
+    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+    try {
+        const res = await fetch(`/AiScenario/UpdateStatus/${scenario.id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+            body: JSON.stringify({ projectId: window.AI_PROJECT_ID, status: newStatus })
+        });
+        const result = await res.json();
+        if (!result.success) throw new Error(result.message);
+        showCustomToast('success', `Status changed to ${newStatus}.`);
+        await ScenarioManager.refresh();
+        ScenarioManager.selectScenario(scenario.id);
+    } catch (err) {
+        showCustomToast('danger', err.message);
+    }
+}
+
 let newScenarioActiveTab = 'manual';
+let _aiGeneratedSource = false;
 
 function openNewScenarioModal() {
     document.getElementById('editScenarioId').value = '';
@@ -272,6 +311,9 @@ function openNewScenarioModal() {
     document.getElementById('newScenarioGherkin').value = '';
     document.getElementById('newScenarioTags').value = '';
     document.getElementById('gherkinValidationFeedback').innerHTML = '';
+    document.getElementById('aiScenarioPrompt').value = '';
+    document.getElementById('aiScenarioFeature').value = '';
+    _aiGeneratedSource = false;
     switchScenarioTab('manual');
     new bootstrap.Modal(document.getElementById('newScenarioModal')).show();
 }
@@ -283,6 +325,10 @@ function switchScenarioTab(tab) {
     document.querySelectorAll('#newScenarioTabs .nav-link').forEach((a, i) => {
         a.classList.toggle('active', (i === 0 && tab === 'manual') || (i === 1 && tab === 'ai'));
     });
+    if (!document.getElementById('editScenarioId')?.value) {
+        const saveBtn = document.getElementById('saveScenarioBtn');
+        if (saveBtn) saveBtn.textContent = tab === 'ai' ? 'Generate & Preview' : 'Save Scenario';
+    }
 }
 
 async function saveNewScenario() {
@@ -304,8 +350,8 @@ async function saveNewScenario() {
             featureName: document.getElementById('newScenarioFeature').value.trim(),
             gherkinContent: gherkin,
             tags: document.getElementById('newScenarioTags').value.split(',').map(t => t.trim()).filter(Boolean),
-            status: isEdit ? (existing?.status ?? 0) : 0,
-            source: isEdit ? (existing?.source ?? 0) : 0,
+            status: isEdit ? (existing?.status ?? 0) : (_aiGeneratedSource ? 1 : 0),
+            source: isEdit ? (existing?.source ?? 0) : (_aiGeneratedSource ? 1 : 0),
         };
 
         const btn = document.getElementById('saveScenarioBtn');
@@ -320,6 +366,7 @@ async function saveNewScenario() {
             });
             const result = await res.json();
             if (!result.success) throw new Error(result.message);
+            _aiGeneratedSource = false;
             bootstrap.Modal.getInstance(document.getElementById('newScenarioModal')).hide();
             showCustomToast('success', isEdit ? 'Scenario updated.' : 'Scenario created.');
             await ScenarioManager.refresh();
@@ -331,7 +378,46 @@ async function saveNewScenario() {
             btn.textContent = isEdit ? 'Save Changes' : 'Save Scenario';
         }
     } else {
-        showCustomToast('info', 'AI scenario generation will be implemented soon.');
+        // AI Generate tab
+        const prompt = document.getElementById('aiScenarioPrompt').value.trim();
+        const aiFeature = document.getElementById('aiScenarioFeature').value.trim();
+        if (!prompt) { showCustomToast('warning', 'Please describe what to test.'); return; }
+
+        const btn = document.getElementById('saveScenarioBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generating...';
+        try {
+            const res = await fetch('/AiScenario/Generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                body: JSON.stringify({
+                    projectId,
+                    topic: prompt,
+                    additionalContext: aiFeature ? `Feature: ${aiFeature}` : ''
+                })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message);
+
+            const titleMatch = data.gherkin.match(/Scenario(?:\s+Outline)?:\s*(.+)/i);
+            const extractedTitle = titleMatch ? titleMatch[1].trim() : prompt;
+            const featureMatch = data.gherkin.match(/Feature:\s*(.+)/i);
+            const extractedFeature = featureMatch ? featureMatch[1].trim() : (aiFeature || 'AI Generated');
+
+            document.getElementById('newScenarioTitle').value = extractedTitle;
+            document.getElementById('newScenarioFeature').value = extractedFeature;
+            document.getElementById('newScenarioGherkin').value = data.gherkin;
+            document.getElementById('newScenarioTags').value = '';
+            document.getElementById('gherkinValidationFeedback').innerHTML = '';
+
+            _aiGeneratedSource = true;
+            switchScenarioTab('manual');
+            showCustomToast('success', 'Gherkin generated! Review and save.');
+        } catch (err) {
+            showCustomToast('danger', 'Generation failed: ' + err.message);
+            btn.disabled = false;
+            btn.textContent = 'Generate & Preview';
+        }
     }
 }
 
@@ -432,10 +518,27 @@ async function saveGeneratedScenario() {
 document.addEventListener('DOMContentLoaded', () => {
     if (window.AI_PROJECT_ID) ScenarioManager.init();
 
+    // Populate agent selector for Run button
+    fetch('/AiAgents/GetAll')
+        .then(r => r.json())
+        .then(agents => {
+            const sel = document.getElementById('runAgentSelect');
+            if (!sel) return;
+            agents.filter(a => a.isEnabled).forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = `${a.name} (${a.providerType})`;
+                if (a.isDefault) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        })
+        .catch(() => { /* selector stays with Default Agent */ });
+
     document.getElementById('newScenarioModal')?.addEventListener('hidden.bs.modal', () => {
         document.getElementById('editScenarioId').value = '';
         document.getElementById('newScenarioModalTitle').textContent = 'New Scenario';
         document.getElementById('saveScenarioBtn').textContent = 'Save Scenario';
+        _aiGeneratedSource = false;
     });
 
     let searchTimeout;

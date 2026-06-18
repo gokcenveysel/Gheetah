@@ -165,7 +165,8 @@ const AiExecution = (() => {
 function executeScenario() {
     const scenario = window.ScenarioManager?.getSelectedScenario();
     if (!scenario) { showCustomToast('warning', 'No scenario selected.'); return; }
-    AiExecution.start(window.AI_PROJECT_ID, scenario.id, null);
+    const agentId = document.getElementById('runAgentSelect')?.value || null;
+    AiExecution.start(window.AI_PROJECT_ID, scenario.id, agentId);
 }
 
 function cancelExecution() { AiExecution.cancel(); }

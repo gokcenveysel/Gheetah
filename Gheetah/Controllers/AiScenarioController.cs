@@ -209,6 +209,31 @@ namespace Gheetah.Controllers
             }
         }
 
+        [HttpPatch("UpdateStatus/{scenarioId}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStatus(string scenarioId, [FromBody] UpdateStatusRequest request)
+        {
+            try
+            {
+                var scenario = await _scenarioService.GetByIdAsync(scenarioId, request.ProjectId);
+                if (scenario == null) return Json(new { success = false, message = "Scenario not found" });
+                scenario.Status = request.Status;
+                await _scenarioService.SaveScenarioAsync(scenario);
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update status for scenario {ScenarioId}", scenarioId);
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        public class UpdateStatusRequest
+        {
+            public string ProjectId { get; set; }
+            public AiScenarioStatus Status { get; set; }
+        }
+
         [HttpPost("ValidateGherkin")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ValidateGherkin([FromBody] string content)

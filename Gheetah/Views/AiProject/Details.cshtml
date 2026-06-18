@@ -97,11 +97,15 @@
                         <h3 class="card-title mb-0" id="detailTitle">Scenario Title</h3>
                         <div class="mt-1">
                             <span class="badge" id="detailStatusBadge">Draft</span>
+                            <button class="btn btn-sm btn-link p-0 ms-1 text-muted" id="statusToggleBtn" onclick="toggleScenarioStatus()" title="Change status" style="display:none;font-size:.75rem;line-height:1"></button>
                             <span class="badge bg-secondary-lt ms-1" id="detailSourceBadge">Manual</span>
                             <span class="text-muted ms-2 small" id="detailFeatureName"></span>
                         </div>
                     </div>
                     <div class="card-options">
+                        <select class="form-select form-select-sm me-1" id="runAgentSelect" style="max-width:170px" title="Select AI agent">
+                            <option value="">Default Agent</option>
+                        </select>
                         <button class="btn btn-sm btn-success me-1" onclick="executeScenario()" id="runBtn" title="Run with AI">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon me-1">
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
