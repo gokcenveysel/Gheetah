@@ -236,21 +236,43 @@ const ScenarioManager = (() => {
             } catch (err) {
                 showCustomToast('danger', err.message);
             }
-        }
+        },
+
+        loadExecutionResult(sessionId) { loadLastExecution(sessionId); }
     };
 })();
 
-function editScenario() { showCustomToast('info', 'Edit coming soon.'); }
+function editScenario() {
+    const scenario = window.ScenarioManager?.getSelectedScenario();
+    if (!scenario) return;
+
+    document.getElementById('editScenarioId').value = scenario.id;
+    document.getElementById('newScenarioModalTitle').textContent = 'Edit Scenario';
+    document.getElementById('saveScenarioBtn').textContent = 'Save Changes';
+
+    document.getElementById('newScenarioTitle').value = scenario.title || '';
+    document.getElementById('newScenarioFeature').value = scenario.featureName || scenario.FeatureName || '';
+    document.getElementById('newScenarioGherkin').value = scenario.gherkinContent || scenario.GherkinContent || '';
+    document.getElementById('newScenarioTags').value = (scenario.tags || scenario.Tags || []).join(', ');
+    document.getElementById('gherkinValidationFeedback').innerHTML = '';
+
+    switchScenarioTab('manual');
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('newScenarioModal')).show();
+}
 function deleteScenario() { ScenarioManager.deleteSelected(); }
 
 let newScenarioActiveTab = 'manual';
 
 function openNewScenarioModal() {
+    document.getElementById('editScenarioId').value = '';
+    document.getElementById('newScenarioModalTitle').textContent = 'New Scenario';
+    document.getElementById('saveScenarioBtn').textContent = 'Save Scenario';
     document.getElementById('newScenarioTitle').value = '';
     document.getElementById('newScenarioFeature').value = '';
     document.getElementById('newScenarioGherkin').value = '';
     document.getElementById('newScenarioTags').value = '';
     document.getElementById('gherkinValidationFeedback').innerHTML = '';
+    switchScenarioTab('manual');
     new bootstrap.Modal(document.getElementById('newScenarioModal')).show();
 }
 
@@ -266,41 +288,47 @@ function switchScenarioTab(tab) {
 async function saveNewScenario() {
     const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
     const projectId = window.AI_PROJECT_ID;
+    const editId = document.getElementById('editScenarioId').value;
+    const isEdit = !!editId;
 
-    if (newScenarioActiveTab === 'manual') {
+    if (newScenarioActiveTab === 'manual' || isEdit) {
         const title = document.getElementById('newScenarioTitle').value.trim();
         const gherkin = document.getElementById('newScenarioGherkin').value.trim();
         if (!title || !gherkin) { showCustomToast('warning', 'Title and Gherkin content are required.'); return; }
 
+        const existing = isEdit ? window.ScenarioManager?.getSelectedScenario() : null;
         const scenario = {
+            id: isEdit ? editId : undefined,
             projectId,
             title,
             featureName: document.getElementById('newScenarioFeature').value.trim(),
             gherkinContent: gherkin,
             tags: document.getElementById('newScenarioTags').value.split(',').map(t => t.trim()).filter(Boolean),
-            status: 0,
-            source: 0
+            status: isEdit ? (existing?.status ?? 0) : 0,
+            source: isEdit ? (existing?.source ?? 0) : 0,
         };
 
         const btn = document.getElementById('saveScenarioBtn');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
         try {
-            const res = await fetch('/AiScenario/Create', {
-                method: 'POST',
+            const url = isEdit ? '/AiScenario/Update' : '/AiScenario/Create';
+            const res = await fetch(url, {
+                method: isEdit ? 'PUT' : 'POST',
                 headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
                 body: JSON.stringify(scenario)
             });
             const result = await res.json();
             if (!result.success) throw new Error(result.message);
             bootstrap.Modal.getInstance(document.getElementById('newScenarioModal')).hide();
-            showCustomToast('success', 'Scenario created.');
+            showCustomToast('success', isEdit ? 'Scenario updated.' : 'Scenario created.');
             await ScenarioManager.refresh();
+            if (isEdit) ScenarioManager.selectScenario(editId);
         } catch (err) {
             showCustomToast('danger', err.message);
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Save Scenario';
+            btn.textContent = isEdit ? 'Save Changes' : 'Save Scenario';
         }
     } else {
         showCustomToast('info', 'AI scenario generation will be implemented soon.');
@@ -403,6 +431,12 @@ async function saveGeneratedScenario() {
 
 document.addEventListener('DOMContentLoaded', () => {
     if (window.AI_PROJECT_ID) ScenarioManager.init();
+
+    document.getElementById('newScenarioModal')?.addEventListener('hidden.bs.modal', () => {
+        document.getElementById('editScenarioId').value = '';
+        document.getElementById('newScenarioModalTitle').textContent = 'New Scenario';
+        document.getElementById('saveScenarioBtn').textContent = 'Save Scenario';
+    });
 
     let searchTimeout;
     const treeSearchInput = document.getElementById('treeSearchInput');

@@ -96,7 +96,12 @@ const AiExecution = (() => {
         const cancelBtn = document.getElementById('cancelExecBtn');
         if (cancelBtn) cancelBtn.style.display = 'none';
 
-        if (window.ScenarioManager) ScenarioManager.refresh();
+        if (window.ScenarioManager) {
+            ScenarioManager.refresh();
+            if (activeSessionId && typeof ScenarioManager.loadExecutionResult === 'function') {
+                ScenarioManager.loadExecutionResult(activeSessionId);
+            }
+        }
     }
 
     function handleError(msg) {
